@@ -54,7 +54,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Стандартний порт Vite/Vue
+    "http://localhost:5173", # Порт Vite/Vue
 ]
 
 ROOT_URLCONF = 'backend.urls'
