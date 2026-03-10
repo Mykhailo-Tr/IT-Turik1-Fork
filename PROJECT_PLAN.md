@@ -79,7 +79,6 @@
 - Backend feature support (CRUD + simple business logic)
 - API endpoint implementation (non-critical logic) <!-- proposed -->
 - Bug fixing & feature polishing <!-- proposed -->
-
 - UX improvements <!-- consider focusing primarily on implementation rather than UX design strategy -->
 - Visual consistency <!-- consider sharing responsibility with Frontend Lead -->
 ---
