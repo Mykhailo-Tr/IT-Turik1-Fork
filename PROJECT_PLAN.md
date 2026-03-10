@@ -6,7 +6,7 @@
 |---|--------|------|----------|
 | 1 | [@Mykhailo-Tr](https://github.com/Mykhailo-Tr) | Team Lead / Architect | Management + Architecture + Backend |
 | 2 | [@Mox1toGH](https://github.com/Mox1toGH) | Tech Lead (DRF) | API + Backend/Frontend |
-| 3 | [@lliyussha](https://github.com/username3) | Support Developer / Assistant | Documentation + Task Management |
+| 3 | [@lliyussha](https://github.com/username3) | Project Manager / Support Developer | Documentation + Task Management |
 | 4 | [@Lastto0](https://github.com/username4) | Frontend Lead (Vue.js) | SPA Architecture |
 | 5 | [@janekdev](https://github.com/username5) | Full-Stack Developer | Frontend Development + Backend Feature Support + UI Logic |
 
