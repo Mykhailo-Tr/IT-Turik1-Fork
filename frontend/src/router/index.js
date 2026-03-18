@@ -2,6 +2,7 @@
 
 import Activate from '../views/Activate.vue'
 import CompleteProfile from '../views/CompleteProfile.vue'
+import EditProfile from '../views/EditProfile.vue'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Profile from '../views/Profile.vue'
@@ -27,6 +28,11 @@ const routes = [
   {
     path: '/profile',
     component: Profile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/profile/edit',
+    component: EditProfile,
     meta: { requiresAuth: true },
   },
   {
