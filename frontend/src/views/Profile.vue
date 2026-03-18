@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="page-shell">
     <article class="card profile-card">
       <div class="head">
@@ -13,7 +13,9 @@
         {{ notification.message }}
       </div>
 
-      <div class="summary">
+      <div v-if="loadingProfile" class="state-box">Loading profile...</div>
+      <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
+      <div v-else class="details">
         <div class="item">
           <span>Username</span>
           <strong>{{ profile.username || '-' }}</strong>
@@ -26,33 +28,32 @@
           <span>Role</span>
           <strong class="badge">{{ profile.role || '-' }}</strong>
         </div>
+        <div class="item">
+          <span>Full name</span>
+          <strong>{{ profile.full_name || '-' }}</strong>
+        </div>
+        <div class="item">
+          <span>Phone</span>
+          <strong>{{ profile.phone || '-' }}</strong>
+        </div>
+        <div class="item">
+          <span>City</span>
+          <strong>{{ profile.city || '-' }}</strong>
+        </div>
       </div>
 
-      <form @submit.prevent="handleUpdate" class="form">
-        <label class="form-label">
-          Full name
-          <input v-model="form.full_name" class="input-control" type="text" placeholder="John Doe" />
-        </label>
-
-        <label class="form-label">
-          Phone
-          <input v-model="form.phone" class="input-control" type="text" placeholder="+380..." />
-          <small v-if="errors.phone" class="text-error">{{ errors.phone[0] }}</small>
-        </label>
-
-        <label class="form-label">
-          City
-          <input v-model="form.city" class="input-control" type="text" placeholder="Kyiv" />
-        </label>
-
-        <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Saving...' : 'Save changes' }}
+      <div class="actions">
+        <button class="btn-primary" type="button" :disabled="loadingProfile" @click="goToEditProfile">
+          Edit Profile
         </button>
-      </form>
+        <button class="btn-secondary" type="button" :disabled="loadingProfile || isDeleting" @click="logoutToLogin">
+          Log Out
+        </button>
+      </div>
 
       <div class="danger-zone">
         <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
-        <button class="btn-danger" :disabled="loading || isDeleting" @click="openDeleteModal" type="button">
+        <button class="btn-danger" :disabled="loadingProfile || isDeleting" @click="openDeleteModal" type="button">
           Delete account
         </button>
       </div>
@@ -96,10 +97,10 @@ import { useRouter } from 'vue-router'
 import { API_BASE } from '@/config/api'
 
 const profile = ref({})
-const form = ref({ full_name: '', phone: '', city: '' })
-const loading = ref(false)
-const errors = ref({})
 const notification = ref(null)
+const profileError = ref('')
+const loadingProfile = ref(true)
+
 const router = useRouter()
 const isDeleteModalOpen = ref(false)
 const deleteConfirmInput = ref('')
@@ -121,18 +122,30 @@ const logoutToLogin = () => {
   router.push('/login')
 }
 
+const goToEditProfile = () => {
+  router.push('/profile/edit')
+}
+
 const fetchProfile = async () => {
+  loadingProfile.value = true
+  profileError.value = ''
+
   const token = localStorage.getItem('access')
-  const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
+  try {
+    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
 
-  if (res.status === 401) {
-    logoutToLogin()
-    return
-  }
+    if (res.status === 401) {
+      logoutToLogin()
+      return
+    }
 
-  if (res.ok) {
+    if (!res.ok) {
+      profileError.value = 'Could not load profile information.'
+      return
+    }
+
     const data = await res.json()
     if (data.needs_onboarding) {
       localStorage.setItem('needs_onboarding', '1')
@@ -141,49 +154,10 @@ const fetchProfile = async () => {
     }
 
     profile.value = data
-    form.value = {
-      full_name: data.full_name || '',
-      phone: data.phone || '',
-      city: data.city || '',
-    }
-  }
-}
-
-const handleUpdate = async () => {
-  loading.value = true
-  errors.value = {}
-  notification.value = null
-
-  const token = localStorage.getItem('access')
-  try {
-    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value),
-    })
-
-    if (res.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    const data = await res.json()
-
-    if (res.ok) {
-      notification.value = { type: 'success', message: 'Profile updated successfully.' }
-      profile.value = { ...profile.value, ...data }
-      return
-    }
-
-    errors.value = data
-    notification.value = { type: 'error', message: 'Validation error. Please check your data.' }
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    profileError.value = 'Server connection error.'
   } finally {
-    loading.value = false
+    loadingProfile.value = false
   }
 }
 
@@ -209,7 +183,6 @@ const handleDeleteAccount = async () => {
   isDeleting.value = true
   deleteError.value = ''
   notification.value = null
-  errors.value = {}
 
   const token = localStorage.getItem('access')
   try {
@@ -220,12 +193,7 @@ const handleDeleteAccount = async () => {
       },
     })
 
-    if (res.status === 204 || res.status === 200) {
-      logoutToLogin()
-      return
-    }
-
-    if (res.status === 401) {
+    if (res.status === 204 || res.status === 200 || res.status === 401) {
       logoutToLogin()
       return
     }
@@ -270,7 +238,21 @@ onMounted(fetchProfile)
   font-size: 0.86rem;
 }
 
-.summary {
+.state-box {
+  margin-top: 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--line-soft);
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.state-box.error {
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.25);
+  background: rgba(254, 242, 242, 0.9);
+}
+
+.details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
@@ -304,10 +286,27 @@ onMounted(fetchProfile)
   font-size: 0.74rem;
 }
 
-.form {
+.actions {
   margin-top: 1rem;
-  display: grid;
-  gap: 0.8rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  background: #fff;
+  color: var(--ink-800);
+  cursor: pointer;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .danger-zone {
@@ -410,8 +409,12 @@ onMounted(fetchProfile)
     align-items: flex-start;
   }
 
-  .summary {
+  .details {
     grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
   }
 }
 </style>

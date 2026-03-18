@@ -46,8 +46,7 @@
 
           <label class="form-label">
             Phone
-            <input v-model="form.phone" class="input-control" type="text" placeholder="+380XXXXXXXXX" />
-            <small v-if="errors.phone" class="text-error">{{ errors.phone[0] }}</small>
+            <PhoneField v-model="form.phone" :error="errors.phone?.[0]" placeholder="Enter phone number" />
           </label>
 
           <label class="form-label">
@@ -81,6 +80,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/components/auth/GoogleAuthButton.vue'
+import PhoneField from '@/components/forms/PhoneField.vue'
 import { API_BASE } from '@/config/api'
 
 const router = useRouter()
