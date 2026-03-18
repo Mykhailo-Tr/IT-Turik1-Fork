@@ -49,12 +49,49 @@
           {{ loading ? 'Saving...' : 'Save changes' }}
         </button>
       </form>
+
+      <div class="danger-zone">
+        <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
+        <button class="btn-danger" :disabled="loading || isDeleting" @click="openDeleteModal" type="button">
+          Delete account
+        </button>
+      </div>
     </article>
+
+    <div v-if="isDeleteModalOpen" class="modal-backdrop" @click.self="closeDeleteModal">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+        <h3 id="delete-title">Delete account</h3>
+        <p class="modal-text">
+          This action cannot be undone. Enter
+          <code>{{ expectedDeleteText }}</code>
+          to confirm.
+        </p>
+
+        <input
+          v-model="deleteConfirmInput"
+          class="input-control"
+          type="text"
+          :placeholder="expectedDeleteText"
+          :disabled="isDeleting"
+        />
+
+        <p v-if="deleteError" class="text-error modal-error">{{ deleteError }}</p>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" type="button" :disabled="isDeleting" @click="closeDeleteModal">
+            Cancel
+          </button>
+          <button class="btn-danger" type="button" :disabled="!canConfirmDelete" @click="handleDeleteAccount">
+            {{ isDeleting ? 'Deleting...' : 'Delete permanently' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_BASE } from '@/config/api'
 
@@ -64,6 +101,18 @@ const loading = ref(false)
 const errors = ref({})
 const notification = ref(null)
 const router = useRouter()
+const isDeleteModalOpen = ref(false)
+const deleteConfirmInput = ref('')
+const deleteError = ref('')
+const isDeleting = ref(false)
+
+const expectedDeleteText = computed(() => profile.value.username || '')
+const canConfirmDelete = computed(
+  () =>
+    Boolean(expectedDeleteText.value) &&
+    deleteConfirmInput.value === expectedDeleteText.value &&
+    !isDeleting.value,
+)
 
 const logoutToLogin = () => {
   localStorage.removeItem('access')
@@ -138,6 +187,57 @@ const handleUpdate = async () => {
   }
 }
 
+const openDeleteModal = () => {
+  deleteConfirmInput.value = ''
+  deleteError.value = ''
+  isDeleteModalOpen.value = true
+}
+
+const closeDeleteModal = () => {
+  if (isDeleting.value) {
+    return
+  }
+  isDeleteModalOpen.value = false
+}
+
+const handleDeleteAccount = async () => {
+  if (deleteConfirmInput.value !== expectedDeleteText.value) {
+    deleteError.value = `Please enter "${expectedDeleteText.value}" exactly.`
+    return
+  }
+
+  isDeleting.value = true
+  deleteError.value = ''
+  notification.value = null
+  errors.value = {}
+
+  const token = localStorage.getItem('access')
+  try {
+    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (res.status === 204 || res.status === 200) {
+      logoutToLogin()
+      return
+    }
+
+    if (res.status === 401) {
+      logoutToLogin()
+      return
+    }
+
+    notification.value = { type: 'error', message: 'Unable to delete account.' }
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    isDeleting.value = false
+  }
+}
+
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('uk-UA')
@@ -208,6 +308,96 @@ onMounted(fetchProfile)
   margin-top: 1rem;
   display: grid;
   gap: 0.8rem;
+}
+
+.danger-zone {
+  margin-top: 1.4rem;
+  border-top: 1px dashed var(--line-strong);
+  padding-top: 1rem;
+}
+
+.danger-text {
+  margin: 0 0 0.6rem;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.btn-danger {
+  border: 1px solid #dc2626;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-danger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(100%, 520px);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-lg);
+  padding: 1.2rem;
+}
+
+.modal-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.modal-text {
+  margin: 0.7rem 0;
+  color: var(--ink-700);
+}
+
+.modal-text code {
+  background: #f1f5f9;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+}
+
+.modal-error {
+  margin: 0.5rem 0 0;
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.btn-cancel {
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  background: #fff;
+}
+
+.btn-cancel:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 @media (max-width: 760px) {

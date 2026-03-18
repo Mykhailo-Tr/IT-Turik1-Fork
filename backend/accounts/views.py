@@ -124,7 +124,7 @@ class GoogleAuthView(APIView):
         )
 
 
-class UserProfileView(generics.RetrieveUpdateAPIView):
+class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):

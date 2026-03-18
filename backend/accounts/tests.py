@@ -106,3 +106,16 @@ class GoogleAuthViewTests(APITestCase):
         self.assertEqual(user.city, 'Kyiv')
         self.assertFalse(user.needs_onboarding)
 
+    def test_profile_delete_removes_current_user(self):
+        user = User.objects.create_user(
+            username='delete-me',
+            email='delete-me@example.com',
+            password='StrongPass123!',
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.delete(self.profile_url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(User.objects.filter(id=user.id).exists())
+
