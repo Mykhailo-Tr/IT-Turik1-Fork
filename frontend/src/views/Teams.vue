@@ -457,8 +457,8 @@ const openKickModal = (team, member) => {
   isKickModalOpen.value = true
 }
 
-const closeKickModal = () => {
-  if (kickLoading.value) {
+const closeKickModal = (force = false) => {
+  if (kickLoading.value && !force) {
     return
   }
   isKickModalOpen.value = false
@@ -494,7 +494,7 @@ const confirmKickMember = async () => {
     }
 
     notification.value = { type: 'success', message: 'Member removed.' }
-    closeKickModal()
+    closeKickModal(true)
     await fetchTeams()
   } catch {
     kickError.value = 'Server connection error.'
@@ -509,8 +509,8 @@ const openDeleteModal = (team) => {
   isDeleteModalOpen.value = true
 }
 
-const closeDeleteModal = () => {
-  if (deleteTeamLoading.value) {
+const closeDeleteModal = (force = false) => {
+  if (deleteTeamLoading.value && !force) {
     return
   }
   isDeleteModalOpen.value = false
@@ -543,7 +543,7 @@ const confirmDeleteTeam = async () => {
     }
 
     notification.value = { type: 'success', message: 'Team deleted.' }
-    closeDeleteModal()
+    closeDeleteModal(true)
     await fetchTeams()
   } catch {
     deleteError.value = 'Server connection error.'
