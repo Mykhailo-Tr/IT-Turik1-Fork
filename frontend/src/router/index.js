@@ -6,6 +6,7 @@ import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Profile from '../views/Profile.vue'
 import Register from '../views/Register.vue'
+import Teams from '../views/Teams.vue'
 
 const routes = [
   {
@@ -26,6 +27,11 @@ const routes = [
   {
     path: '/profile',
     component: Profile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/teams',
+    component: Teams,
     meta: { requiresAuth: true },
   },
   {

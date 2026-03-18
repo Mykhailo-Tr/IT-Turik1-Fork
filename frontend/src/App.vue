@@ -16,6 +16,7 @@
           </template>
 
           <template v-else>
+            <router-link to="/teams" class="nav-item">Teams</router-link>
             <router-link to="/profile" class="nav-item">Profile</router-link>
             <button @click="logout" class="nav-item nav-danger">Logout</button>
           </template>

@@ -1,44 +1,47 @@
-# accounts/models.py
+﻿from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-class Team(models.Model):
-    """
-    Модель команди.
-    Чому окрема модель: Дозволяє масштабувати функціонал команд (додавати логотипи, опис) у майбутньому.
-    """
-    name = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.name
 
 class User(AbstractUser):
-    """
-    Кастомна модель користувача.
-    Чому наслідуємо AbstractUser: Це зберігає стандартний функціонал Django (хешування паролів, 
-    перевірки), але дозволяє додати власні поля без створення складних профілів "один-до-одного".
-    """
-    # Формальні ролі. Поки не впливають на логіку, але готові до розширення прав доступу.
     ROLE_CHOICES = (
         ('admin', 'Admin'),
         ('team', 'Team Member'),
         ('jury', 'Jury'),
         ('organizer', 'Organizer'),
     )
-    
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='team')
     needs_onboarding = models.BooleanField(default=False)
     full_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     city = models.CharField(max_length=100, blank=True)
-    
-    # Зв'язок: Багато користувачів до однієї команди.
-    # on_delete=models.SET_NULL: якщо команду видалять, користувачі залишаться, але без команди.
-    team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name='members')
-    
-    # Поля created_at не потрібно додавати вручну, AbstractUser вже має date_joined.
-    # Email та username вже є в AbstractUser, але робимо email унікальним обов'язково:
     email = models.EmailField(unique=True)
 
     def __str__(self):
         return self.username
+
+
+class Team(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    captain = models.ForeignKey('User', on_delete=models.PROTECT, related_name='captained_teams')
+    organization = models.CharField(max_length=255, blank=True)
+    contact = models.CharField(max_length=100, blank=True)
+    members = models.ManyToManyField('User', through='TeamMember', related_name='teams')
+
+    def __str__(self):
+        return self.name
+
+
+class TeamMember(models.Model):
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='team_memberships')
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, related_name='team_members')
+
+    class Meta:
+        unique_together = (('user', 'team'),)
+        indexes = [
+            models.Index(fields=['user', 'team'], name='team_members_index_0'),
+        ]
+
+    def __str__(self):
+        return f'{self.user_id}:{self.team_id}'

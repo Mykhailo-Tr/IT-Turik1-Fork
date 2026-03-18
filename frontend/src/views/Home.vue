@@ -23,7 +23,7 @@
         <p><strong>Username:</strong> {{ userProfile.username }}</p>
         <p><strong>Email:</strong> {{ userProfile.email }}</p>
         <p><strong>Role:</strong> {{ userProfile.role }}</p>
-        <p v-if="userProfile.team"><strong>Team:</strong> {{ userProfile.team }}</p>
+        <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
       </article>
 
       <article class="card info-card accent">
@@ -50,6 +50,7 @@ const router = useRouter()
 
 const displayName = computed(() => userProfile.value?.full_name || userProfile.value?.username || 'User')
 const profileReady = computed(() => Boolean(userProfile.value?.full_name && userProfile.value?.city))
+const teamNames = computed(() => (userProfile.value?.teams || []).map((team) => team.name).join(', '))
 
 onMounted(async () => {
   const token = localStorage.getItem('access')
