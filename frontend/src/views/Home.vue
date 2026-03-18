@@ -1,150 +1,231 @@
-<template>
-  <div class="home-container">
-    <header class="navbar">
-      <h2>Платформа Турнірів</h2>
-      <button @click="handleLogout" class="logout-btn">Вийти</button>
-    </header>
-
-    <main class="content">
-      <h3>Вітаємо в системі!</h3>
-      
-      <div v-if="isLoading" class="loading">Завантаження профілю...</div>
-      
-      <div v-else-if="error" class="error">{{ error }}</div>
-      
-      <div v-else-if="userProfile" class="profile-card">
-        <p><strong>Ім'я користувача:</strong> {{ userProfile.username }}</p>
-        <p><strong>Email:</strong> {{ userProfile.email }}</p>
-        <p><strong>Роль:</strong> {{ userProfile.role }}</p>
-        <p v-if="userProfile.team"><strong>Команда:</strong> {{ userProfile.team }}</p>
+﻿<template>
+  <section class="page-shell home-page">
+    <article class="card hero">
+      <div>
+        <p class="eyebrow">Dashboard</p>
+        <h1 v-if="userProfile">Welcome back, {{ displayName }}</h1>
+        <h1 v-else>Welcome to TournamentOS</h1>
+        <p class="sub">Manage your profile and stay ready for upcoming competitions.</p>
       </div>
-    </main>
-  </div>
+
+      <div class="hero-actions">
+        <router-link to="/profile" class="ghost-btn">Open profile</router-link>
+        <button @click="handleLogout" class="danger-btn">Logout</button>
+      </div>
+    </article>
+
+    <div v-if="isLoading" class="state-box">Loading profile...</div>
+    <div v-else-if="error" class="state-box error">{{ error }}</div>
+
+    <div v-else-if="userProfile" class="grid">
+      <article class="card info-card">
+        <h2>Account details</h2>
+        <p><strong>Username:</strong> {{ userProfile.username }}</p>
+        <p><strong>Email:</strong> {{ userProfile.email }}</p>
+        <p><strong>Role:</strong> {{ userProfile.role }}</p>
+        <p v-if="userProfile.team"><strong>Team:</strong> {{ userProfile.team }}</p>
+      </article>
+
+      <article class="card info-card accent">
+        <h2>Quick status</h2>
+        <ul>
+          <li>Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span></li>
+          <li>City set: <span>{{ userProfile.city ? 'Yes' : 'No' }}</span></li>
+          <li>Phone set: <span>{{ userProfile.phone ? 'Yes' : 'No' }}</span></li>
+        </ul>
+      </article>
+    </div>
+  </section>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { API_BASE } from '@/config/api'
 import { useRouter } from 'vue-router'
 
-// Створюємо реактивні змінні для збереження стану компонента
 const userProfile = ref(null)
 const isLoading = ref(true)
 const error = ref('')
 const router = useRouter()
 
-// onMounted виконується одразу після того, як компонент з'являється на екрані
+const displayName = computed(() => userProfile.value?.full_name || userProfile.value?.username || 'User')
+const profileReady = computed(() => Boolean(userProfile.value?.full_name && userProfile.value?.city))
+
 onMounted(async () => {
-  // Дістаємо токен доступу зі сховища браузера
   const token = localStorage.getItem('access')
-  
+
   try {
-    // Робимо запит до захищеного ендпоінту, який ми створили в Django (UserProfileView)
-    const response = await fetch('http://localhost:8000/api/accounts/profile/', {
+    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
       method: 'GET',
       headers: {
-        // Чому так: DRF SimpleJWT очікує заголовок Authorization у форматі "Bearer <token>"
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     })
 
     if (response.ok) {
-      // Якщо запит успішний, розпаршуємо JSON і зберігаємо в реактивну змінну
       userProfile.value = await response.json()
-    } else {
-      // Якщо токен прострочений або недійсний (статус 401 Unauthorized)
-      if (response.status === 401) {
-         handleLogout() // Автоматично розлогінюємо користувача
-      } else {
-         error.value = 'Не вдалося завантажити дані профілю.'
+      if (userProfile.value.needs_onboarding) {
+        localStorage.setItem('needs_onboarding', '1')
+        router.push('/complete-profile')
+        return
       }
+      return
     }
-  } catch (err) {
-    error.value = 'Помилка з\'єднання з сервером. Перевір, чи запущений Django.'
+
+    if (response.status === 401) {
+      handleLogout()
+      return
+    }
+
+    error.value = 'Could not load profile data.'
+  } catch {
+    error.value = 'Server is unavailable. Please try again later.'
   } finally {
-    // Вимикаємо індикатор завантаження у будь-якому випадку
     isLoading.value = false
   }
 })
 
-// Логіка виходу з акаунту
 const handleLogout = () => {
-  // Чому так: Щоб вийти, достатньо просто видалити токени з localStorage браузера.
-  // Після цього Navigation Guard (у router/index.js) більше не пустить нас на захищені сторінки.
   localStorage.removeItem('access')
   localStorage.removeItem('refresh')
-  
-  // Перекидаємо користувача на сторінку логіну
+  localStorage.removeItem('needs_onboarding')
   router.push('/login')
 }
 </script>
 
 <style scoped>
-/* Чистий CSS для головної сторінки */
-.home-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.home-page {
+  display: grid;
+  gap: 1rem;
 }
 
-.navbar {
+.hero {
+  padding: 1.4rem;
   display: flex;
   justify-content: space-between;
+  gap: 1rem;
   align-items: center;
-  background-color: #343a40;
-  color: white;
-  padding: 1rem 2rem;
-}
-
-.navbar h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
-.logout-btn {
-  background-color: #dc3545;
+  background:
+    linear-gradient(130deg, rgba(15, 118, 110, 0.95), rgba(20, 184, 166, 0.88)),
+    linear-gradient(45deg, rgba(249, 115, 22, 0.2), transparent);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+}
+
+.eyebrow {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+h1 {
+  margin: 0.45rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 1.3vw + 1rem, 2rem);
+}
+
+.sub {
+  margin: 0.5rem 0 0;
+  opacity: 0.92;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.ghost-btn,
+.danger-btn {
+  border-radius: 999px;
+  padding: 0.52rem 0.95rem;
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  text-decoration: none;
   cursor: pointer;
-  font-weight: bold;
 }
 
-.logout-btn:hover {
-  background-color: #c82333;
+.danger-btn {
+  border-color: rgba(254, 202, 202, 0.75);
+  background: rgba(220, 38, 38, 0.28);
 }
 
-.content {
-  padding: 2rem;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
+.state-box {
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--line-soft);
+  background: var(--surface-strong);
 }
 
-.loading {
-  font-size: 1.2rem;
-  color: #666;
+.state-box.error {
+  border-color: rgba(220, 38, 38, 0.25);
+  color: #b91c1c;
+  background: rgba(254, 242, 242, 0.9);
 }
 
-.error {
-  color: #dc3545;
-  background-color: #f8d7da;
-  padding: 1rem;
-  border-radius: 4px;
-  border: 1px solid #f5c6cb;
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.profile-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  margin-top: 1rem;
+.info-card {
+  padding: 1.2rem;
 }
 
-.profile-card p {
+.info-card h2 {
+  margin-top: 0;
+  font-family: var(--font-display);
+}
+
+.info-card p {
   margin: 0.5rem 0;
-  font-size: 1.1rem;
+  color: var(--ink-700);
+}
+
+.accent {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(237, 254, 255, 0.95));
+}
+
+ul {
+  margin: 0.8rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--line-soft);
+  padding-bottom: 0.35rem;
+}
+
+li span {
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

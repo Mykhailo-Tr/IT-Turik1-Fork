@@ -1,42 +1,133 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated, AllowAny
+﻿import re
+
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer, UserUpdateSerializer
 
+
 class RegisterView(generics.CreateAPIView):
-    """Ендпоінт реєстрації (відкритий для всіх)"""
     queryset = User.objects.all()
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
+
 
 class ActivationView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request, uidb64, token):
         try:
-            # Декодуємо ID користувача
             uid = urlsafe_base64_decode(uidb64).decode()
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
 
-        # Перевіряємо токен. Важливо: токен одноразовий!
         if user is not None and default_token_generator.check_token(user, token):
             user.is_active = True
-            user.save() # Обов'язково зберігаємо зміни в БД
-            return Response({'status': 'success', 'message': 'Акаунт активовано!'}, status=status.HTTP_200_OK)
-        
-        return Response({'status': 'error', 'message': 'Посилання недійсне або застаріло.'}, status=status.HTTP_400_BAD_REQUEST)
+            user.save(update_fields=['is_active'])
+            return Response({'status': 'success', 'message': 'Account activated!'}, status=status.HTTP_200_OK)
+
+        return Response(
+            {'status': 'error', 'message': 'Activation link is invalid or expired.'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+class GoogleAuthView(APIView):
+    permission_classes = (AllowAny,)
+
+    @staticmethod
+    def _generate_unique_username(email):
+        base = re.sub(r'[^a-zA-Z0-9_]', '', email.split('@')[0]) or 'user'
+        base = base[:140]
+        username = base
+        index = 1
+
+        while User.objects.filter(username=username).exists():
+            suffix = str(index)
+            username = f"{base[:150 - len(suffix)]}{suffix}"
+            index += 1
+
+        return username
+
+    def post(self, request):
+        raw_id_token = request.data.get('id_token') or request.data.get('credential')
+        if not raw_id_token:
+            return Response({'detail': 'id_token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not settings.GOOGLE_OAUTH_CLIENT_ID:
+            return Response({'detail': 'Google auth is not configured.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        try:
+            payload = id_token.verify_oauth2_token(
+                raw_id_token,
+                google_requests.Request(),
+                settings.GOOGLE_OAUTH_CLIENT_ID,
+            )
+        except ValueError:
+            return Response({'detail': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        issuer = payload.get('iss')
+        if issuer not in {'accounts.google.com', 'https://accounts.google.com'}:
+            return Response({'detail': 'Invalid token issuer.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not payload.get('email_verified'):
+            return Response({'detail': 'Google email is not verified.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        email = payload.get('email')
+        if not email:
+            return Response({'detail': 'Google account email is missing.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        full_name = payload.get('name', '')
+
+        user = User.objects.filter(email=email).first()
+        if user is None:
+            username = self._generate_unique_username(email)
+            user = User.objects.create(
+                username=username,
+                email=email,
+                full_name=full_name,
+                is_active=True,
+                needs_onboarding=True,
+            )
+            user.set_unusable_password()
+            user.save()
+        else:
+            updated_fields = []
+            if not user.is_active:
+                user.is_active = True
+                updated_fields.append('is_active')
+            if full_name and not user.full_name:
+                user.full_name = full_name
+                updated_fields.append('full_name')
+            if updated_fields:
+                user.save(update_fields=updated_fields)
+
+        refresh = RefreshToken.for_user(user)
+        return Response(
+            {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': UserSerializer(user).data,
+                'onboarding_required': user.needs_onboarding,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    
+
     def get_serializer_class(self):
-        # Якщо запит GET - повертаємо всі дані, якщо PATCH - використовуємо серіалізатор оновлення
         if self.request.method in ['PATCH', 'PUT']:
             return UserUpdateSerializer
         return UserSerializer

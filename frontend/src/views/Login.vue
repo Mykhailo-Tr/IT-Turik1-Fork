@@ -1,60 +1,88 @@
-<template>
-  <div class="auth-container">
-    <form @submit.prevent="handleLogin" class="auth-form">
-      <h2>Вхід</h2>
-      
-      <div class="form-group">
-        <label>Ім'я користувача</label>
-        <input v-model="form.username" type="text" required />
-      </div>
+﻿<template>
+  <section class="page-shell centered">
+    <div class="card auth-card">
+      <p class="section-eyebrow">Account Access</p>
+      <h1 class="section-title">Sign in to TournamentOS</h1>
+      <p class="section-subtitle">Track your team, profile, and upcoming tournaments in one place.</p>
 
-      <div class="form-group">
-        <label>Пароль</label>
-        <input v-model="form.password" type="password" required />
-      </div>
+      <form @submit.prevent="handleLogin" class="auth-form">
+        <label class="form-label">
+          Username
+          <input v-model="form.username" class="input-control" type="text" autocomplete="username" required />
+        </label>
 
-      <button type="submit" :disabled="isLoading">Увійти</button>
-      <p v-if="error" class="error">{{ error }}</p>
-    </form>
-  </div>
+        <label class="form-label">
+          Password
+          <input v-model="form.password" class="input-control" type="password" autocomplete="current-password" required />
+        </label>
+
+        <button type="submit" class="btn-primary" :disabled="isLoading">
+          {{ isLoading ? 'Signing in...' : 'Sign in' }}
+        </button>
+      </form>
+
+      <p v-if="error" class="text-error feedback">{{ error }}</p>
+
+      <GoogleAuthButton
+        :api-base="API_BASE"
+        divider-label="or continue with"
+        @success="saveTokensAndRedirect"
+      />
+
+      <p class="auth-link">
+        No account yet?
+        <router-link to="/register">Create one</router-link>
+      </p>
+    </div>
+  </section>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import GoogleAuthButton from '@/components/auth/GoogleAuthButton.vue'
+import { API_BASE } from '@/config/api'
+
 const form = ref({ username: '', password: '' })
 const error = ref('')
 const isLoading = ref(false)
 const router = useRouter()
 
+const saveTokensAndRedirect = (data) => {
+  localStorage.setItem('access', data.access)
+  localStorage.setItem('refresh', data.refresh)
+  if (data.onboarding_required) {
+    localStorage.setItem('needs_onboarding', '1')
+    router.push('/complete-profile')
+    return
+  }
+
+  localStorage.removeItem('needs_onboarding')
+  router.push('/')
+}
+
 const handleLogin = async () => {
   isLoading.value = true
   error.value = ''
-  
+
   try {
-    const response = await fetch('http://localhost:8000/api/accounts/login/', {
+    const response = await fetch(`${API_BASE}/api/accounts/login/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form.value)
+      body: JSON.stringify(form.value),
     })
-    
+
     const data = await response.json()
-    
+
     if (response.ok) {
-      // Як працює збереження: 
-      // localStorage - це API браузера, що дозволяє зберігати дані у вигляді ключ-значення без терміну дії.
-      // Зберігаємо access для запитів і refresh для оновлення токена.
-      localStorage.setItem('access', data.access)
-      localStorage.setItem('refresh', data.refresh)
-      
-      // Перенаправляємо на захищену сторінку
-      router.push('/')
-    } else {
-      error.value = 'Невірний логін, пароль, або акаунт не активовано.'
+      saveTokensAndRedirect(data)
+      return
     }
-  } catch (err) {
-    error.value = 'Помилка мережі'
+
+    error.value = 'Invalid credentials or account not activated.'
+  } catch {
+    error.value = 'Network error. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -62,11 +90,24 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-/* Використовуємо ті ж базові стилі, що і в Register.vue */
-.auth-container { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f9; }
-.auth-form { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-.form-group { margin-bottom: 1rem; }
-input { width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-button { width: 100%; padding: 0.75rem; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-.error { color: #dc3545; margin-top: 1rem; text-align: center; }
+.auth-card {
+  width: min(100%, 520px);
+  padding: 2rem;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.feedback {
+  margin: 0.6rem 0 0;
+}
+
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 1.3rem;
+    border-radius: 18px;
+  }
+}
 </style>

@@ -1,20 +1,27 @@
-<template>
-  <div class="card shadow">
-    <h2>Підтвердження пошти</h2>
-    <p v-if="status === 'loading'">Зачекайте, ми перевіряємо ваш токен...</p>
-    <div v-if="status === 'success'" class="alert alert-success">
-      ✅ {{ message }}
-      <router-link to="/login">Перейти до входу</router-link>
-    </div>
-    <div v-if="status === 'error'" class="alert alert-error">
-      ❌ {{ message }}
-    </div>
-  </div>
+﻿<template>
+  <section class="page-shell centered">
+    <article class="card activate-card">
+      <p class="section-eyebrow">Email Verification</p>
+      <h1 class="section-title activate-title">Account activation</h1>
+
+      <p v-if="status === 'loading'" class="text-muted status">Checking your activation token...</p>
+
+      <div v-if="status === 'success'" class="notice success">
+        {{ message }}
+        <router-link to="/login">Go to sign in</router-link>
+      </div>
+
+      <div v-if="status === 'error'" class="notice error">
+        {{ message }}
+      </div>
+    </article>
+  </section>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { API_BASE } from '@/config/api'
 
 const route = useRoute()
 const status = ref('loading')
@@ -22,27 +29,49 @@ const message = ref('')
 
 onMounted(async () => {
   const { uid, token } = route.params
+
   try {
-    const res = await fetch(`http://localhost:8000/api/accounts/activate/${uid}/${token}/`)
+    const res = await fetch(`${API_BASE}/api/accounts/activate/${uid}/${token}/`)
     const data = await res.json()
-    
+
     if (res.ok) {
       status.value = 'success'
       message.value = data.message
-    } else {
-      status.value = 'error'
-      message.value = data.message || 'Помилка активації'
+      return
     }
-  } catch (e) {
+
     status.value = 'error'
-    message.value = 'Сервер недоступний'
+    message.value = data.message || 'Activation failed.'
+  } catch {
+    status.value = 'error'
+    message.value = 'Server is unavailable.'
   }
 })
 </script>
 
 <style scoped>
-.card { background: white; padding: 2rem; border-radius: 12px; text-align: center; }
-.alert { margin-top: 1rem; padding: 1rem; border-radius: 8px; }
-.alert-success { background: #dcfce7; color: #166534; }
-.alert-error { background: #fee2e2; color: #991b1b; }
+.activate-card {
+  width: min(100%, 520px);
+  padding: 2rem;
+  text-align: center;
+}
+
+.activate-title {
+  margin-top: 0.2rem;
+}
+
+.status {
+  margin-top: 1rem;
+}
+
+.notice {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.notice a {
+  color: var(--brand-700);
+  text-decoration: none;
+  font-weight: 700;
+}
 </style>

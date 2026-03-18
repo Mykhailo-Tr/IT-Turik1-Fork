@@ -1,52 +1,75 @@
-// src/router/index.js
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
+
+import Activate from '../views/Activate.vue'
+import CompleteProfile from '../views/CompleteProfile.vue'
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
+import Profile from '../views/Profile.vue'
 import Register from '../views/Register.vue'
-import Activate from '../views/Activate.vue' // Імпортуємо новий компонент
 
 const routes = [
-  { 
-    path: '/', 
-    component: Home, 
-    meta: { requiresAuth: true } 
+  {
+    path: '/',
+    component: Home,
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/login', 
-    component: Login, 
-    meta: { requiresGuest: true } 
+  {
+    path: '/login',
+    component: Login,
+    meta: { requiresGuest: true },
   },
-  { 
-    path: '/register', 
-    component: Register, 
-    meta: { requiresGuest: true } 
+  {
+    path: '/register',
+    component: Register,
+    meta: { requiresGuest: true },
   },
-  { 
-    // Одразу фіксуємо помилку: додаємо маршрут для активації
-    // :uid та :token — це змінні, які ми потім забираємо через route.params
-    path: '/activate/:uid/:token', 
+  {
+    path: '/profile',
+    component: Profile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/complete-profile',
+    component: CompleteProfile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/activate/:uid/:token',
     component: Activate,
-    meta: { requiresGuest: true }
-  }
+    meta: { requiresGuest: true },
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
-// Захист роутів (Navigation Guards)
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('access')
+  const needsOnboarding = localStorage.getItem('needs_onboarding') === '1'
+
+  if (isAuthenticated && needsOnboarding && to.path !== '/complete-profile') {
+    next('/complete-profile')
+    return
+  }
+
+  if (isAuthenticated && !needsOnboarding && to.path === '/complete-profile') {
+    next('/')
+    return
+  }
 
   if (to.meta.requiresAuth && !isAuthenticated) {
     next('/login')
-  } else if (to.meta.requiresGuest && isAuthenticated && to.path !== '/activate') {
-    // Якщо залогінений, не пускаємо на логін/реєстрацію
-    next('/')
-  } else {
-    next()
+    return
   }
+
+  if (to.meta.requiresGuest && isAuthenticated && !to.path.startsWith('/activate/')) {
+    next('/')
+    return
+  }
+
+  next()
 })
 
 export default router

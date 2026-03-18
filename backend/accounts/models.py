@@ -27,6 +27,7 @@ class User(AbstractUser):
     )
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='team')
+    needs_onboarding = models.BooleanField(default=False)
     full_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     city = models.CharField(max_length=100, blank=True)
