@@ -198,7 +198,7 @@ const handleCreateTeam = async () => {
 
     notification.value = { type: 'success', message: 'Team created successfully.' }
     resetCreateForm()
-    router.push(`/teams/edit?team=${data.id}`)
+    router.push(`/teams/${data.id}`)
   } catch {
     notification.value = { type: 'error', message: 'Server connection error.' }
   } finally {

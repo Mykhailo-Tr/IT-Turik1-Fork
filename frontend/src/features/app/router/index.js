@@ -8,6 +8,7 @@ import Login from '@/features/auth/views/LoginView.vue'
 import Profile from '@/features/profile/views/ProfileView.vue'
 import Register from '@/features/auth/views/RegisterView.vue'
 import TeamsCreate from '@/features/teams/views/TeamsCreateView.vue'
+import TeamsDetail from '@/features/teams/views/TeamsDetailView.vue'
 import TeamsEdit from '@/features/teams/views/TeamsEditView.vue'
 import Teams from '@/features/teams/views/TeamsView.vue'
 
@@ -48,8 +49,13 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/teams/edit',
+    path: '/teams/:id/edit',
     component: TeamsEdit,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/teams/:id',
+    component: TeamsDetail,
     meta: { requiresAuth: true },
   },
   {
@@ -97,4 +103,3 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
-

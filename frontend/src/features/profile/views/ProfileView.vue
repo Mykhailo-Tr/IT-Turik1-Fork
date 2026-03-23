@@ -46,7 +46,7 @@
             <router-link
               v-for="team in profile.teams || []"
               :key="team.id"
-              :to="`/teams?team=${team.id}`"
+              :to="`/teams/${team.id}`"
               class="team-link"
             >
               {{ team.name }}
@@ -452,4 +452,3 @@ onMounted(fetchProfile)
   }
 }
 </style>
-
