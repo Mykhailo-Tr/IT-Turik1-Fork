@@ -3,7 +3,6 @@
     <article class="card hero-card">
       <p class="section-eyebrow">Team workspace</p>
       <h1 class="section-title">Edit {{ team?.name || 'team' }}</h1>
-      <p class="section-subtitle">Update team information. Member management stays in the team detail page.</p>
       <div class="hero-actions">
         <router-link :to="team ? `/teams/${team.id}` : '/teams'" class="btn-soft action-link">Back to team</router-link>
       </div>
@@ -81,34 +80,89 @@
           </form>
         </article>
 
-        <aside class="card panel side-panel">
+        <article class="card panel members-panel">
           <header class="panel-head">
-            <h2>Workspace overview</h2>
+            <h2>Members management</h2>
+            <span class="text-muted">{{ team.members.length }} people</span>
           </header>
 
-          <div class="side-list">
-            <div class="side-item">
-              <span>Captain</span>
-              <strong>{{ captainName }}</strong>
-            </div>
-            <div class="side-item">
-              <span>Members</span>
-              <strong>{{ team.members.length }}</strong>
-            </div>
-            <div class="side-item">
-              <span>Telegram</span>
-              <strong>{{ team.contact_telegram ? `@${team.contact_telegram}` : '-' }}</strong>
-            </div>
-            <div class="side-item">
-              <span>Discord</span>
-              <strong>{{ team.contact_discord || '-' }}</strong>
-            </div>
+          <label class="form-label member-search">
+            Search members
+            <input
+              v-model="memberSearch"
+              class="input-control"
+              type="text"
+              placeholder="Search by username or email"
+            />
+          </label>
+
+          <div class="member-list">
+            <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
+              <div>
+                <p class="member-name">{{ member.username }}</p>
+                <p class="text-muted member-email">{{ member.email }}</p>
+              </div>
+
+              <div class="member-actions">
+                <span v-if="member.id === team.captain_id" class="captain-tag">Captain</span>
+                <button
+                  v-else-if="isCaptain"
+                  type="button"
+                  class="btn-danger btn-small"
+                  @click="openKickModal(member)"
+                >
+                  Remove
+                </button>
+              </div>
+            </article>
           </div>
 
-          <router-link :to="`/teams/${team.id}`" class="btn-soft side-link">Go to members management</router-link>
-        </aside>
+          <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
+
+          <div v-if="isCaptain" class="add-member-box">
+            <h3>Add member</h3>
+
+            <label class="form-label">
+              Select user
+              <select v-model="addMemberSelection" class="select-control">
+                <option value="">Select user</option>
+                <option v-for="user in availableUsers" :key="`add-${user.id}`" :value="String(user.id)">
+                  {{ user.username }} ({{ user.email }})
+                </option>
+              </select>
+            </label>
+
+            <p v-if="availableUsers.length === 0" class="text-muted">No available users to add.</p>
+
+            <button class="btn-primary" type="button" @click="addMember" :disabled="addMemberLoading">
+              {{ addMemberLoading ? 'Adding...' : 'Add member' }}
+            </button>
+          </div>
+        </article>
       </div>
     </template>
+
+    <div v-if="isKickModalOpen" class="modal-backdrop" @click.self="closeKickModal">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="kick-member-title">
+        <h3 id="kick-member-title">Remove member</h3>
+        <p class="modal-text">
+          Remove
+          <strong>{{ memberPendingKick?.username }}</strong>
+          from
+          <strong>{{ team?.name }}</strong>
+          ?
+        </p>
+
+        <p v-if="kickError" class="text-error modal-error">{{ kickError }}</p>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" type="button" :disabled="kickLoading" @click="closeKickModal">Cancel</button>
+          <button class="btn-danger" type="button" :disabled="kickLoading" @click="confirmKickMember">
+            {{ kickLoading ? 'Removing...' : 'Remove member' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -123,6 +177,8 @@ const router = useRouter()
 
 const currentUserId = ref(null)
 const team = ref(null)
+const users = ref([])
+
 const loading = ref(true)
 const loadError = ref('')
 const notification = ref(null)
@@ -136,13 +192,32 @@ const form = ref({
   contact_discord: '',
 })
 
+const memberSearch = ref('')
+const addMemberSelection = ref('')
+const addMemberLoading = ref(false)
+
+const isKickModalOpen = ref(false)
+const kickLoading = ref(false)
+const kickError = ref('')
+const memberPendingKick = ref(null)
+
 const teamId = computed(() => Number(route.params.id))
 const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
 
-const captainName = computed(() => {
-  if (!team.value) return '-'
-  const captain = team.value.members.find((member) => member.id === team.value.captain_id)
-  return captain?.username || `User #${team.value.captain_id}`
+const filteredMembers = computed(() => {
+  if (!team.value) return []
+  const search = memberSearch.value.trim().toLowerCase()
+  if (!search) return team.value.members
+
+  return team.value.members.filter((member) => {
+    return [member.username, member.email, member.full_name || ''].join(' ').toLowerCase().includes(search)
+  })
+})
+
+const availableUsers = computed(() => {
+  if (!isCaptain.value || !team.value) return []
+  const currentIds = new Set(team.value.members.map((member) => member.id))
+  return users.value.filter((user) => !currentIds.has(user.id))
 })
 
 const authHeaders = (json = false) => {
@@ -240,6 +315,25 @@ const fetchTeam = async () => {
   return true
 }
 
+const fetchUsers = async () => {
+  const response = await fetch(`${API_BASE}/api/accounts/users/`, {
+    headers: authHeaders(false),
+  })
+
+  if (response.status === 401) {
+    logoutToLogin()
+    return false
+  }
+
+  if (!response.ok) {
+    notification.value = { type: 'error', message: 'Unable to load users list.' }
+    return false
+  }
+
+  users.value = await response.json()
+  return true
+}
+
 const loadEditor = async () => {
   loading.value = true
   loadError.value = ''
@@ -250,7 +344,11 @@ const loadEditor = async () => {
     return
   }
 
-  await fetchTeam()
+  const teamOk = await fetchTeam()
+  if (teamOk && isCaptain.value) {
+    await fetchUsers()
+  }
+
   loading.value = false
 }
 
@@ -277,12 +375,95 @@ const saveTeam = async () => {
       return
     }
 
-    notification.value = { type: 'success', message: 'Team updated successfully.' }
-    await fetchTeam()
+    router.push(`/teams/${team.value.id}`)
   } catch {
     notification.value = { type: 'error', message: 'Server connection error.' }
   } finally {
     saveLoading.value = false
+  }
+}
+
+const addMember = async () => {
+  if (!team.value || !isCaptain.value) return
+  if (!addMemberSelection.value) {
+    notification.value = { type: 'error', message: 'Select a user to add.' }
+    return
+  }
+
+  addMemberLoading.value = true
+  notification.value = null
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/members/`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({ user_id: Number(addMemberSelection.value) }),
+    })
+
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+
+    if (!response.ok) {
+      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to add member.') }
+      return
+    }
+
+    addMemberSelection.value = ''
+    notification.value = { type: 'success', message: 'Member added.' }
+    await Promise.all([fetchTeam(), fetchUsers()])
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    addMemberLoading.value = false
+  }
+}
+
+const openKickModal = (member) => {
+  memberPendingKick.value = {
+    userId: member.id,
+    username: member.username,
+  }
+  kickError.value = ''
+  isKickModalOpen.value = true
+}
+
+const closeKickModal = (force = false) => {
+  if (kickLoading.value && !force) return
+  isKickModalOpen.value = false
+  memberPendingKick.value = null
+}
+
+const confirmKickMember = async () => {
+  if (!memberPendingKick.value || !team.value || !isCaptain.value) return
+
+  kickLoading.value = true
+  kickError.value = ''
+  notification.value = null
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/api/accounts/teams/${team.value.id}/members/${memberPendingKick.value.userId}/`,
+      { method: 'DELETE', headers: authHeaders(false) },
+    )
+
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+
+    if (!response.ok && response.status !== 204) {
+      kickError.value = await parseApiError(response, 'Unable to remove member.')
+      return
+    }
+
+    notification.value = { type: 'success', message: 'Member removed.' }
+    closeKickModal(true)
+    await Promise.all([fetchTeam(), fetchUsers()])
+  } catch {
+    kickError.value = 'Server connection error.'
+  } finally {
+    kickLoading.value = false
   }
 }
 
@@ -318,6 +499,7 @@ watch(
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+  margin-top: 0.8rem;
 }
 
 .action-link {
@@ -326,7 +508,7 @@ watch(
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 1.4fr 0.8fr;
+  grid-template-columns: 1fr;
   gap: 1rem;
   align-items: start;
 }
@@ -379,35 +561,71 @@ watch(
   align-items: center;
 }
 
-.side-panel {
-  display: grid;
-  gap: 0.8rem;
+.member-search {
+  margin-bottom: 0.75rem;
 }
 
-.side-list {
+.member-list {
   display: grid;
   gap: 0.55rem;
 }
 
-.side-item {
+.member-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.7rem;
   border: 1px solid var(--line-soft);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 0.7rem;
+  background: #fff;
+  padding: 0.65rem 0.75rem;
 }
 
-.side-item span {
-  display: block;
-  color: var(--ink-500);
-  font-size: 0.8rem;
+.member-name,
+.member-email {
+  margin: 0;
 }
 
-.side-item strong {
+.member-name {
+  font-weight: 700;
   color: var(--ink-900);
 }
 
-.side-link {
-  justify-self: start;
+.member-email {
+  font-size: 0.84rem;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.captain-tag {
+  border-radius: 999px;
+  border: 1px solid rgba(14, 116, 144, 0.35);
+  background: rgba(14, 116, 144, 0.14);
+  color: #0e7490;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+}
+
+.member-note {
+  margin-top: 0.8rem;
+}
+
+.add-member-box {
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 0.9rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.add-member-box h3 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .btn-soft {
@@ -420,10 +638,70 @@ watch(
   cursor: pointer;
 }
 
-@media (max-width: 1020px) {
-  .workspace-grid {
-    grid-template-columns: 1fr;
-  }
+.btn-danger {
+  border: 1px solid #dc2626;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-small {
+  padding: 0.28rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.btn-cancel {
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(100%, 500px);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-lg);
+  padding: 1.2rem;
+}
+
+.modal-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.modal-text {
+  margin: 0.7rem 0;
+  color: var(--ink-700);
+}
+
+.modal-error {
+  margin: 0.5rem 0 0;
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 
 @media (max-width: 760px) {
@@ -434,6 +712,11 @@ watch(
   .form-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .member-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

@@ -1,17 +1,53 @@
 <template>
   <section class="page-shell teams-detail-page">
     <article class="card hero-card">
-      <p class="section-eyebrow">Team workspace</p>
-      <h1 class="section-title">{{ team?.name || 'Team details' }}</h1>
-      <p class="section-subtitle">Manage team information and members in one place.</p>
+      <div class="hero-top">
+        <div>
+          <p class="section-eyebrow">Team workspace</p>
+          <h1 class="section-title">{{ team?.name || 'Team details' }}</h1>
+        </div>
+
+        <div class="hero-contacts">
+          <a
+            v-if="team?.contact_telegram"
+            class="contact-pill"
+            :href="telegramLink(team.contact_telegram)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" class="contact-icon" aria-hidden="true">
+              <path
+                d="M9.04 15.57 8.9 19.47c.45 0 .64-.19.87-.43l2.09-1.98 4.34 3.17c.8.44 1.36.21 1.57-.74l2.85-13.37h.01c.25-1.15-.42-1.6-1.2-1.31L2.64 11.2c-1.12.44-1.1 1.07-.2 1.35l4.8 1.5L18.4 6.9c.53-.35 1.02-.16.62.2L9.04 15.57z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>@{{ team.contact_telegram }}</span>
+          </a>
+
+          <span v-else class="contact-pill muted">No Telegram</span>
+
+          <a
+            v-if="team?.contact_discord"
+            class="contact-pill"
+            :href="discordLink(team.contact_discord)"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" class="contact-icon" aria-hidden="true">
+              <path
+                d="M20.32 4.37A19.8 19.8 0 0 0 15.3 3l-.27.54a18.7 18.7 0 0 1 4.82 1.48c-2.97-1.39-6.16-2.1-9.36-2.05-3.2-.05-6.39.66-9.36 2.05a18.7 18.7 0 0 1 4.82-1.48L5.68 3A19.8 19.8 0 0 0 .66 4.37C-2.53 9.1-3.39 13.7-2.97 18.22a19.9 19.9 0 0 0 6.11 3.08l1.31-1.8c-.72-.27-1.4-.6-2.04-.98.17.12.36.23.55.34 3.84 2.1 8 2.1 11.84 0 .19-.11.38-.22.55-.34-.64.38-1.32.71-2.04.98l1.31 1.8a19.9 19.9 0 0 0 6.11-3.08c.5-5.29-.86-9.86-3.4-13.85ZM8.02 15.45c-1.2 0-2.17-1.1-2.17-2.45 0-1.36.95-2.45 2.17-2.45 1.22 0 2.2 1.1 2.17 2.45 0 1.35-.95 2.45-2.17 2.45Zm7.96 0c-1.2 0-2.17-1.1-2.17-2.45 0-1.36.95-2.45 2.17-2.45 1.22 0 2.2 1.1 2.17 2.45 0 1.35-.95 2.45-2.17 2.45Z"
+                fill="currentColor"
+              />
+            </svg>
+            <span>{{ team.contact_discord }}</span>
+          </a>
+
+          <span v-else class="contact-pill muted">No Discord</span>
+        </div>
+      </div>
+
       <div class="hero-actions">
         <router-link to="/teams" class="btn-soft action-link">Back to teams</router-link>
-        <router-link v-if="team && isCaptain" :to="`/teams/${team.id}/edit`" class="btn-primary action-link">
-          Edit team
-        </router-link>
-        <button v-if="team && isCaptain" class="btn-danger" type="button" @click="openDeleteModal(team)">
-          Delete team
-        </button>
       </div>
     </article>
 
@@ -22,59 +58,35 @@
 
     <template v-else-if="team">
       <div class="workspace-grid">
-        <div class="left-column">
-          <article class="card panel info-panel">
-            <header class="panel-head">
-              <h2>Team profile</h2>
-              <span v-if="isCaptain" class="status-badge">You are captain</span>
-            </header>
+        <article class="card panel info-panel">
+          <header class="panel-head">
+            <h2>Team profile</h2>
+            <span v-if="isCaptain" class="status-badge">You are captain</span>
+          </header>
 
-            <div class="info-grid">
-              <div class="info-item">
-                <span>Name</span>
-                <strong>{{ team.name }}</strong>
-              </div>
-              <div class="info-item">
-                <span>Email</span>
-                <strong>{{ team.email }}</strong>
-              </div>
-              <div class="info-item">
-                <span>Organization</span>
-                <strong>{{ team.organization || '-' }}</strong>
-              </div>
-              <div class="info-item">
-                <span>Captain</span>
-                <strong>{{ captainName }}</strong>
-              </div>
-              <div class="info-item">
-                <span>Members count</span>
-                <strong>{{ team.members.length }}</strong>
-              </div>
+          <div class="info-grid">
+            <div class="info-item">
+              <span>Name</span>
+              <strong>{{ team.name }}</strong>
             </div>
-          </article>
-
-          <article class="card panel contacts-panel">
-            <header class="panel-head">
-              <h2>Contacts</h2>
-            </header>
-            <div class="contacts-list">
-              <p>
-                <strong>Telegram:</strong>
-                <a v-if="team.contact_telegram" :href="telegramLink(team.contact_telegram)" target="_blank" rel="noopener noreferrer">
-                  @{{ team.contact_telegram }}
-                </a>
-                <span v-else>-</span>
-              </p>
-              <p>
-                <strong>Discord:</strong>
-                <a v-if="team.contact_discord" :href="discordLink(team.contact_discord)" target="_blank" rel="noopener noreferrer">
-                  {{ team.contact_discord }}
-                </a>
-                <span v-else>-</span>
-              </p>
+            <div class="info-item">
+              <span>Email</span>
+              <strong>{{ team.email }}</strong>
             </div>
-          </article>
-        </div>
+            <div class="info-item">
+              <span>Organization</span>
+              <strong>{{ team.organization || '-' }}</strong>
+            </div>
+            <div class="info-item">
+              <span>Captain</span>
+              <strong>{{ captainName }}</strong>
+            </div>
+            <div class="info-item">
+              <span>Members count</span>
+              <strong>{{ team.members.length }}</strong>
+            </div>
+          </div>
+        </article>
 
         <article class="card panel members-panel">
           <header class="panel-head">
@@ -82,98 +94,76 @@
             <span class="text-muted">{{ team.members.length }} people</span>
           </header>
 
+          <label class="form-label member-search">
+            Search members
+            <input
+              v-model="memberSearch"
+              class="input-control"
+              type="text"
+              placeholder="Search by username or email"
+            />
+          </label>
+
           <div class="member-list">
-            <article
-              v-for="member in team.members"
-              :key="`team-${team.id}-member-${member.id}`"
-              class="member-row"
-            >
+            <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
               <div>
                 <p class="member-name">{{ member.username }}</p>
                 <p class="text-muted member-email">{{ member.email }}</p>
               </div>
-
-              <div class="member-actions">
-                <span v-if="member.id === team.captain_id" class="captain-tag">Captain</span>
-                <button
-                  v-else-if="isCaptain"
-                  type="button"
-                  class="btn-danger btn-small"
-                  @click="openKickModal(team, member)"
-                >
-                  Remove
-                </button>
-              </div>
+              <span v-if="member.id === team.captain_id" class="captain-tag">Captain</span>
             </article>
           </div>
 
-          <div v-if="isCaptain" class="manage-box">
-            <h3>Manage members</h3>
-            <label class="form-label">
-              Search users
-              <input
-                v-model="memberSearch"
-                class="input-control"
-                type="text"
-                placeholder="Search by username, email, full name"
-              />
-            </label>
-
-            <label class="form-label">
-              Add member
-              <select v-model="addMemberSelection" class="select-control">
-                <option value="">Select user</option>
-                <option v-for="user in availableUsers" :key="`add-${user.id}`" :value="String(user.id)">
-                  {{ user.username }} ({{ user.email }})
-                </option>
-              </select>
-            </label>
-
-            <button class="btn-primary" type="button" @click="addMember" :disabled="addMemberLoading">
-              {{ addMemberLoading ? 'Adding...' : 'Add member' }}
-            </button>
-          </div>
-          <p v-else class="text-muted member-note">Only team captain can manage members.</p>
+          <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
         </article>
       </div>
+
+      <article v-if="isCaptain" class="card manage-zone">
+        <div class="manage-row">
+          <div>
+            <h3>Edit team</h3>
+            <p class="text-muted">Update team profile and manage members in edit workspace.</p>
+          </div>
+          <router-link :to="`/teams/${team.id}/edit`" class="btn-soft action-link action-btn">Edit team</router-link>
+        </div>
+
+        <div class="manage-row danger">
+          <div>
+            <h3>Delete team</h3>
+            <p class="text-muted">This action permanently deletes the team.</p>
+          </div>
+          <button class="btn-danger" type="button" :disabled="deleteTeamLoading" @click="openDeleteModal">
+            Delete team
+          </button>
+        </div>
+      </article>
     </template>
 
     <div v-if="isDeleteModalOpen" class="modal-backdrop" @click.self="closeDeleteModal">
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-team-title">
         <h3 id="delete-team-title">Delete team</h3>
         <p class="modal-text">
-          Are you sure you want to permanently delete
-          <strong>{{ teamPendingDelete?.name }}</strong>?
+          This action cannot be undone. Enter
+          <code>{{ expectedDeleteText }}</code>
+          to confirm.
         </p>
+
+        <input
+          v-model="deleteConfirmInput"
+          class="input-control"
+          type="text"
+          :placeholder="expectedDeleteText"
+          :disabled="deleteTeamLoading"
+        />
 
         <p v-if="deleteError" class="text-error modal-error">{{ deleteError }}</p>
 
         <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="deleteTeamLoading" @click="closeDeleteModal">Cancel</button>
-          <button class="btn-danger" type="button" :disabled="deleteTeamLoading" @click="confirmDeleteTeam">
-            {{ deleteTeamLoading ? 'Deleting...' : 'Delete permanently' }}
+          <button class="btn-cancel" type="button" :disabled="deleteTeamLoading" @click="closeDeleteModal">
+            Cancel
           </button>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="isKickModalOpen" class="modal-backdrop" @click.self="closeKickModal">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="kick-member-title">
-        <h3 id="kick-member-title">Remove member</h3>
-        <p class="modal-text">
-          Remove
-          <strong>{{ memberPendingKick?.username }}</strong>
-          from
-          <strong>{{ memberPendingKick?.teamName }}</strong>
-          ?
-        </p>
-
-        <p v-if="kickError" class="text-error modal-error">{{ kickError }}</p>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="kickLoading" @click="closeKickModal">Cancel</button>
-          <button class="btn-danger" type="button" :disabled="kickLoading" @click="confirmKickMember">
-            {{ kickLoading ? 'Removing...' : 'Remove member' }}
+          <button class="btn-danger" type="button" :disabled="!canDeleteTeam" @click="confirmDeleteTeam">
+            {{ deleteTeamLoading ? 'Deleting...' : 'Delete permanently' }}
           </button>
         </div>
       </div>
@@ -191,7 +181,6 @@ const route = useRoute()
 const router = useRouter()
 
 const team = ref(null)
-const users = ref([])
 const currentUserId = ref(null)
 
 const loading = ref(true)
@@ -199,18 +188,10 @@ const loadError = ref('')
 const notification = ref(null)
 
 const memberSearch = ref('')
-const addMemberSelection = ref('')
-const addMemberLoading = ref(false)
-
 const isDeleteModalOpen = ref(false)
+const deleteConfirmInput = ref('')
 const deleteTeamLoading = ref(false)
 const deleteError = ref('')
-const teamPendingDelete = ref(null)
-
-const isKickModalOpen = ref(false)
-const kickLoading = ref(false)
-const kickError = ref('')
-const memberPendingKick = ref(null)
 
 const teamId = computed(() => Number(route.params.id))
 const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
@@ -221,17 +202,19 @@ const captainName = computed(() => {
   return captain?.username || `User #${team.value.captain_id}`
 })
 
-const availableUsers = computed(() => {
-  if (!isCaptain.value || !team.value) return []
-
-  const currentIds = new Set(team.value.members.map((member) => member.id))
+const filteredMembers = computed(() => {
+  if (!team.value) return []
   const search = memberSearch.value.trim().toLowerCase()
+  if (!search) return team.value.members
 
-  return users.value.filter((user) => {
-    if (currentIds.has(user.id)) return false
-    if (!search) return true
-    return [user.username, user.email, user.full_name || ''].join(' ').toLowerCase().includes(search)
+  return team.value.members.filter((member) => {
+    return [member.username, member.email, member.full_name || ''].join(' ').toLowerCase().includes(search)
   })
+})
+
+const expectedDeleteText = computed(() => team.value?.name || '')
+const canDeleteTeam = computed(() => {
+  return Boolean(expectedDeleteText.value) && deleteConfirmInput.value === expectedDeleteText.value && !deleteTeamLoading.value
 })
 
 const authHeaders = (json = false) => {
@@ -320,28 +303,12 @@ const fetchTeam = async () => {
   return true
 }
 
-const fetchUsers = async () => {
-  const response = await fetch(`${API_BASE}/api/accounts/users/`, {
-    headers: authHeaders(false),
-  })
-
-  if (response.status === 401) {
-    logoutToLogin()
-    return false
-  }
-
-  if (!response.ok) {
-    notification.value = { type: 'error', message: 'Unable to load users list.' }
-    return false
-  }
-
-  users.value = await response.json()
-  return true
-}
-
 const loadWorkspace = async () => {
   loading.value = true
   loadError.value = ''
+  isDeleteModalOpen.value = false
+  deleteConfirmInput.value = ''
+  deleteError.value = ''
 
   const profileOk = await fetchProfile()
   if (!profileOk) {
@@ -349,122 +316,33 @@ const loadWorkspace = async () => {
     return
   }
 
-  const teamOk = await fetchTeam()
-  if (teamOk && isCaptain.value) {
-    await fetchUsers()
-  }
-
+  await fetchTeam()
   loading.value = false
 }
 
-const addMember = async () => {
-  if (!team.value || !isCaptain.value) return
-  if (!addMemberSelection.value) {
-    notification.value = { type: 'error', message: 'Select a user to add.' }
-    return
-  }
-
-  addMemberLoading.value = true
-  notification.value = null
-  try {
-    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/members/`, {
-      method: 'POST',
-      headers: authHeaders(true),
-      body: JSON.stringify({ user_id: Number(addMemberSelection.value) }),
-    })
-
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (!response.ok) {
-      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to add member.') }
-      return
-    }
-
-    addMemberSelection.value = ''
-    memberSearch.value = ''
-    notification.value = { type: 'success', message: 'Member added.' }
-    await Promise.all([fetchTeam(), fetchUsers()])
-  } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
-  } finally {
-    addMemberLoading.value = false
-  }
-}
-
-const openKickModal = (sourceTeam, member) => {
-  memberPendingKick.value = {
-    teamId: sourceTeam.id,
-    teamName: sourceTeam.name,
-    userId: member.id,
-    username: member.username,
-  }
-  kickError.value = ''
-  isKickModalOpen.value = true
-}
-
-const closeKickModal = (force = false) => {
-  if (kickLoading.value && !force) return
-  isKickModalOpen.value = false
-  memberPendingKick.value = null
-}
-
-const confirmKickMember = async () => {
-  if (!memberPendingKick.value || !team.value) return
-
-  kickLoading.value = true
-  kickError.value = ''
-  notification.value = null
-
-  try {
-    const response = await fetch(
-      `${API_BASE}/api/accounts/teams/${memberPendingKick.value.teamId}/members/${memberPendingKick.value.userId}/`,
-      { method: 'DELETE', headers: authHeaders(false) },
-    )
-
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (!response.ok && response.status !== 204) {
-      kickError.value = await parseApiError(response, 'Unable to remove member.')
-      return
-    }
-
-    notification.value = { type: 'success', message: 'Member removed.' }
-    closeKickModal(true)
-    await Promise.all([fetchTeam(), fetchUsers()])
-  } catch {
-    kickError.value = 'Server connection error.'
-  } finally {
-    kickLoading.value = false
-  }
-}
-
-const openDeleteModal = (sourceTeam) => {
-  teamPendingDelete.value = sourceTeam
+const openDeleteModal = () => {
+  deleteConfirmInput.value = ''
   deleteError.value = ''
   isDeleteModalOpen.value = true
 }
 
-const closeDeleteModal = (force = false) => {
-  if (deleteTeamLoading.value && !force) return
+const closeDeleteModal = () => {
+  if (deleteTeamLoading.value) return
   isDeleteModalOpen.value = false
-  teamPendingDelete.value = null
 }
 
 const confirmDeleteTeam = async () => {
-  if (!teamPendingDelete.value) return
+  if (!team.value) return
+  if (!canDeleteTeam.value) {
+    deleteError.value = `Please enter "${expectedDeleteText.value}" exactly.`
+    return
+  }
 
   deleteTeamLoading.value = true
   deleteError.value = ''
   notification.value = null
-
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/teams/${teamPendingDelete.value.id}/`, {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/`, {
       method: 'DELETE',
       headers: authHeaders(false),
     })
@@ -479,7 +357,6 @@ const confirmDeleteTeam = async () => {
       return
     }
 
-    closeDeleteModal(true)
     router.push('/teams')
   } catch {
     deleteError.value = 'Server connection error.'
@@ -505,7 +382,8 @@ watch(
 
 .hero-card,
 .state-card,
-.panel {
+.panel,
+.manage-zone {
   padding: 1.2rem;
 }
 
@@ -516,10 +394,48 @@ watch(
   border: 1px solid rgba(13, 148, 136, 0.22);
 }
 
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.hero-contacts {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: end;
+}
+
+.contact-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.84rem;
+  text-decoration: none;
+  color: var(--ink-800);
+  max-width: 100%;
+}
+
+.contact-pill.muted {
+  color: var(--ink-500);
+}
+
+.contact-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--brand-700);
+}
+
 .hero-actions {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
+  margin-top: 0.8rem;
 }
 
 .action-link {
@@ -528,14 +444,9 @@ watch(
 
 .workspace-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 0.95fr 1.25fr;
   gap: 1rem;
   align-items: start;
-}
-
-.left-column {
-  display: grid;
-  gap: 1rem;
 }
 
 .panel {
@@ -568,7 +479,6 @@ watch(
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
 }
 
@@ -589,13 +499,8 @@ watch(
   color: var(--ink-900);
 }
 
-.contacts-list {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.contacts-list p {
-  margin: 0;
+.member-search {
+  margin-bottom: 0.75rem;
 }
 
 .member-list {
@@ -628,12 +533,6 @@ watch(
   font-size: 0.84rem;
 }
 
-.member-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
 .captain-tag {
   border-radius: 999px;
   border: 1px solid rgba(14, 116, 144, 0.35);
@@ -644,21 +543,85 @@ watch(
   padding: 0.2rem 0.5rem;
 }
 
-.manage-box {
-  margin-top: 0.9rem;
-  border-top: 1px solid var(--line-soft);
-  padding-top: 0.9rem;
-  display: grid;
-  gap: 0.65rem;
+.member-note {
+  margin-top: 0.8rem;
 }
 
-.manage-box h3 {
+.manage-zone {
+  border: 1px solid var(--line-soft);
+  overflow: hidden;
+}
+
+.manage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 0;
+}
+
+.manage-row + .manage-row {
+  border-top: 1px solid var(--line-soft);
+}
+
+.manage-row h3 {
   margin: 0;
   font-size: 1rem;
 }
 
-.member-note {
-  margin-top: 0.9rem;
+.manage-row p {
+  margin: 0.3rem 0 0;
+}
+
+.manage-row.danger h3 {
+  color: #991b1b;
+}
+
+.action-btn {
+  font-weight: 700;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(100%, 520px);
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow-lg);
+  padding: 1.2rem;
+}
+
+.modal-card h3 {
+  margin: 0;
+  font-family: var(--font-display);
+}
+
+.modal-text {
+  margin: 0.7rem 0;
+  color: var(--ink-700);
+}
+
+.modal-text code {
+  background: #f1f5f9;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  padding: 0.1rem 0.35rem;
+}
+
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 
 .btn-soft {
@@ -682,73 +645,42 @@ watch(
   cursor: pointer;
 }
 
-.btn-small {
-  padding: 0.28rem 0.55rem;
-  font-size: 0.8rem;
+.btn-danger:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .btn-cancel {
   border: 1px solid var(--line-strong);
-  background: #fff;
   border-radius: 10px;
   padding: 0.45rem 0.7rem;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  display: grid;
-  place-items: center;
-  z-index: 50;
-  padding: 1rem;
-}
-
-.modal-card {
-  width: min(100%, 500px);
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-lg);
-  padding: 1.2rem;
-}
-
-.modal-card h3 {
-  margin: 0;
-  font-family: var(--font-display);
-}
-
-.modal-text {
-  margin: 0.7rem 0;
-  color: var(--ink-700);
 }
 
 .modal-error {
   margin: 0.5rem 0 0;
 }
 
-.modal-actions {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
-}
-
 @media (max-width: 1020px) {
+  .hero-top {
+    flex-direction: column;
+  }
+
+  .hero-contacts {
+    justify-items: start;
+  }
+
   .workspace-grid {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 640px) {
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .member-row {
+  .member-row,
+  .manage-row {
     flex-direction: column;
     align-items: flex-start;
   }

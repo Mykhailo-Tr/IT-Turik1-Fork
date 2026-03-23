@@ -24,14 +24,14 @@
       </div>
     </nav>
 
-    <main :class="['page-content', { 'wide-workspace': isWideWorkspace }]">
+    <main class="page-content">
       <router-view @auth-change="checkAuth" />
     </main>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const isLoggedIn = ref(false)
@@ -72,13 +72,6 @@ const navItemClass = (section, cta = false) => ({
   'nav-item': true,
   'nav-cta': cta,
   active: isSectionActive(section),
-})
-
-const isWideWorkspace = computed(() => {
-  const path = route.path
-  const isTeamDetail = /^\/teams\/\d+$/.test(path)
-  const isTeamEdit = /^\/teams\/\d+\/edit$/.test(path)
-  return isTeamDetail || isTeamEdit
 })
 
 watch(
@@ -213,11 +206,6 @@ const logout = () => {
 .page-content {
   width: min(1100px, 100% - 2rem);
   margin: 1.6rem auto 2.4rem;
-}
-
-.page-content.wide-workspace {
-  width: calc(100% - 2rem);
-  max-width: none;
 }
 
 @media (max-width: 680px) {
