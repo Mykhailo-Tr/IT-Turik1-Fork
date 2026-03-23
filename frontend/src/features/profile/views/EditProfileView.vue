@@ -57,8 +57,8 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import PhoneField from '@/components/forms/PhoneField.vue'
-import { API_BASE } from '@/config/api'
+import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
+import { API_BASE } from '@/features/shared/config/api'
 
 const form = ref({ username: '', full_name: '', phone: '', city: '' })
 const loading = ref(false)
@@ -250,3 +250,4 @@ onMounted(fetchProfile)
   }
 }
 </style>
+

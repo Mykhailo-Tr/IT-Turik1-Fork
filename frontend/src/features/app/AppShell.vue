@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div id="app" class="app-shell">
     <div class="bg-orb orb-a"></div>
     <div class="bg-orb orb-b"></div>
@@ -179,3 +179,4 @@ const logout = () => {
   }
 }
 </style>
+

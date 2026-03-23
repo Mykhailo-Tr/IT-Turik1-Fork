@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="page-shell home-page">
     <article class="card hero">
       <div>
@@ -40,7 +40,7 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { API_BASE } from '@/config/api'
+import { API_BASE } from '@/features/shared/config/api'
 import { useRouter } from 'vue-router'
 
 const userProfile = ref(null)
@@ -230,3 +230,4 @@ li span {
   }
 }
 </style>
+

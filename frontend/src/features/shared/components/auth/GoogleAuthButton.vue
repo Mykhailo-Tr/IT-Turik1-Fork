@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="google-auth">
     <div v-if="dividerLabel" class="divider-line"><span>{{ dividerLabel }}</span></div>
     <div ref="googleButtonRef" class="google-slot"></div>
@@ -9,9 +9,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 
-import { renderGoogleButton } from '@/utils/googleAuth'
+import { renderGoogleButton } from '@/features/shared/lib/googleAuth'
 
-import { API_BASE } from '@/config/api'
+import { API_BASE } from '@/features/shared/config/api'
 
 const props = defineProps({
   apiBase: {
@@ -81,3 +81,4 @@ onMounted(async () => {
   margin-top: 0.6rem;
 }
 </style>
+

@@ -1,13 +1,13 @@
-﻿import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 
-import Activate from '../views/Activate.vue'
-import CompleteProfile from '../views/CompleteProfile.vue'
-import EditProfile from '../views/EditProfile.vue'
-import Home from '../views/Home.vue'
-import Login from '../views/Login.vue'
-import Profile from '../views/Profile.vue'
-import Register from '../views/Register.vue'
-import Teams from '../views/Teams.vue'
+import Activate from '@/features/auth/views/ActivateView.vue'
+import CompleteProfile from '@/features/profile/views/CompleteProfileView.vue'
+import EditProfile from '@/features/profile/views/EditProfileView.vue'
+import Home from '@/features/home/views/HomeView.vue'
+import Login from '@/features/auth/views/LoginView.vue'
+import Profile from '@/features/profile/views/ProfileView.vue'
+import Register from '@/features/auth/views/RegisterView.vue'
+import Teams from '@/features/teams/views/TeamsView.vue'
 
 const routes = [
   {
@@ -85,3 +85,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+

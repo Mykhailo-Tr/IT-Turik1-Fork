@@ -94,7 +94,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_BASE } from '@/config/api'
+import { API_BASE } from '@/features/shared/config/api'
 
 const profile = ref({})
 const notification = ref(null)
@@ -418,3 +418,4 @@ onMounted(fetchProfile)
   }
 }
 </style>
+

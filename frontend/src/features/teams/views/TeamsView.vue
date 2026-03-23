@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="page-shell teams-page">
     <article class="card create-card">
       <p class="section-eyebrow">Teams</p>
@@ -183,7 +183,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { API_BASE } from '@/config/api'
+import { API_BASE } from '@/features/shared/config/api'
 
 const router = useRouter()
 
@@ -774,3 +774,4 @@ onMounted(async () => {
   cursor: pointer;
 }
 </style>
+

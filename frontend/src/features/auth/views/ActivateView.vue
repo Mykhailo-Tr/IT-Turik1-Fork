@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="page-shell centered">
     <article class="card activate-card">
       <p class="section-eyebrow">Email Verification</p>
@@ -21,7 +21,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { API_BASE } from '@/config/api'
+import { API_BASE } from '@/features/shared/config/api'
 
 const route = useRoute()
 const status = ref('loading')
@@ -75,3 +75,4 @@ onMounted(async () => {
   font-weight: 700;
 }
 </style>
+

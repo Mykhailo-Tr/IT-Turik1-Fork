@@ -55,8 +55,8 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import PhoneField from '@/components/forms/PhoneField.vue'
-import { API_BASE } from '@/config/api'
+import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
+import { API_BASE } from '@/features/shared/config/api'
 
 const router = useRouter()
 const loading = ref(false)
@@ -202,3 +202,4 @@ onMounted(async () => {
   }
 }
 </style>
+

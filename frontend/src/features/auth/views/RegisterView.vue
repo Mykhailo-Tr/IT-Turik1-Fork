@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="page-shell centered">
     <div class="card register-card">
       <p class="section-eyebrow">Join the Platform</p>
@@ -79,9 +79,9 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import GoogleAuthButton from '@/components/auth/GoogleAuthButton.vue'
-import PhoneField from '@/components/forms/PhoneField.vue'
-import { API_BASE } from '@/config/api'
+import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
+import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
+import { API_BASE } from '@/features/shared/config/api'
 
 const router = useRouter()
 
@@ -173,3 +173,4 @@ const handleRegister = async () => {
   }
 }
 </style>
+
