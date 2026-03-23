@@ -109,9 +109,10 @@
                   v-else-if="isCaptain"
                   type="button"
                   class="btn-danger btn-small"
-                  @click="openKickModal(member)"
+                  :disabled="kickLoadingByUser[member.id]"
+                  @click="removeMember(member)"
                 >
-                  Remove
+                  {{ kickLoadingByUser[member.id] ? 'Removing...' : 'Remove' }}
                 </button>
               </div>
             </article>
@@ -120,7 +121,7 @@
           <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
 
           <div v-if="isCaptain" class="add-member-box">
-            <h3>Add member</h3>
+            <h3>Invite user</h3>
 
             <label class="form-label">
               Select user
@@ -135,34 +136,26 @@
             <p v-if="availableUsers.length === 0" class="text-muted">No available users to add.</p>
 
             <button class="btn-primary" type="button" @click="addMember" :disabled="addMemberLoading">
-              {{ addMemberLoading ? 'Adding...' : 'Add member' }}
+              {{ addMemberLoading ? 'Sending...' : 'Send invitation' }}
             </button>
+          </div>
+
+          <div v-if="isCaptain" class="add-member-box">
+            <h3>Invitations status</h3>
+            <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
+            <div v-else class="member-list">
+              <article v-for="invitation in team.invitations" :key="`inv-${invitation.id}`" class="member-row">
+                <div>
+                  <p class="member-name">{{ invitation.user.username }}</p>
+                  <p class="text-muted member-email">{{ invitation.user.email }}</p>
+                </div>
+                <span class="captain-tag">{{ invitation.status }}</span>
+              </article>
+            </div>
           </div>
         </article>
       </div>
     </template>
-
-    <div v-if="isKickModalOpen" class="modal-backdrop" @click.self="closeKickModal">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="kick-member-title">
-        <h3 id="kick-member-title">Remove member</h3>
-        <p class="modal-text">
-          Remove
-          <strong>{{ memberPendingKick?.username }}</strong>
-          from
-          <strong>{{ team?.name }}</strong>
-          ?
-        </p>
-
-        <p v-if="kickError" class="text-error modal-error">{{ kickError }}</p>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="kickLoading" @click="closeKickModal">Cancel</button>
-          <button class="btn-danger" type="button" :disabled="kickLoading" @click="confirmKickMember">
-            {{ kickLoading ? 'Removing...' : 'Remove member' }}
-          </button>
-        </div>
-      </div>
-    </div>
   </section>
 </template>
 
@@ -195,11 +188,7 @@ const form = ref({
 const memberSearch = ref('')
 const addMemberSelection = ref('')
 const addMemberLoading = ref(false)
-
-const isKickModalOpen = ref(false)
-const kickLoading = ref(false)
-const kickError = ref('')
-const memberPendingKick = ref(null)
+const kickLoadingByUser = ref({})
 
 const teamId = computed(() => Number(route.params.id))
 const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
@@ -410,7 +399,7 @@ const addMember = async () => {
     }
 
     addMemberSelection.value = ''
-    notification.value = { type: 'success', message: 'Member added.' }
+    notification.value = { type: 'success', message: 'Invitation sent.' }
     await Promise.all([fetchTeam(), fetchUsers()])
   } catch {
     notification.value = { type: 'error', message: 'Server connection error.' }
@@ -419,31 +408,18 @@ const addMember = async () => {
   }
 }
 
-const openKickModal = (member) => {
-  memberPendingKick.value = {
-    userId: member.id,
-    username: member.username,
+const removeMember = async (member) => {
+  if (!member || !team.value || !isCaptain.value) return
+  if (member.id === team.value.captain_id) return
+  kickLoadingByUser.value = {
+    ...kickLoadingByUser.value,
+    [member.id]: true,
   }
-  kickError.value = ''
-  isKickModalOpen.value = true
-}
-
-const closeKickModal = (force = false) => {
-  if (kickLoading.value && !force) return
-  isKickModalOpen.value = false
-  memberPendingKick.value = null
-}
-
-const confirmKickMember = async () => {
-  if (!memberPendingKick.value || !team.value || !isCaptain.value) return
-
-  kickLoading.value = true
-  kickError.value = ''
   notification.value = null
 
   try {
     const response = await fetch(
-      `${API_BASE}/api/accounts/teams/${team.value.id}/members/${memberPendingKick.value.userId}/`,
+      `${API_BASE}/api/accounts/teams/${team.value.id}/members/${member.id}/`,
       { method: 'DELETE', headers: authHeaders(false) },
     )
 
@@ -453,17 +429,19 @@ const confirmKickMember = async () => {
     }
 
     if (!response.ok && response.status !== 204) {
-      kickError.value = await parseApiError(response, 'Unable to remove member.')
+      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to remove member.') }
       return
     }
 
     notification.value = { type: 'success', message: 'Member removed.' }
-    closeKickModal(true)
     await Promise.all([fetchTeam(), fetchUsers()])
   } catch {
-    kickError.value = 'Server connection error.'
+    notification.value = { type: 'error', message: 'Server connection error.' }
   } finally {
-    kickLoading.value = false
+    kickLoadingByUser.value = {
+      ...kickLoadingByUser.value,
+      [member.id]: false,
+    }
   }
 }
 

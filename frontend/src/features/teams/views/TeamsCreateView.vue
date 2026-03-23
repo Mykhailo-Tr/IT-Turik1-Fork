@@ -24,6 +24,14 @@
           <input v-model="createForm.organization" class="input-control" type="text" />
         </label>
 
+        <label class="form-label toggle-field">
+          <span>Team visibility</span>
+          <span class="toggle-row">
+            <input v-model="createForm.is_public" type="checkbox" />
+            <span>{{ createForm.is_public ? 'Public' : 'Private' }}</span>
+          </span>
+        </label>
+
         <label class="form-label">
           Telegram
           <input
@@ -96,6 +104,7 @@ const createForm = ref({
   organization: '',
   contact_telegram: '',
   contact_discord: '',
+  is_public: false,
   member_ids: [],
 })
 
@@ -170,6 +179,7 @@ const resetCreateForm = () => {
     organization: '',
     contact_telegram: '',
     contact_discord: '',
+    is_public: false,
     member_ids: [],
   }
 }
@@ -253,6 +263,18 @@ onMounted(async () => {
   overflow: auto;
   display: grid;
   gap: 0.45rem;
+}
+
+.toggle-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ink-800);
 }
 
 .picker-item {

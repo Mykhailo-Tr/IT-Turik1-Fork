@@ -16,6 +16,43 @@
     <template v-else>
       <article class="card teams-card">
         <header class="section-head">
+          <h2>Invitations</h2>
+          <span class="text-muted">{{ pendingInboxInvitations.length }} pending</span>
+        </header>
+
+        <p v-if="inboxLoading" class="text-muted">Loading invitations...</p>
+        <p v-else-if="pendingInboxInvitations.length === 0" class="text-muted">No pending invitations.</p>
+        <div v-else class="team-grid">
+          <article v-for="invitation in pendingInboxInvitations" :key="`invite-${invitation.id}`" class="team-item">
+            <div class="team-meta">
+              <h3>{{ invitation.team.name }}</h3>
+              <span class="status-badge">invited</span>
+            </div>
+            <p class="text-muted">Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}</p>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn-soft"
+                :disabled="invitationActionLoading[invitation.id]"
+                @click="respondToInvitation(invitation.id, 'accept')"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                class="btn-soft"
+                :disabled="invitationActionLoading[invitation.id]"
+                @click="respondToInvitation(invitation.id, 'decline')"
+              >
+                Decline
+              </button>
+            </div>
+          </article>
+        </div>
+      </article>
+
+      <article class="card teams-card">
+        <header class="section-head">
           <h2>My teams</h2>
           <span class="text-muted">{{ myTeams.length }} joined</span>
         </header>
@@ -27,8 +64,11 @@
               <h3>{{ team.name }}</h3>
               <span v-if="isCaptain(team)" class="status-badge">Captain</span>
             </div>
+            <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
             <p class="text-muted">Captain: {{ captainName(team) }}</p>
             <p class="text-muted">Members: {{ team.members.length }}</p>
+            <p v-if="team.my_invitation_status" class="text-muted">My invitation: {{ team.my_invitation_status }}</p>
+            <p v-if="team.my_join_request_status" class="text-muted">My join request: {{ team.my_join_request_status }}</p>
             <router-link :to="`/teams/${team.id}`" class="btn-soft open-link">Open workspace</router-link>
           </article>
         </div>
@@ -52,8 +92,20 @@
             <div class="team-meta">
               <h3>{{ team.name }}</h3>
             </div>
+            <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
             <p class="text-muted">Captain: {{ captainName(team) }}</p>
             <p class="text-muted">Members: {{ team.members.length }}</p>
+            <p v-if="team.my_invitation_status" class="text-muted">My invitation: {{ team.my_invitation_status }}</p>
+            <p v-if="team.my_join_request_status" class="text-muted">My join request: {{ team.my_join_request_status }}</p>
+            <button
+              v-if="team.can_request_to_join"
+              type="button"
+              class="btn-soft"
+              :disabled="joinRequestLoadingByTeam[team.id]"
+              @click="sendJoinRequest(team.id)"
+            >
+              {{ joinRequestLoadingByTeam[team.id] ? 'Sending...' : 'Request to join' }}
+            </button>
             <router-link :to="`/teams/${team.id}`" class="btn-soft open-link">Open workspace</router-link>
           </article>
         </div>
@@ -78,9 +130,13 @@ const PER_PAGE = 8
 
 const router = useRouter()
 const teams = ref([])
+const inboxInvitations = ref([])
 const currentUserId = ref(null)
 const loading = ref(true)
 const notification = ref(null)
+const inboxLoading = ref(false)
+const invitationActionLoading = ref({})
+const joinRequestLoadingByTeam = ref({})
 
 const myPage = ref(1)
 const otherPage = ref(1)
@@ -103,13 +159,14 @@ const captainName = (team) => {
 }
 
 const isCaptain = (team) => team.captain_id === currentUserId.value
+const isAcceptedMember = (team) => team.is_member || isCaptain(team)
 
 const myTeams = computed(() =>
-  teams.value.filter((team) => team.members.some((member) => member.id === currentUserId.value)),
+  teams.value.filter((team) => isAcceptedMember(team)),
 )
 
 const otherTeams = computed(() =>
-  teams.value.filter((team) => !team.members.some((member) => member.id === currentUserId.value)),
+  teams.value.filter((team) => !isAcceptedMember(team)),
 )
 
 const myPages = computed(() => Math.max(1, Math.ceil(myTeams.value.length / PER_PAGE)))
@@ -178,6 +235,112 @@ const fetchTeams = async () => {
   teams.value = await response.json()
 }
 
+const parseApiError = async (response, fallbackMessage) => {
+  try {
+    const data = await response.json()
+    if (typeof data === 'string') return data
+    if (data.detail) return data.detail
+    return JSON.stringify(data)
+  } catch {
+    return fallbackMessage
+  }
+}
+
+const fetchInvitations = async () => {
+  inboxLoading.value = true
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/invitations/`, {
+      headers: authHeaders(),
+    })
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+    if (!response.ok) {
+      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to load invitations.') }
+      return
+    }
+    inboxInvitations.value = await response.json()
+  } finally {
+    inboxLoading.value = false
+  }
+}
+
+const pendingInboxInvitations = computed(() =>
+  inboxInvitations.value.filter((invitation) => invitation.status === 'invited'),
+)
+
+const respondToInvitation = async (invitationId, action) => {
+  invitationActionLoading.value = {
+    ...invitationActionLoading.value,
+    [invitationId]: true,
+  }
+  notification.value = null
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/invitations/${invitationId}/${action}/`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+    if (!response.ok) {
+      notification.value = {
+        type: 'error',
+        message: await parseApiError(response, `Unable to ${action} invitation.`),
+      }
+      return
+    }
+    notification.value = {
+      type: 'success',
+      message: action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.',
+    }
+    await Promise.all([fetchTeams(), fetchInvitations()])
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    invitationActionLoading.value = {
+      ...invitationActionLoading.value,
+      [invitationId]: false,
+    }
+  }
+}
+
+const sendJoinRequest = async (teamId) => {
+  joinRequestLoadingByTeam.value = {
+    ...joinRequestLoadingByTeam.value,
+    [teamId]: true,
+  }
+  notification.value = null
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${teamId}/join-requests/`, {
+      method: 'POST',
+      headers: authHeaders(),
+    })
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+    if (!response.ok) {
+      notification.value = {
+        type: 'error',
+        message: await parseApiError(response, 'Unable to send join request.'),
+      }
+      return
+    }
+    notification.value = { type: 'success', message: 'Join request sent.' }
+    await fetchTeams()
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    joinRequestLoadingByTeam.value = {
+      ...joinRequestLoadingByTeam.value,
+      [teamId]: false,
+    }
+  }
+}
+
 onMounted(async () => {
   const ok = await fetchProfile()
   if (!ok) {
@@ -186,6 +349,7 @@ onMounted(async () => {
   }
 
   await fetchTeams()
+  await fetchInvitations()
   loading.value = false
 })
 </script>
@@ -290,6 +454,12 @@ onMounted(async () => {
   margin-top: 0.3rem;
   text-decoration: none;
   justify-self: start;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .pagination {

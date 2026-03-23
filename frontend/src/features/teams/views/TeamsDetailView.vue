@@ -85,7 +85,24 @@
               <span>Members count</span>
               <strong>{{ team.members.length }}</strong>
             </div>
+            <div class="info-item">
+              <span>Visibility</span>
+              <strong>{{ team.is_public ? 'Public' : 'Private' }}</strong>
+            </div>
           </div>
+          <div v-if="!isCaptain" class="status-line">
+            <p v-if="team.my_invitation_status" class="text-muted">Your invitation status: {{ team.my_invitation_status }}</p>
+            <p v-if="team.my_join_request_status" class="text-muted">Your join request status: {{ team.my_join_request_status }}</p>
+          </div>
+          <button
+            v-if="team.can_request_to_join"
+            type="button"
+            class="btn-soft"
+            :disabled="joinRequestLoading"
+            @click="sendJoinRequest"
+          >
+            {{ joinRequestLoading ? 'Sending...' : 'Request to join this team' }}
+          </button>
         </article>
 
         <article class="card panel members-panel">
@@ -117,6 +134,57 @@
           <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
         </article>
       </div>
+
+      <article v-if="isCaptain" class="card panel">
+        <header class="panel-head">
+          <h2>Invitations status</h2>
+          <span class="text-muted">{{ team.invitations?.length || 0 }} total</span>
+        </header>
+        <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
+        <div v-else class="member-list">
+          <article v-for="invitation in team.invitations" :key="`invitation-${invitation.id}`" class="member-row">
+            <div>
+              <p class="member-name">{{ invitation.user.username }}</p>
+              <p class="text-muted member-email">{{ invitation.user.email }}</p>
+            </div>
+            <span class="captain-tag">{{ invitation.status }}</span>
+          </article>
+        </div>
+      </article>
+
+      <article v-if="isCaptain" class="card panel">
+        <header class="panel-head">
+          <h2>Join requests</h2>
+          <span class="text-muted">{{ pendingJoinRequests.length }} pending</span>
+        </header>
+        <p v-if="pendingJoinRequests.length === 0" class="text-muted">No pending join requests.</p>
+        <div v-else class="member-list">
+          <article v-for="joinRequest in pendingJoinRequests" :key="`join-request-${joinRequest.id}`" class="member-row">
+            <div>
+              <p class="member-name">{{ joinRequest.user.username }}</p>
+              <p class="text-muted member-email">{{ joinRequest.user.email }}</p>
+            </div>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn-soft"
+                :disabled="joinRequestActionLoading[joinRequest.id]"
+                @click="reviewJoinRequest(joinRequest.id, 'accept')"
+              >
+                Accept
+              </button>
+              <button
+                type="button"
+                class="btn-soft"
+                :disabled="joinRequestActionLoading[joinRequest.id]"
+                @click="reviewJoinRequest(joinRequest.id, 'decline')"
+              >
+                Decline
+              </button>
+            </div>
+          </article>
+        </div>
+      </article>
 
       <article v-if="isCaptain" class="card manage-zone">
         <div class="manage-row">
@@ -192,6 +260,8 @@ const isDeleteModalOpen = ref(false)
 const deleteConfirmInput = ref('')
 const deleteTeamLoading = ref(false)
 const deleteError = ref('')
+const joinRequestLoading = ref(false)
+const joinRequestActionLoading = ref({})
 
 const teamId = computed(() => Number(route.params.id))
 const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
@@ -210,6 +280,10 @@ const filteredMembers = computed(() => {
   return team.value.members.filter((member) => {
     return [member.username, member.email, member.full_name || ''].join(' ').toLowerCase().includes(search)
   })
+})
+const pendingJoinRequests = computed(() => {
+  if (!team.value?.join_requests) return []
+  return team.value.join_requests.filter((item) => item.status === 'pending')
 })
 
 const expectedDeleteText = computed(() => team.value?.name || '')
@@ -365,6 +439,64 @@ const confirmDeleteTeam = async () => {
   }
 }
 
+const sendJoinRequest = async () => {
+  if (!team.value) return
+  joinRequestLoading.value = true
+  notification.value = null
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/join-requests/`, {
+      method: 'POST',
+      headers: authHeaders(false),
+    })
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+    if (!response.ok) {
+      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to send join request.') }
+      return
+    }
+    notification.value = { type: 'success', message: 'Join request sent.' }
+    await fetchTeam()
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    joinRequestLoading.value = false
+  }
+}
+
+const reviewJoinRequest = async (requestId, action) => {
+  if (!team.value || !isCaptain.value) return
+  joinRequestActionLoading.value = {
+    ...joinRequestActionLoading.value,
+    [requestId]: true,
+  }
+  notification.value = null
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/join-requests/${requestId}/${action}/`, {
+      method: 'POST',
+      headers: authHeaders(false),
+    })
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+    if (!response.ok) {
+      notification.value = { type: 'error', message: await parseApiError(response, `Unable to ${action} join request.`) }
+      return
+    }
+    notification.value = { type: 'success', message: `Join request ${action}ed.` }
+    team.value = await response.json()
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    joinRequestActionLoading.value = {
+      ...joinRequestActionLoading.value,
+      [requestId]: false,
+    }
+  }
+}
+
 onMounted(loadWorkspace)
 
 watch(
@@ -499,6 +631,14 @@ watch(
   color: var(--ink-900);
 }
 
+.status-line {
+  margin-top: 0.75rem;
+}
+
+.status-line p {
+  margin: 0.35rem 0 0;
+}
+
 .member-search {
   margin-bottom: 0.75rem;
 }
@@ -545,6 +685,12 @@ watch(
 
 .member-note {
   margin-top: 0.8rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .manage-zone {

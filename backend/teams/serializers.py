@@ -1,16 +1,82 @@
 import re
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from accounts.models import User
 
-from .models import Team, TeamMember
+from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
+
+
+def invite_user_to_team(*, team, user, invited_by):
+    if TeamMember.objects.filter(team=team, user=user).exists():
+        return None, False
+
+    invitation, created = TeamInvitation.objects.get_or_create(
+        team=team,
+        user=user,
+        defaults={
+            'invited_by': invited_by,
+            'status': TeamInvitation.STATUS_INVITED,
+        },
+    )
+
+    if not created:
+        invitation.status = TeamInvitation.STATUS_INVITED
+        invitation.responded_at = None
+        invitation.invited_by = invited_by
+        invitation.save(update_fields=['status', 'responded_at', 'invited_by', 'updated_at'])
+
+    TeamJoinRequest.objects.filter(
+        team=team,
+        user=user,
+        status=TeamJoinRequest.STATUS_PENDING,
+    ).update(
+        status=TeamJoinRequest.STATUS_DECLINED,
+        reviewed_by=invited_by,
+        reviewed_at=timezone.now(),
+    )
+
+    return invitation, created
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'full_name', 'role')
+
+
+class TeamSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ('id', 'name', 'is_public')
+
+
+class TeamInvitationSerializer(serializers.ModelSerializer):
+    user = TeamMemberSerializer(read_only=True)
+    invited_by_id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = TeamInvitation
+        fields = ('id', 'user', 'status', 'created_at', 'responded_at', 'invited_by_id')
+
+
+class TeamJoinRequestSerializer(serializers.ModelSerializer):
+    user = TeamMemberSerializer(read_only=True)
+    reviewed_by_id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = TeamJoinRequest
+        fields = ('id', 'user', 'status', 'created_at', 'reviewed_at', 'reviewed_by_id')
+
+
+class TeamInvitationInboxSerializer(serializers.ModelSerializer):
+    team = TeamSummarySerializer(read_only=True)
+    invited_by = TeamMemberSerializer(read_only=True)
+
+    class Meta:
+        model = TeamInvitation
+        fields = ('id', 'team', 'status', 'created_at', 'responded_at', 'invited_by')
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -21,6 +87,13 @@ class TeamSerializer(serializers.ModelSerializer):
         required=False,
     )
     members = TeamMemberSerializer(many=True, read_only=True)
+    invitations = serializers.SerializerMethodField()
+    join_requests = serializers.SerializerMethodField()
+    my_invitation_status = serializers.SerializerMethodField()
+    my_join_request_status = serializers.SerializerMethodField()
+    is_member = serializers.SerializerMethodField()
+    is_captain = serializers.SerializerMethodField()
+    can_request_to_join = serializers.SerializerMethodField()
 
     class Meta:
         model = Team
@@ -29,12 +102,82 @@ class TeamSerializer(serializers.ModelSerializer):
             'name',
             'email',
             'captain_id',
+            'is_public',
             'organization',
             'contact_telegram',
             'contact_discord',
             'members',
+            'invitations',
+            'join_requests',
+            'my_invitation_status',
+            'my_join_request_status',
+            'is_member',
+            'is_captain',
+            'can_request_to_join',
             'member_ids',
         )
+
+    def _request_user(self):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+        return request.user
+
+    def _is_captain_for_user(self, obj, user):
+        return bool(user) and obj.captain_id == user.id
+
+    def _is_member_for_user(self, obj, user):
+        if not user:
+            return False
+        return any(member.id == user.id for member in obj.members.all())
+
+    def get_invitations(self, obj):
+        user = self._request_user()
+        if not self._is_captain_for_user(obj, user):
+            return []
+        return TeamInvitationSerializer(obj.invitations.all(), many=True).data
+
+    def get_join_requests(self, obj):
+        user = self._request_user()
+        if not self._is_captain_for_user(obj, user):
+            return []
+        return TeamJoinRequestSerializer(obj.join_requests.all(), many=True).data
+
+    def get_my_invitation_status(self, obj):
+        user = self._request_user()
+        if not user:
+            return None
+
+        for invitation in obj.invitations.all():
+            if invitation.user_id == user.id:
+                return invitation.status
+        return None
+
+    def get_my_join_request_status(self, obj):
+        user = self._request_user()
+        if not user:
+            return None
+
+        for join_request in obj.join_requests.all():
+            if join_request.user_id == user.id:
+                return join_request.status
+        return None
+
+    def get_is_member(self, obj):
+        return self._is_member_for_user(obj, self._request_user())
+
+    def get_is_captain(self, obj):
+        return self._is_captain_for_user(obj, self._request_user())
+
+    def get_can_request_to_join(self, obj):
+        user = self._request_user()
+        if not user or not obj.is_public:
+            return False
+        if self._is_member_for_user(obj, user) or self._is_captain_for_user(obj, user):
+            return False
+        if self.get_my_invitation_status(obj) == TeamInvitation.STATUS_INVITED:
+            return False
+        return self.get_my_join_request_status(obj) != TeamJoinRequest.STATUS_PENDING
 
     def validate_contact_telegram(self, value):
         normalized = value.strip().lstrip('@')
@@ -78,8 +221,9 @@ class TeamSerializer(serializers.ModelSerializer):
         team = Team.objects.create(captain=captain, **validated_data)
         TeamMember.objects.get_or_create(team=team, user=captain)
 
-        for user in User.objects.filter(id__in=member_ids).exclude(id=captain.id):
-            TeamMember.objects.get_or_create(team=team, user=user)
+        invited_users = User.objects.filter(id__in=member_ids).exclude(id=captain.id)
+        for user in invited_users:
+            invite_user_to_team(team=team, user=user, invited_by=captain)
 
         return team
 
@@ -88,16 +232,9 @@ class TeamSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
 
         if member_ids is not None:
-            target_ids = set(member_ids)
-            target_ids.add(instance.captain_id)
-            current_ids = set(instance.members.values_list('id', flat=True))
-
-            to_add = target_ids - current_ids
-            to_remove = current_ids - target_ids
-
-            for user in User.objects.filter(id__in=to_add):
-                TeamMember.objects.get_or_create(team=instance, user=user)
-
-            TeamMember.objects.filter(team=instance, user_id__in=to_remove).delete()
+            request_user = self._request_user() or instance.captain
+            invited_users = User.objects.filter(id__in=member_ids).exclude(id=instance.captain_id)
+            for user in invited_users:
+                invite_user_to_team(team=instance, user=user, invited_by=request_user)
 
         return instance
