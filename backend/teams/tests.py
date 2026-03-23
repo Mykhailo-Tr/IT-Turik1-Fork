@@ -30,7 +30,8 @@ class TeamApiTests(APITestCase):
                 'name': 'Alpha Team',
                 'email': 'alpha@example.com',
                 'organization': 'T-Org',
-                'contact': '+380971112233',
+                'contact_telegram': '@alpha_team',
+                'contact_discord': 'alpha.team',
                 'member_ids': [self.member.id],
             },
             format='json',
@@ -41,6 +42,26 @@ class TeamApiTests(APITestCase):
         member_ids = {member['id'] for member in response.data['members']}
         self.assertIn(self.captain.id, member_ids)
         self.assertIn(self.member.id, member_ids)
+        self.assertEqual(response.data['contact_telegram'], 'alpha_team')
+        self.assertEqual(response.data['contact_discord'], 'alpha.team')
+
+    def test_create_team_rejects_invalid_contact_usernames(self):
+        self.client.force_authenticate(user=self.captain)
+
+        response = self.client.post(
+            self.teams_url,
+            {
+                'name': 'Delta Team',
+                'email': 'delta@example.com',
+                'contact_telegram': '1bad',
+                'contact_discord': 'bad discord',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('contact_telegram', response.data)
+        self.assertIn('contact_discord', response.data)
 
     def test_only_captain_can_update_team(self):
         self.client.force_authenticate(user=self.captain)

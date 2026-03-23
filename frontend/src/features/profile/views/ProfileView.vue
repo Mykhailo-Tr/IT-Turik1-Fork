@@ -40,6 +40,20 @@
           <span>City</span>
           <strong>{{ profile.city || '-' }}</strong>
         </div>
+        <div class="item item-wide">
+          <span>Teams</span>
+          <div class="team-list">
+            <router-link
+              v-for="team in profile.teams || []"
+              :key="team.id"
+              :to="`/teams?team=${team.id}`"
+              class="team-link"
+            >
+              {{ team.name }}
+            </router-link>
+            <p v-if="!(profile.teams || []).length" class="text-muted">No teams yet.</p>
+          </div>
+        </div>
       </div>
 
       <div class="actions">
@@ -274,6 +288,26 @@ onMounted(fetchProfile)
 
 .item strong {
   color: var(--ink-900);
+}
+
+.item-wide {
+  grid-column: 1 / -1;
+}
+
+.team-list {
+  margin-top: 0.4rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.team-list p {
+  margin: 0;
+}
+
+.team-link {
+  color: var(--brand-700);
+  text-decoration: none;
+  font-weight: 700;
 }
 
 .badge {

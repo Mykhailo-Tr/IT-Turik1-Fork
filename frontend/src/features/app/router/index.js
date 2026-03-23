@@ -7,6 +7,8 @@ import Home from '@/features/home/views/HomeView.vue'
 import Login from '@/features/auth/views/LoginView.vue'
 import Profile from '@/features/profile/views/ProfileView.vue'
 import Register from '@/features/auth/views/RegisterView.vue'
+import TeamsCreate from '@/features/teams/views/TeamsCreateView.vue'
+import TeamsEdit from '@/features/teams/views/TeamsEditView.vue'
 import Teams from '@/features/teams/views/TeamsView.vue'
 
 const routes = [
@@ -38,6 +40,16 @@ const routes = [
   {
     path: '/teams',
     component: Teams,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/teams/create',
+    component: TeamsCreate,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/teams/edit',
+    component: TeamsEdit,
     meta: { requiresAuth: true },
   },
   {

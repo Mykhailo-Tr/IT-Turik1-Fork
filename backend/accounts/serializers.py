@@ -70,6 +70,8 @@ class UserSerializer(serializers.ModelSerializer):
             {
                 'id': team.id,
                 'name': team.name,
+                'contact_telegram': team.contact_telegram,
+                'contact_discord': team.contact_discord,
             }
             for team in obj.teams.all()
         ]

@@ -8,16 +8,16 @@
         <router-link to="/" class="brand">TournamentOS</router-link>
 
         <div class="nav-links">
-          <router-link to="/" class="nav-item">Home</router-link>
+          <router-link to="/" :class="navItemClass('home')">Home</router-link>
 
           <template v-if="!isLoggedIn">
-            <router-link to="/login" class="nav-item">Sign in</router-link>
-            <router-link to="/register" class="nav-item nav-cta">Register</router-link>
+            <router-link to="/login" :class="navItemClass('login')">Sign in</router-link>
+            <router-link to="/register" :class="navItemClass('register', true)">Register</router-link>
           </template>
 
           <template v-else>
-            <router-link to="/teams" class="nav-item">Teams</router-link>
-            <router-link to="/profile" class="nav-item">Profile</router-link>
+            <router-link to="/teams" :class="navItemClass('teams')">Teams</router-link>
+            <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
             <button @click="logout" class="nav-item nav-danger">Logout</button>
           </template>
         </div>
@@ -42,6 +42,38 @@ const checkAuth = () => {
   isLoggedIn.value = !!localStorage.getItem('access')
 }
 
+const isSectionActive = (section) => {
+  const path = route.path
+
+  if (section === 'home') {
+    return path === '/'
+  }
+
+  if (section === 'teams') {
+    return path === '/teams' || path.startsWith('/teams/')
+  }
+
+  if (section === 'profile') {
+    return path === '/profile' || path.startsWith('/profile/') || path === '/complete-profile'
+  }
+
+  if (section === 'login') {
+    return path === '/login' || path.startsWith('/activate/')
+  }
+
+  if (section === 'register') {
+    return path === '/register'
+  }
+
+  return false
+}
+
+const navItemClass = (section, cta = false) => ({
+  'nav-item': true,
+  'nav-cta': cta,
+  active: isSectionActive(section),
+})
+
 watch(
   () => route.path,
   () => {
@@ -64,9 +96,11 @@ const logout = () => {
 
 <style scoped>
 .app-shell {
+  --nav-offset: 76px;
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
+  padding-top: var(--nav-offset);
 }
 
 .bg-orb {
@@ -94,8 +128,10 @@ const logout = () => {
 }
 
 .main-nav {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
   backdrop-filter: blur(10px);
   background: rgba(248, 250, 252, 0.8);
@@ -144,6 +180,11 @@ const logout = () => {
   background: rgba(15, 23, 42, 0.06);
 }
 
+.nav-item.active {
+  background: rgba(15, 23, 42, 0.1);
+  color: var(--ink-900);
+}
+
 .nav-cta {
   color: white;
   background: linear-gradient(120deg, var(--brand-700), var(--brand-500));
@@ -151,6 +192,11 @@ const logout = () => {
 
 .nav-cta:hover {
   background: linear-gradient(120deg, var(--brand-600), var(--brand-500));
+}
+
+.nav-cta.active {
+  color: white;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 
 .nav-danger {
@@ -163,6 +209,10 @@ const logout = () => {
 }
 
 @media (max-width: 680px) {
+  .app-shell {
+    --nav-offset: 122px;
+  }
+
   .nav-container {
     align-items: flex-start;
     flex-direction: column;

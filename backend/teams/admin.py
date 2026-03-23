@@ -5,8 +5,24 @@ from .models import Team, TeamMember
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'email', 'captain', 'organization', 'contact', 'get_members_count')
-    search_fields = ('name', 'email', 'organization', 'contact', 'captain__username')
+    list_display = (
+        'id',
+        'name',
+        'email',
+        'captain',
+        'organization',
+        'contact_telegram',
+        'contact_discord',
+        'get_members_count',
+    )
+    search_fields = (
+        'name',
+        'email',
+        'organization',
+        'contact_telegram',
+        'contact_discord',
+        'captain__username',
+    )
 
     def get_members_count(self, obj):
         return obj.members.count()

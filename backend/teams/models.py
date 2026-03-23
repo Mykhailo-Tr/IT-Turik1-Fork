@@ -7,7 +7,8 @@ class Team(models.Model):
     email = models.EmailField()
     captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='captained_teams')
     organization = models.CharField(max_length=255, blank=True)
-    contact = models.CharField(max_length=100, blank=True)
+    contact_telegram = models.CharField(max_length=100, blank=True)
+    contact_discord = models.CharField(max_length=100, blank=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, through='TeamMember', related_name='teams')
 
     class Meta:

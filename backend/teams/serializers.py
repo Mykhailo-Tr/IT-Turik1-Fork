@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 
 from accounts.models import User
@@ -28,10 +30,35 @@ class TeamSerializer(serializers.ModelSerializer):
             'email',
             'captain_id',
             'organization',
-            'contact',
+            'contact_telegram',
+            'contact_discord',
             'members',
             'member_ids',
         )
+
+    def validate_contact_telegram(self, value):
+        normalized = value.strip().lstrip('@')
+        if not normalized:
+            return ''
+
+        if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{4,31}', normalized):
+            raise serializers.ValidationError(
+                'Telegram username must be 5-32 chars, start with a letter, and contain only letters, digits, or _.'
+            )
+
+        return normalized
+
+    def validate_contact_discord(self, value):
+        normalized = value.strip().lstrip('@')
+        if not normalized:
+            return ''
+
+        if not re.fullmatch(r'(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?', normalized):
+            raise serializers.ValidationError(
+                'Discord username must be 2-32 chars and may contain letters, digits, ".", "_" and optional #1234.'
+            )
+
+        return normalized
 
     def validate_member_ids(self, value):
         if not value:
