@@ -12,6 +12,7 @@ from accounts.models import User
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
 from .serializers import (
     clear_invitation_states_for_member,
+    clear_join_request_states_for_member,
     TeamInvitationInboxSerializer,
     TeamMemberSerializer,
     TeamSerializer,
@@ -146,7 +147,34 @@ class TeamMemberManageView(APIView):
         if deleted_count == 0:
             return Response({'detail': 'User is not a team member.'}, status=status.HTTP_404_NOT_FOUND)
 
+        clear_invitation_states_for_member(team=team, user_id=user_id)
+        clear_join_request_states_for_member(team=team, user_id=user_id)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TeamLeaveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @staticmethod
+    def _get_team(pk):
+        return get_object_or_404(get_team_queryset(), pk=pk)
+
+    def post(self, request, pk):
+        team = self._get_team(pk)
+
+        if team.captain_id == request.user.id:
+            return Response(
+                {'detail': 'Captain cannot leave the team. Transfer captain role or delete the team.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        deleted_count, _ = TeamMember.objects.filter(team=team, user=request.user).delete()
+        if deleted_count == 0:
+            return Response({'detail': 'You are not a team member of this team.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        clear_invitation_states_for_member(team=team, user=request.user)
+        clear_join_request_states_for_member(team=team, user=request.user)
+        return Response({'detail': 'You left the team.'}, status=status.HTTP_200_OK)
 
 
 class TeamInvitationListView(generics.ListAPIView):

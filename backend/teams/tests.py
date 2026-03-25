@@ -353,6 +353,69 @@ class TeamApiTests(APITestCase):
         team_ids = {item['team']['id'] for item in inbox_response.data}
         self.assertNotIn(team['id'], team_ids)
 
+    def test_member_can_leave_team_and_related_states_are_cleared(self):
+        team = self._create_team(
+            {
+                'name': 'Leave Team',
+                'email': 'leave@example.com',
+                'is_public': False,
+                'member_ids': [self.member.id],
+            }
+        )
+
+        invitation = TeamInvitation.objects.get(team_id=team['id'], user=self.member)
+        self.client.force_authenticate(user=self.member)
+        accept_response = self.client.post(
+            reverse('team_invitation_accept', kwargs={'invitation_id': invitation.id}),
+            {},
+            format='json',
+        )
+        self.assertEqual(accept_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.member).exists())
+
+        TeamInvitation.objects.create(
+            team_id=team['id'],
+            user=self.member,
+            invited_by=self.captain,
+            status=TeamInvitation.STATUS_DECLINED,
+        )
+        TeamJoinRequest.objects.create(
+            team_id=team['id'],
+            user=self.member,
+            status=TeamJoinRequest.STATUS_DECLINED,
+            reviewed_by=self.captain,
+        )
+
+        leave_response = self.client.post(reverse('team_leave', kwargs={'pk': team['id']}), {}, format='json')
+        self.assertEqual(leave_response.status_code, status.HTTP_200_OK)
+        self.assertIn('left', leave_response.data['detail'].lower())
+
+        self.assertFalse(TeamMember.objects.filter(team_id=team['id'], user=self.member).exists())
+        self.assertFalse(TeamInvitation.objects.filter(team_id=team['id'], user=self.member).exists())
+        self.assertFalse(TeamJoinRequest.objects.filter(team_id=team['id'], user=self.member).exists())
+
+        detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_captain_cannot_leave_team(self):
+        team = self._create_team({'name': 'Captain Team', 'email': 'captain-team@example.com'})
+
+        self.client.force_authenticate(user=self.captain)
+        leave_response = self.client.post(reverse('team_leave', kwargs={'pk': team['id']}), {}, format='json')
+
+        self.assertEqual(leave_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('captain cannot leave', leave_response.data['detail'].lower())
+        self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.captain).exists())
+
+    def test_non_member_cannot_leave_team(self):
+        team = self._create_team({'name': 'Leave Restriction Team', 'email': 'leave-restrict@example.com', 'is_public': True})
+
+        self.client.force_authenticate(user=self.other_user)
+        leave_response = self.client.post(reverse('team_leave', kwargs={'pk': team['id']}), {}, format='json')
+
+        self.assertEqual(leave_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('not a team member', leave_response.data['detail'].lower())
+
     def test_private_team_not_visible_to_non_members(self):
         team = self._create_team({'name': 'Private Team', 'email': 'private@example.com', 'is_public': False})
 

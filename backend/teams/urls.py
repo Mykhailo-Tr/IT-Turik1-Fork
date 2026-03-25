@@ -8,6 +8,7 @@ from .views import (
     TeamJoinRequestAcceptView,
     TeamJoinRequestCreateView,
     TeamJoinRequestDeclineView,
+    TeamLeaveView,
     TeamListCreateView,
     TeamMemberManageView,
     UserListView,
@@ -16,6 +17,7 @@ from .views import (
 urlpatterns = [
     path('teams/', TeamListCreateView.as_view(), name='teams'),
     path('teams/<int:pk>/', TeamDetailView.as_view(), name='team_detail'),
+    path('teams/<int:pk>/leave/', TeamLeaveView.as_view(), name='team_leave'),
     path('teams/<int:pk>/members/', TeamMemberManageView.as_view(), name='team_members'),
     path('teams/<int:pk>/members/<int:user_id>/', TeamMemberManageView.as_view(), name='team_member_detail'),
     path('teams/<int:pk>/join-requests/', TeamJoinRequestCreateView.as_view(), name='team_join_request_create'),

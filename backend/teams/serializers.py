@@ -8,8 +8,18 @@ from accounts.models import User
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
 
 
-def clear_invitation_states_for_member(*, team, user):
-    TeamInvitation.objects.filter(team=team, user=user).delete()
+def clear_invitation_states_for_member(*, team, user=None, user_id=None):
+    target_user_id = user_id or getattr(user, 'id', None)
+    if not target_user_id:
+        return
+    TeamInvitation.objects.filter(team=team, user_id=target_user_id).delete()
+
+
+def clear_join_request_states_for_member(*, team, user=None, user_id=None):
+    target_user_id = user_id or getattr(user, 'id', None)
+    if not target_user_id:
+        return
+    TeamJoinRequest.objects.filter(team=team, user_id=target_user_id).delete()
 
 
 def invite_user_to_team(*, team, user, invited_by):

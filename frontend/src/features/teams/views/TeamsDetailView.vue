@@ -94,15 +94,26 @@
             <p v-if="team.my_invitation_status" class="text-muted">Your invitation status: {{ team.my_invitation_status }}</p>
             <p v-if="team.my_join_request_status" class="text-muted">Your join request status: {{ team.my_join_request_status }}</p>
           </div>
-          <button
-            v-if="team.can_request_to_join"
-            type="button"
-            class="btn-soft"
-            :disabled="joinRequestLoading"
-            @click="sendJoinRequest"
-          >
-            {{ joinRequestLoading ? 'Sending...' : 'Request to join this team' }}
-          </button>
+          <div class="info-actions">
+            <button
+              v-if="team.can_request_to_join"
+              type="button"
+              class="btn-soft"
+              :disabled="joinRequestLoading"
+              @click="sendJoinRequest"
+            >
+              {{ joinRequestLoading ? 'Sending...' : 'Request to join this team' }}
+            </button>
+            <button
+              v-if="canLeaveTeam"
+              type="button"
+              class="btn-danger"
+              :disabled="leaveTeamLoading"
+              @click="openLeaveModal"
+            >
+              {{ leaveTeamLoading ? 'Leaving...' : 'Leave team' }}
+            </button>
+          </div>
         </article>
 
         <article class="card panel members-panel">
@@ -303,6 +314,22 @@
       </article>
     </template>
 
+    <div v-if="isLeaveModalOpen" class="modal-backdrop" @click.self="closeLeaveModal">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="leave-team-title">
+        <h3 id="leave-team-title">Leave Team?</h3>
+        <p class="modal-text">Are you sure you want to leave this team?</p>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" type="button" :disabled="leaveTeamLoading" @click="closeLeaveModal">
+            Cancel
+          </button>
+          <button class="btn-danger" type="button" :disabled="leaveTeamLoading" @click="confirmLeaveTeam">
+            {{ leaveTeamLoading ? 'Leaving...' : 'Leave' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div v-if="isDeleteModalOpen" class="modal-backdrop" @click.self="closeDeleteModal">
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-team-title">
         <h3 id="delete-team-title">Delete team</h3>
@@ -352,16 +379,19 @@ const loadError = ref('')
 const notification = ref(null)
 
 const memberSearch = ref('')
+const isLeaveModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
 const deleteConfirmInput = ref('')
 const deleteTeamLoading = ref(false)
 const deleteError = ref('')
 const joinRequestLoading = ref(false)
+const leaveTeamLoading = ref(false)
 const joinRequestActionLoading = ref({})
 const resendInvitationLoading = ref({})
 
 const teamId = computed(() => Number(route.params.id))
 const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
+const canLeaveTeam = computed(() => Boolean(team.value?.is_member) && !isCaptain.value)
 
 const captainName = computed(() => {
   if (!team.value) return '-'
@@ -590,6 +620,7 @@ const fetchTeam = async () => {
 const loadWorkspace = async () => {
   loading.value = true
   loadError.value = ''
+  isLeaveModalOpen.value = false
   isDeleteModalOpen.value = false
   deleteConfirmInput.value = ''
   deleteError.value = ''
@@ -672,6 +703,67 @@ const sendJoinRequest = async () => {
     notification.value = { type: 'error', message: 'Server connection error.' }
   } finally {
     joinRequestLoading.value = false
+  }
+}
+
+const openLeaveModal = () => {
+  if (!canLeaveTeam.value || leaveTeamLoading.value) return
+  isLeaveModalOpen.value = true
+}
+
+const closeLeaveModal = () => {
+  if (leaveTeamLoading.value) return
+  isLeaveModalOpen.value = false
+}
+
+const confirmLeaveTeam = async () => {
+  if (!team.value || !canLeaveTeam.value || leaveTeamLoading.value) return
+  await leaveTeam()
+}
+
+const leaveTeam = async () => {
+  if (!team.value || !canLeaveTeam.value) return
+
+  leaveTeamLoading.value = true
+  notification.value = null
+
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/leave/`, {
+      method: 'POST',
+      headers: authHeaders(false),
+    })
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+    if (!response.ok) {
+      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to leave team.') }
+      return
+    }
+
+    team.value = {
+      ...team.value,
+      members: (team.value.members || []).filter((member) => member.id !== currentUserId.value),
+      invitations: (team.value.invitations || []).filter((inv) => inv.user?.id !== currentUserId.value),
+      join_requests: (team.value.join_requests || []).filter((jr) => jr.user?.id !== currentUserId.value),
+      my_invitation_status: null,
+      my_join_request_status: null,
+      is_member: false,
+      can_request_to_join: Boolean(team.value.is_public),
+    }
+    isLeaveModalOpen.value = false
+    notification.value = { type: 'success', message: 'You left the team.' }
+
+    if (!team.value.is_public) {
+      router.push('/teams')
+      return
+    }
+
+    await fetchTeam()
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    leaveTeamLoading.value = false
   }
 }
 
@@ -884,6 +976,13 @@ watch(
 
 .status-line p {
   margin: 0.35rem 0 0;
+}
+
+.info-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
 }
 
 .member-search {
