@@ -8,6 +8,10 @@ from accounts.models import User
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
 
 
+def clear_invitation_states_for_member(*, team, user):
+    TeamInvitation.objects.filter(team=team, user=user).delete()
+
+
 def invite_user_to_team(*, team, user, invited_by):
     if TeamMember.objects.filter(team=team, user=user).exists():
         return None, False
@@ -135,7 +139,9 @@ class TeamSerializer(serializers.ModelSerializer):
         user = self._request_user()
         if not self._is_captain_for_user(obj, user):
             return []
-        return TeamInvitationSerializer(obj.invitations.all(), many=True).data
+        member_ids = {member.id for member in obj.members.all()}
+        invitations = [invitation for invitation in obj.invitations.all() if invitation.user_id not in member_ids]
+        return TeamInvitationSerializer(invitations, many=True).data
 
     def get_join_requests(self, obj):
         user = self._request_user()
@@ -146,6 +152,8 @@ class TeamSerializer(serializers.ModelSerializer):
     def get_my_invitation_status(self, obj):
         user = self._request_user()
         if not user:
+            return None
+        if self._is_member_for_user(obj, user) or self._is_captain_for_user(obj, user):
             return None
 
         for invitation in obj.invitations.all():

@@ -86,8 +86,7 @@ class TeamApiTests(APITestCase):
         member_ids = {member['id'] for member in accept_response.data['members']}
         self.assertIn(self.member.id, member_ids)
 
-        invitation = TeamInvitation.objects.get(id=invitation_id)
-        self.assertEqual(invitation.status, TeamInvitation.STATUS_ACCEPTED)
+        self.assertFalse(TeamInvitation.objects.filter(id=invitation_id).exists())
         self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.member).exists())
 
     def test_invited_user_can_decline_invitation_without_becoming_member(self):
@@ -136,8 +135,7 @@ class TeamApiTests(APITestCase):
             {},
             format='json',
         )
-        self.assertEqual(second_accept.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('already processed', second_accept.data['detail'])
+        self.assertEqual(second_accept.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_user_cannot_respond_to_someone_elses_invitation(self):
         team = self._create_team(
@@ -274,6 +272,86 @@ class TeamApiTests(APITestCase):
         self.assertEqual(accept_response.status_code, status.HTTP_200_OK)
         member_ids = {member['id'] for member in accept_response.data['members']}
         self.assertIn(self.member.id, member_ids)
+
+    def test_declined_invitation_is_removed_when_join_request_accepted(self):
+        team = self._create_team(
+            {
+                'name': 'Declined Then Join Team',
+                'email': 'declined-then-join@example.com',
+                'is_public': True,
+                'member_ids': [self.member.id],
+            }
+        )
+
+        invitation = TeamInvitation.objects.get(team_id=team['id'], user=self.member)
+        self.client.force_authenticate(user=self.member)
+        decline_response = self.client.post(
+            reverse('team_invitation_decline', kwargs={'invitation_id': invitation.id}),
+            {},
+            format='json',
+        )
+        self.assertEqual(decline_response.status_code, status.HTTP_200_OK)
+        invitation.refresh_from_db()
+        self.assertEqual(invitation.status, TeamInvitation.STATUS_DECLINED)
+
+        join_response = self.client.post(
+            reverse('team_join_request_create', kwargs={'pk': team['id']}),
+            {},
+            format='json',
+        )
+        self.assertIn(join_response.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED))
+
+        self.client.force_authenticate(user=self.captain)
+        detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        request_id = detail_response.data['join_requests'][0]['id']
+
+        accept_response = self.client.post(
+            reverse('team_join_request_accept', kwargs={'pk': team['id'], 'request_id': request_id}),
+            {},
+            format='json',
+        )
+        self.assertEqual(accept_response.status_code, status.HTTP_200_OK)
+
+        member_ids = {member['id'] for member in accept_response.data['members']}
+        self.assertIn(self.member.id, member_ids)
+        invitation_user_ids = {item['user']['id'] for item in accept_response.data['invitations']}
+        self.assertNotIn(self.member.id, invitation_user_ids)
+
+        self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.member).exists())
+        self.assertFalse(TeamInvitation.objects.filter(team_id=team['id'], user=self.member).exists())
+
+    def test_member_never_appears_in_invitations_even_with_stale_record(self):
+        team = self._create_team(
+            {
+                'name': 'Stale Invitation Team',
+                'email': 'stale-invitation@example.com',
+                'member_ids': [self.member.id],
+            }
+        )
+
+        invitation = TeamInvitation.objects.get(team_id=team['id'], user=self.member)
+        self.client.force_authenticate(user=self.member)
+        self.client.post(reverse('team_invitation_accept', kwargs={'invitation_id': invitation.id}), {}, format='json')
+
+        TeamInvitation.objects.create(
+            team_id=team['id'],
+            user=self.member,
+            invited_by=self.captain,
+            status=TeamInvitation.STATUS_DECLINED,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        invitation_user_ids = {item['user']['id'] for item in detail_response.data['invitations']}
+        self.assertNotIn(self.member.id, invitation_user_ids)
+
+        self.client.force_authenticate(user=self.member)
+        inbox_response = self.client.get(self.invitations_url)
+        self.assertEqual(inbox_response.status_code, status.HTTP_200_OK)
+        team_ids = {item['team']['id'] for item in inbox_response.data}
+        self.assertNotIn(team['id'], team_ids)
 
     def test_private_team_not_visible_to_non_members(self):
         team = self._create_team({'name': 'Private Team', 'email': 'private@example.com', 'is_public': False})

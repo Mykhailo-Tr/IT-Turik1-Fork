@@ -11,6 +11,7 @@ from accounts.models import User
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
 from .serializers import (
+    clear_invitation_states_for_member,
     TeamInvitationInboxSerializer,
     TeamMemberSerializer,
     TeamSerializer,
@@ -156,6 +157,7 @@ class TeamInvitationListView(generics.ListAPIView):
         return (
             TeamInvitation.objects.select_related('team', 'invited_by')
             .filter(user=self.request.user)
+            .exclude(team__team_members__user=self.request.user)
             .order_by('-created_at')
         )
 
@@ -178,9 +180,6 @@ class TeamInvitationRespondView(APIView):
             )
 
         now = timezone.now()
-        invitation.status = self.new_status
-        invitation.responded_at = now
-        invitation.save(update_fields=['status', 'responded_at', 'updated_at'])
 
         if self.new_status == TeamInvitation.STATUS_ACCEPTED:
             TeamMember.objects.get_or_create(team=invitation.team, user=request.user)
@@ -193,6 +192,11 @@ class TeamInvitationRespondView(APIView):
                 reviewed_by=invitation.team.captain,
                 reviewed_at=now,
             )
+            clear_invitation_states_for_member(team=invitation.team, user=request.user)
+        else:
+            invitation.status = self.new_status
+            invitation.responded_at = now
+            invitation.save(update_fields=['status', 'responded_at', 'updated_at'])
 
         team = get_object_or_404(get_team_queryset(), pk=invitation.team_id)
         serializer = TeamSerializer(team, context={'request': request})
@@ -271,6 +275,7 @@ class TeamJoinRequestReviewView(APIView):
 
         if self.new_status == TeamJoinRequest.STATUS_ACCEPTED:
             TeamMember.objects.get_or_create(team=team, user=join_request.user)
+            clear_invitation_states_for_member(team=team, user=join_request.user)
 
         team.refresh_from_db()
         serializer = TeamSerializer(team, context={'request': request})
