@@ -140,24 +140,7 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span
-                          v-if="statusByUserId?.[member.id]?.accepted"
-                          class="status-tag status-accepted"
-                        >
-                          accepted
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[member.id]?.declined"
-                          class="status-tag status-declined"
-                        >
-                          declined
-                        </span>
-                        <span v-if="statusByUserId?.[member.id]?.invited" class="status-tag status-invited">
-                          invited
-                        </span>
-                        <span v-if="statusByUserId?.[member.id]?.pending" class="status-tag status-pending">
-                          pending
-                        </span>
+                        <span class="status-tag status-accepted">accepted</span>
                         <span class="status-tag status-source">{{ statusByUserId?.[member.id]?.source || 'Member' }}</span>
                       </div>
                     </template>
@@ -254,31 +237,8 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.accepted"
-                          class="status-tag status-accepted"
-                        >
-                          accepted
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.declined"
-                          class="status-tag status-declined"
-                        >
-                          declined
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.invited"
-                          class="status-tag status-invited"
-                        >
-                          invited
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.pending"
-                          class="status-tag status-pending"
-                        >
-                          pending
-                        </span>
-                        <span class="status-tag status-source">{{ statusByUserId?.[invitation.user.id]?.source || 'Invitation' }}</span>
+                        <span class="status-tag status-invited">invited</span>
+                        <span class="status-tag status-source">Invitation</span>
                       </div>
                     </template>
                   </div>
@@ -300,31 +260,8 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.accepted"
-                          class="status-tag status-accepted"
-                        >
-                          accepted
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.declined"
-                          class="status-tag status-declined"
-                        >
-                          declined
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.invited"
-                          class="status-tag status-invited"
-                        >
-                          invited
-                        </span>
-                        <span
-                          v-if="statusByUserId?.[invitation.user.id]?.pending"
-                          class="status-tag status-pending"
-                        >
-                          pending
-                        </span>
-                        <span class="status-tag status-source">{{ statusByUserId?.[invitation.user.id]?.source || 'Invitation' }}</span>
+                        <span class="status-tag status-declined">declined</span>
+                        <span class="status-tag status-source">Invitation</span>
                       </div>
                     </template>
                   </div>
@@ -520,8 +457,15 @@ const statusByUserId = computed(() => {
     const declined = invitationStatus === 'declined' || joinRequestStatus === 'declined'
 
     let source = 'Member'
-    if (invitationStatus) source = 'Invitation'
-    else if (joinRequestStatus) source = 'Join request'
+    if (accepted) {
+      if (joinRequestStatus === 'accepted') source = 'Join request'
+      else if (invitationStatus === 'accepted') source = 'Invitation'
+      else if (joinRequestStatus) source = 'Join request'
+      else if (invitationStatus) source = 'Invitation'
+    } else {
+      if (invitationStatus) source = 'Invitation'
+      else if (joinRequestStatus) source = 'Join request'
+    }
 
     map[userId] = { accepted, declined, invited, pending, source }
   }
