@@ -263,6 +263,16 @@
                         <span class="status-tag status-declined">declined</span>
                         <span class="status-tag status-source">Invitation</span>
                       </div>
+                      <div class="row-actions">
+                        <button
+                          type="button"
+                          class="btn-soft"
+                          :disabled="resendInvitationLoading[invitation.user.id]"
+                          @click="resendInvitation(invitation.user.id)"
+                        >
+                          {{ resendInvitationLoading[invitation.user.id] ? 'Resending...' : 'Resend invitation' }}
+                        </button>
+                      </div>
                     </template>
                   </div>
                 </article>
@@ -348,6 +358,7 @@ const deleteTeamLoading = ref(false)
 const deleteError = ref('')
 const joinRequestLoading = ref(false)
 const joinRequestActionLoading = ref({})
+const resendInvitationLoading = ref({})
 
 const teamId = computed(() => Number(route.params.id))
 const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
@@ -383,15 +394,27 @@ const filteredPendingJoinRequests = computed(() => {
   })
 })
 
-const pendingInvitations = computed(() => {
+const uniqueInvitations = computed(() => {
   if (!team.value?.invitations) return []
-  return team.value.invitations.filter((invitation) => invitation.status === 'invited')
+  const byUserId = new Map()
+  for (const invitation of team.value.invitations) {
+    const userId = invitation?.user?.id
+    if (!userId) continue
+    if (!byUserId.has(userId)) {
+      byUserId.set(userId, invitation)
+      continue
+    }
+    const prev = byUserId.get(userId)
+    const prevTime = new Date(prev.created_at || 0).getTime()
+    const nextTime = new Date(invitation.created_at || 0).getTime()
+    if (nextTime >= prevTime) byUserId.set(userId, invitation)
+  }
+  return Array.from(byUserId.values())
 })
 
-const declinedInvitations = computed(() => {
-  if (!team.value?.invitations) return []
-  return team.value.invitations.filter((invitation) => invitation.status === 'declined')
-})
+const pendingInvitations = computed(() => uniqueInvitations.value.filter((invitation) => invitation.status === 'invited'))
+
+const declinedInvitations = computed(() => uniqueInvitations.value.filter((invitation) => invitation.status === 'declined'))
 
 const filteredPendingInvitations = computed(() => {
   if (!team.value) return []
@@ -680,6 +703,43 @@ const reviewJoinRequest = async (requestId, action) => {
     joinRequestActionLoading.value = {
       ...joinRequestActionLoading.value,
       [requestId]: false,
+    }
+  }
+}
+
+const resendInvitation = async (userId) => {
+  if (!team.value || !isCaptain.value) return
+  resendInvitationLoading.value = {
+    ...resendInvitationLoading.value,
+    [userId]: true,
+  }
+  notification.value = null
+
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/members/`, {
+      method: 'POST',
+      headers: authHeaders(true),
+      body: JSON.stringify({ user_id: userId }),
+    })
+
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+
+    if (!response.ok) {
+      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to resend invitation.') }
+      return
+    }
+
+    team.value = await response.json()
+    notification.value = { type: 'success', message: 'Invitation resent.' }
+  } catch {
+    notification.value = { type: 'error', message: 'Server connection error.' }
+  } finally {
+    resendInvitationLoading.value = {
+      ...resendInvitationLoading.value,
+      [userId]: false,
     }
   }
 }
