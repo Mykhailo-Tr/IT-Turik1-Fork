@@ -108,7 +108,7 @@
         <article class="card panel members-panel">
           <header class="panel-head">
             <h2>Members</h2>
-            <span class="text-muted">{{ team.members.length }} people</span>
+            <span class="text-muted">{{ team.members.length }} accepted</span>
           </header>
 
           <label class="form-label member-search">
@@ -121,70 +121,219 @@
             />
           </label>
 
-          <div class="member-list">
-            <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
-              <div>
-                <p class="member-name">{{ member.username }}</p>
-                <p class="text-muted member-email">{{ member.email }}</p>
-              </div>
-              <span v-if="member.id === team.captain_id" class="captain-tag">Captain</span>
-            </article>
-          </div>
+          <div class="members-sections">
+            <section class="members-section">
+              <header class="section-subhead">
+                <h3>Members</h3>
+                <span class="text-muted">{{ filteredMembers.length }} people</span>
+              </header>
 
-          <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
+              <div class="member-list">
+                <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
+                  <div>
+                    <p class="member-name">{{ member.username }}</p>
+                    <p class="text-muted member-email">{{ member.email }}</p>
+                  </div>
+                  <div class="member-side">
+                    <template v-if="member.id === team.captain_id">
+                      <span class="captain-tag">Captain</span>
+                    </template>
+                    <template v-else>
+                      <div class="status-tags">
+                        <span
+                          v-if="statusByUserId?.[member.id]?.accepted"
+                          class="status-tag status-accepted"
+                        >
+                          accepted
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[member.id]?.declined"
+                          class="status-tag status-declined"
+                        >
+                          declined
+                        </span>
+                        <span v-if="statusByUserId?.[member.id]?.invited" class="status-tag status-invited">
+                          invited
+                        </span>
+                        <span v-if="statusByUserId?.[member.id]?.pending" class="status-tag status-pending">
+                          pending
+                        </span>
+                        <span class="status-tag status-source">{{ statusByUserId?.[member.id]?.source || 'Member' }}</span>
+                      </div>
+                    </template>
+                  </div>
+                </article>
+              </div>
+
+              <p v-if="filteredMembers.length === 0" class="text-muted member-note">No accepted members match your search.</p>
+            </section>
+
+            <section v-if="isCaptain" class="members-section">
+              <header class="section-subhead">
+                <h3>Join Requests</h3>
+                <span class="text-muted">{{ filteredPendingJoinRequests.length }} pending</span>
+              </header>
+
+              <p v-if="filteredPendingJoinRequests.length === 0" class="text-muted member-note">No pending join requests.</p>
+
+              <div v-else class="member-list">
+                <article
+                  v-for="joinRequest in filteredPendingJoinRequests"
+                  :key="`join-request-${joinRequest.id}`"
+                  class="member-row"
+                >
+                  <div>
+                    <p class="member-name">{{ joinRequest.user.username }}</p>
+                    <p class="text-muted member-email">{{ joinRequest.user.email }}</p>
+                  </div>
+                  <div class="member-side">
+                    <template v-if="joinRequest.user.id === team.captain_id">
+                      <span class="captain-tag">Captain</span>
+                    </template>
+                    <template v-else>
+                      <div class="status-tags">
+                        <span class="status-tag status-pending">pending</span>
+                        <span class="status-tag status-source">Join request</span>
+                      </div>
+                      <div class="row-actions">
+                        <button
+                          type="button"
+                          class="btn-soft"
+                          :disabled="joinRequestActionLoading[joinRequest.id]"
+                          @click="reviewJoinRequest(joinRequest.id, 'accept')"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          type="button"
+                          class="btn-soft"
+                          :disabled="joinRequestActionLoading[joinRequest.id]"
+                          @click="reviewJoinRequest(joinRequest.id, 'decline')"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </template>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section v-if="isCaptain" class="members-section">
+              <header class="section-subhead">
+                <h3>Invitations</h3>
+                <span class="text-muted">
+                  {{ filteredPendingInvitations.length }} awaiting response
+                  <span v-if="filteredDeclinedInvitations.length">, {{ filteredDeclinedInvitations.length }} declined</span>
+                </span>
+              </header>
+
+              <p
+                v-if="filteredPendingInvitations.length === 0 && filteredDeclinedInvitations.length === 0"
+                class="text-muted member-note"
+              >
+                No invitations yet.
+              </p>
+
+              <div
+                v-else
+                class="member-list invitations-list"
+              >
+                <article
+                  v-for="invitation in filteredPendingInvitations"
+                  :key="`invitation-${invitation.id}`"
+                  class="member-row"
+                >
+                  <div>
+                    <p class="member-name">{{ invitation.user.username }}</p>
+                    <p class="text-muted member-email">{{ invitation.user.email }}</p>
+                  </div>
+                  <div class="member-side">
+                    <template v-if="invitation.user.id === team.captain_id">
+                      <span class="captain-tag">Captain</span>
+                    </template>
+                    <template v-else>
+                      <div class="status-tags">
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.accepted"
+                          class="status-tag status-accepted"
+                        >
+                          accepted
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.declined"
+                          class="status-tag status-declined"
+                        >
+                          declined
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.invited"
+                          class="status-tag status-invited"
+                        >
+                          invited
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.pending"
+                          class="status-tag status-pending"
+                        >
+                          pending
+                        </span>
+                        <span class="status-tag status-source">{{ statusByUserId?.[invitation.user.id]?.source || 'Invitation' }}</span>
+                      </div>
+                    </template>
+                  </div>
+                </article>
+
+
+                <article
+                  v-for="invitation in filteredDeclinedInvitations"
+                  :key="`invitation-${invitation.id}`"
+                  class="member-row"
+                >
+                  <div>
+                    <p class="member-name">{{ invitation.user.username }}</p>
+                    <p class="text-muted member-email">{{ invitation.user.email }}</p>
+                  </div>
+                  <div class="member-side">
+                    <template v-if="invitation.user.id === team.captain_id">
+                      <span class="captain-tag">Captain</span>
+                    </template>
+                    <template v-else>
+                      <div class="status-tags">
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.accepted"
+                          class="status-tag status-accepted"
+                        >
+                          accepted
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.declined"
+                          class="status-tag status-declined"
+                        >
+                          declined
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.invited"
+                          class="status-tag status-invited"
+                        >
+                          invited
+                        </span>
+                        <span
+                          v-if="statusByUserId?.[invitation.user.id]?.pending"
+                          class="status-tag status-pending"
+                        >
+                          pending
+                        </span>
+                        <span class="status-tag status-source">{{ statusByUserId?.[invitation.user.id]?.source || 'Invitation' }}</span>
+                      </div>
+                    </template>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
         </article>
       </div>
-
-      <article v-if="isCaptain" class="card panel">
-        <header class="panel-head">
-          <h2>Invitations status</h2>
-          <span class="text-muted">{{ team.invitations?.length || 0 }} total</span>
-        </header>
-        <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
-        <div v-else class="member-list">
-          <article v-for="invitation in team.invitations" :key="`invitation-${invitation.id}`" class="member-row">
-            <div>
-              <p class="member-name">{{ invitation.user.username }}</p>
-              <p class="text-muted member-email">{{ invitation.user.email }}</p>
-            </div>
-            <span class="captain-tag">{{ invitation.status }}</span>
-          </article>
-        </div>
-      </article>
-
-      <article v-if="isCaptain" class="card panel">
-        <header class="panel-head">
-          <h2>Join requests</h2>
-          <span class="text-muted">{{ pendingJoinRequests.length }} pending</span>
-        </header>
-        <p v-if="pendingJoinRequests.length === 0" class="text-muted">No pending join requests.</p>
-        <div v-else class="member-list">
-          <article v-for="joinRequest in pendingJoinRequests" :key="`join-request-${joinRequest.id}`" class="member-row">
-            <div>
-              <p class="member-name">{{ joinRequest.user.username }}</p>
-              <p class="text-muted member-email">{{ joinRequest.user.email }}</p>
-            </div>
-            <div class="row-actions">
-              <button
-                type="button"
-                class="btn-soft"
-                :disabled="joinRequestActionLoading[joinRequest.id]"
-                @click="reviewJoinRequest(joinRequest.id, 'accept')"
-              >
-                Accept
-              </button>
-              <button
-                type="button"
-                class="btn-soft"
-                :disabled="joinRequestActionLoading[joinRequest.id]"
-                @click="reviewJoinRequest(joinRequest.id, 'decline')"
-              >
-                Decline
-              </button>
-            </div>
-          </article>
-        </div>
-      </article>
 
       <article v-if="isCaptain" class="card manage-zone">
         <div class="manage-row">
@@ -284,6 +433,100 @@ const filteredMembers = computed(() => {
 const pendingJoinRequests = computed(() => {
   if (!team.value?.join_requests) return []
   return team.value.join_requests.filter((item) => item.status === 'pending')
+})
+
+const filteredPendingJoinRequests = computed(() => {
+  if (!team.value) return []
+  const list = pendingJoinRequests.value
+  const search = memberSearch.value.trim().toLowerCase()
+  if (!search) return list
+  return list.filter((jr) => {
+    const text = [jr.user.username, jr.user.email, jr.user.full_name || ''].join(' ').toLowerCase()
+    return text.includes(search)
+  })
+})
+
+const pendingInvitations = computed(() => {
+  if (!team.value?.invitations) return []
+  return team.value.invitations.filter((invitation) => invitation.status === 'invited')
+})
+
+const declinedInvitations = computed(() => {
+  if (!team.value?.invitations) return []
+  return team.value.invitations.filter((invitation) => invitation.status === 'declined')
+})
+
+const filteredPendingInvitations = computed(() => {
+  if (!team.value) return []
+  const list = pendingInvitations.value
+  const search = memberSearch.value.trim().toLowerCase()
+  if (!search) return list
+  return list.filter((inv) => {
+    const text = [inv.user.username, inv.user.email, inv.user.full_name || ''].join(' ').toLowerCase()
+    return text.includes(search)
+  })
+})
+
+const filteredDeclinedInvitations = computed(() => {
+  if (!team.value) return []
+  const list = declinedInvitations.value
+  const search = memberSearch.value.trim().toLowerCase()
+  if (!search) return list
+  return list.filter((inv) => {
+    const text = [inv.user.username, inv.user.email, inv.user.full_name || ''].join(' ').toLowerCase()
+    return text.includes(search)
+  })
+})
+
+const statusByUserId = computed(() => {
+  const map = {}
+  if (!team.value) return map
+
+  const membersSet = new Set((team.value.members || []).map((m) => m.id))
+  const myInvitationStatus = team.value.my_invitation_status
+  const myJoinRequestStatus = team.value.my_join_request_status
+  const invitations = team.value.invitations || []
+  const joinRequests = team.value.join_requests || []
+
+  const invitationByUserId = {}
+  for (const inv of invitations) {
+    const uid = inv?.user?.id
+    if (uid) invitationByUserId[uid] = inv
+  }
+
+  const joinRequestByUserId = {}
+  for (const jr of joinRequests) {
+    const uid = jr?.user?.id
+    if (uid) joinRequestByUserId[uid] = jr
+  }
+
+  const allUserIds = new Set([
+    ...membersSet,
+    ...Object.keys(invitationByUserId).map((x) => Number(x)),
+    ...Object.keys(joinRequestByUserId).map((x) => Number(x)),
+  ])
+
+  for (const userId of allUserIds) {
+    const invitation = invitationByUserId[userId]
+    const joinRequest = joinRequestByUserId[userId]
+    const accepted = membersSet.has(userId)
+    const isCurrentUser = userId === currentUserId.value
+
+    const invitationStatus = invitation?.status ?? (isCurrentUser ? myInvitationStatus : null)
+    const joinRequestStatus = joinRequest?.status ?? (isCurrentUser ? myJoinRequestStatus : null)
+
+    const invited = invitationStatus === 'invited'
+    const pending = joinRequestStatus === 'pending'
+    const declined = invitationStatus === 'declined' || joinRequestStatus === 'declined'
+
+    let source = 'Member'
+    if (invitationStatus) source = 'Invitation'
+    else if (joinRequestStatus) source = 'Join request'
+
+    map[userId] = { accepted, declined, invited, pending, source }
+  }
+
+  return map
 })
 
 const expectedDeleteText = computed(() => team.value?.name || '')
@@ -659,6 +902,100 @@ watch(
   padding: 0.65rem 0.75rem;
 }
 
+.members-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.members-section {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.invitations-list {
+  grid-template-rows: auto;
+}
+
+.invitations-divider {
+  grid-column: 1 / -1;
+  margin-top: 0.35rem;
+  margin-bottom: 0.15rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.03);
+  border-radius: 12px;
+  color: var(--ink-700);
+  font-weight: 700;
+  text-transform: none;
+}
+
+.section-subhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.8rem;
+}
+
+.section-subhead h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.member-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+.status-tags {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.status-tag {
+  border-radius: 999px;
+  border: 1px solid var(--line-soft);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.status-accepted {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+}
+
+.status-declined {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+}
+
+.status-invited {
+  border-color: rgba(20, 184, 166, 0.45);
+  background: rgba(20, 184, 166, 0.12);
+  color: var(--brand-700);
+}
+
+.status-pending {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+}
+
+.status-source {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.03);
+  color: var(--ink-700);
+  text-transform: none;
+}
+
 .member-name,
 .member-email {
   margin: 0;
@@ -829,6 +1166,14 @@ watch(
   .manage-row {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .member-side {
+    align-items: flex-start;
+  }
+
+  .status-tags {
+    justify-content: flex-start;
   }
 }
 </style>
