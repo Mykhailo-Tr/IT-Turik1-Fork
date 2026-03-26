@@ -12,7 +12,13 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
-from .serializers import RegisterSerializer, UserSerializer, UserUpdateSerializer
+from .serializers import (
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    RegisterSerializer,
+    UserSerializer,
+    UserUpdateSerializer,
+)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -134,3 +140,53 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class PasswordResetRequestView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {'message': 'Password reset email sent successfully.'},
+            status=status.HTTP_200_OK,
+        )
+
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = (AllowAny,)
+
+    @staticmethod
+    def _get_user(uidb64):
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()
+            return User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return None
+
+    def get(self, request, uidb64, token):
+        user = self._get_user(uidb64)
+        if user is None or not default_token_generator.check_token(user, token):
+            return Response(
+                {'message': 'Password reset link is invalid or expired.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return Response({'message': 'Password reset link is valid.'}, status=status.HTTP_200_OK)
+
+    def post(self, request, uidb64, token):
+        user = self._get_user(uidb64)
+        if user is None or not default_token_generator.check_token(user, token):
+            return Response(
+                {'message': 'Password reset link is invalid or expired.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = PasswordResetConfirmSerializer(data=request.data, context={'user': user})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {'message': 'Password has been reset successfully.'},
+            status=status.HTTP_200_OK,
+        )

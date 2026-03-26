@@ -1,7 +1,11 @@
 from unittest.mock import patch
 
+from django.contrib.auth.tokens import default_token_generator
+from django.core import mail
 from django.test import override_settings
 from django.urls import reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -198,3 +202,140 @@ class GoogleAuthViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(User.objects.filter(id=user.id).exists())
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class PasswordResetFlowTests(APITestCase):
+    request_url = reverse('password_reset_request')
+
+    @staticmethod
+    def _get_uid_and_token(user):
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        return uid, token
+
+    def test_password_reset_request_sends_email(self):
+        user = User.objects.create_user(
+            username='reset-user',
+            email='reset-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+
+        response = self.client.post(self.request_url, {'email': user.email}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('reset-password', mail.outbox[0].body)
+        self.assertIn(user.email, mail.outbox[0].to)
+
+    def test_password_reset_request_rejects_nonexistent_email(self):
+        response = self.client.post(self.request_url, {'email': 'missing@example.com'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_password_reset_request_rejects_invalid_email_format(self):
+        response = self.client.post(self.request_url, {'email': 'invalid-email'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('email', response.data)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_password_reset_confirm_get_rejects_invalid_or_expired_link(self):
+        user = User.objects.create_user(
+            username='invalid-link-user',
+            email='invalid-link-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+        uid, _ = self._get_uid_and_token(user)
+        url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': 'invalid-token'})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['message'], 'Password reset link is invalid or expired.')
+
+    def test_password_reset_confirm_get_accepts_valid_link(self):
+        user = User.objects.create_user(
+            username='valid-link-user',
+            email='valid-link-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+        uid, token = self._get_uid_and_token(user)
+        url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Password reset link is valid.')
+
+    def test_password_reset_confirm_post_updates_password(self):
+        user = User.objects.create_user(
+            username='confirm-reset-user',
+            email='confirm-reset-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+        uid, token = self._get_uid_and_token(user)
+        url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+
+        response = self.client.post(
+            url,
+            {
+                'new_password': 'NewStrongPass123!',
+                'confirm_password': 'NewStrongPass123!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('NewStrongPass123!'))
+
+    def test_password_reset_confirm_post_rejects_mismatched_passwords(self):
+        user = User.objects.create_user(
+            username='mismatch-user',
+            email='mismatch-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+        uid, token = self._get_uid_and_token(user)
+        url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+
+        response = self.client.post(
+            url,
+            {
+                'new_password': 'NewStrongPass123!',
+                'confirm_password': 'DifferentPass123!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('confirm_password', response.data)
+
+    def test_password_reset_confirm_post_rejects_weak_password(self):
+        user = User.objects.create_user(
+            username='weak-reset-user',
+            email='weak-reset-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+        uid, token = self._get_uid_and_token(user)
+        url = reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+
+        response = self.client.post(
+            url,
+            {
+                'new_password': 'weakpass',
+                'confirm_password': 'weakpass',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)

@@ -166,3 +166,53 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             instance.save(update_fields=update_fields)
 
         return instance
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('No account found with this email address.')
+        return value
+
+    def save(self):
+        email = self.validated_data['email']
+        user = User.objects.get(email=email)
+
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        reset_link = f"http://localhost:5173/reset-password/{uid}/{token}"
+
+        send_mail(
+            subject='Password reset',
+            message=f'Open this link to reset your password: {reset_link}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+        )
+
+        return user
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = self.context.get('user')
+        if user is None:
+            raise serializers.ValidationError({'detail': 'Invalid password reset request.'})
+
+        new_password = attrs.get('new_password')
+        confirm_password = attrs.get('confirm_password')
+        if new_password != confirm_password:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+
+        validate_strong_password(new_password, user=user)
+        return attrs
+
+    def save(self):
+        user = self.context['user']
+        user.set_password(self.validated_data['new_password'])
+        user.save(update_fields=['password'])
+        return user

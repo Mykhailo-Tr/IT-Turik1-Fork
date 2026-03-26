@@ -2,11 +2,13 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import Activate from '@/features/auth/views/ActivateView.vue'
 import CompleteProfile from '@/features/auth/views/CompleteProfileView.vue'
+import ForgotPassword from '@/features/auth/views/ForgotPasswordView.vue'
 import EditProfile from '@/features/profile/views/EditProfileView.vue'
 import Home from '@/features/home/views/HomeView.vue'
 import Login from '@/features/auth/views/LoginView.vue'
 import Profile from '@/features/profile/views/ProfileView.vue'
 import Register from '@/features/auth/views/RegisterView.vue'
+import ResetPassword from '@/features/auth/views/ResetPasswordView.vue'
 import TeamsCreate from '@/features/teams/views/TeamsCreateView.vue'
 import TeamsDetail from '@/features/teams/views/TeamsDetailView.vue'
 import TeamsEdit from '@/features/teams/views/TeamsEditView.vue'
@@ -26,6 +28,16 @@ const routes = [
   {
     path: '/register',
     component: Register,
+    meta: { requiresGuest: true },
+  },
+  {
+    path: '/forgot-password',
+    component: ForgotPassword,
+    meta: { requiresGuest: true },
+  },
+  {
+    path: '/reset-password/:uid/:token',
+    component: ResetPassword,
     meta: { requiresGuest: true },
   },
   {
@@ -94,7 +106,12 @@ router.beforeEach((to, from, next) => {
     return
   }
 
-  if (to.meta.requiresGuest && isAuthenticated && !to.path.startsWith('/activate/')) {
+  if (
+    to.meta.requiresGuest
+    && isAuthenticated
+    && !to.path.startsWith('/activate/')
+    && !to.path.startsWith('/reset-password/')
+  ) {
     next('/')
     return
   }

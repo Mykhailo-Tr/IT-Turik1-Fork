@@ -19,6 +19,9 @@
             required
           />
         </label>
+        <p class="forgot-link">
+          <router-link to="/forgot-password">Forgot password?</router-link>
+        </p>
 
         <button type="submit" class="btn-primary" :disabled="isLoading">
           {{ isLoading ? 'Signing in...' : 'Sign in' }}
@@ -107,6 +110,18 @@ const handleLogin = async () => {
 
 .feedback {
   margin: 0.6rem 0 0;
+}
+
+.forgot-link {
+  margin: -0.2rem 0 0;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+.forgot-link a {
+  color: var(--brand-700);
+  text-decoration: none;
+  font-weight: 600;
 }
 
 @media (max-width: 640px) {
