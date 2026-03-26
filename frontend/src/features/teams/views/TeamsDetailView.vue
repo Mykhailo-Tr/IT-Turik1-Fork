@@ -249,7 +249,7 @@
                     <template v-else>
                       <div class="status-tags">
                         <span class="status-tag status-invited">invited</span>
-                        <span class="status-tag status-source">Invitation</span>
+                        <!-- <span class="status-tag status-source">Invitation</span> -->
                       </div>
                     </template>
                   </div>
