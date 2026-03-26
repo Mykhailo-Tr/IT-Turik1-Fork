@@ -300,14 +300,39 @@
           <router-link :to="`/teams/${team.id}/edit`" class="btn-soft action-link action-btn">Edit team</router-link>
         </div>
 
-        <div class="manage-row danger">
-          <div>
-            <h3>Delete team</h3>
-            <p class="text-muted">This action permanently deletes the team.</p>
+        <div class="danger-zone-header">
+          <svg viewBox="0 0 24 24" class="danger-zone-icon" aria-hidden="true">
+            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span>Danger Zone</span>
+        </div>
+
+        <div class="danger-zone-box">
+          <div class="manage-row danger">
+            <div>
+              <h3>Change visibility</h3>
+              <p class="text-muted">
+                This team is currently
+                <span class="visibility-badge" :class="team.is_public ? 'visibility-public' : 'visibility-private'">
+                  {{ team.is_public ? 'Public' : 'Private' }}
+                </span>.
+                {{ team.is_public ? 'Anyone can find and request to join this team.' : 'Only invited members can see this team.' }}
+              </p>
+            </div>
+            <button class="btn-warning" type="button" :disabled="visibilityLoading" @click="openVisibilityModal">
+              Change visibility
+            </button>
           </div>
-          <button class="btn-danger" type="button" :disabled="deleteTeamLoading" @click="openDeleteModal">
-            Delete team
-          </button>
+
+          <div class="manage-row danger">
+            <div>
+              <h3>Delete team</h3>
+              <p class="text-muted">This action permanently deletes the team and cannot be undone.</p>
+            </div>
+            <button class="btn-danger" type="button" :disabled="deleteTeamLoading" @click="openDeleteModal">
+              Delete team
+            </button>
+          </div>
         </div>
       </article>
     </template>
@@ -323,6 +348,86 @@
           </button>
           <button class="btn-danger" type="button" :disabled="leaveTeamLoading" @click="confirmLeaveTeam">
             {{ leaveTeamLoading ? 'Leaving...' : 'Leave' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="isVisibilityModalOpen" class="modal-backdrop" @click.self="closeVisibilityModal">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="visibility-modal-title">
+        <h3 id="visibility-modal-title">Change team visibility</h3>
+        <p class="modal-text">
+          Select the new visibility for <code>{{ team?.name }}</code>. This affects who can discover and join your team.
+        </p>
+
+        <div class="visibility-options">
+          <label class="visibility-option" :class="{ selected: selectedVisibility === true }">
+            <input
+              v-model="selectedVisibility"
+              type="radio"
+              name="visibility"
+              :value="true"
+              :disabled="visibilityLoading"
+            />
+            <div class="visibility-option-content">
+              <div class="visibility-option-header">
+                <svg viewBox="0 0 24 24" class="visibility-option-icon" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                </svg>
+                <strong>Public</strong>
+              </div>
+              <p>Anyone can find and request to join this team.</p>
+            </div>
+          </label>
+
+          <label class="visibility-option" :class="{ selected: selectedVisibility === false }">
+            <input
+              v-model="selectedVisibility"
+              type="radio"
+              name="visibility"
+              :value="false"
+              :disabled="visibilityLoading"
+            />
+            <div class="visibility-option-content">
+              <div class="visibility-option-header">
+                <svg viewBox="0 0 24 24" class="visibility-option-icon" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
+                <strong>Private</strong>
+              </div>
+              <p>Only invited members can find and access this team.</p>
+            </div>
+          </label>
+        </div>
+
+        <div v-if="selectedVisibility !== team?.is_public" class="visibility-confirm-note">
+          <svg viewBox="0 0 24 24" class="note-icon" aria-hidden="true">
+            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          <span>
+            You are about to change this team from
+            <strong>{{ team?.is_public ? 'Public' : 'Private' }}</strong>
+            to
+            <strong>{{ selectedVisibility ? 'Public' : 'Private' }}</strong>.
+          </span>
+        </div>
+
+        <p v-if="visibilityError" class="text-error modal-error">{{ visibilityError }}</p>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" type="button" :disabled="visibilityLoading" @click="closeVisibilityModal">
+            Cancel
+          </button>
+          <button
+            class="btn-warning"
+            type="button"
+            :disabled="visibilityLoading || selectedVisibility === team?.is_public"
+            @click="confirmChangeVisibility"
+          >
+            {{ visibilityLoading ? 'Saving...' : 'Confirm change' }}
           </button>
         </div>
       </div>
@@ -380,6 +485,10 @@ const { showNotification, hideNotification } = useGlobalNotification()
 const memberSearch = ref('')
 const isLeaveModalOpen = ref(false)
 const isDeleteModalOpen = ref(false)
+const isVisibilityModalOpen = ref(false)
+const selectedVisibility = ref(null)
+const visibilityLoading = ref(false)
+const visibilityError = ref('')
 const deleteConfirmInput = ref('')
 const deleteTeamLoading = ref(false)
 const deleteError = ref('')
@@ -632,6 +741,55 @@ const loadWorkspace = async () => {
 
   await fetchTeam()
   loading.value = false
+}
+
+const openVisibilityModal = () => {
+  selectedVisibility.value = team.value?.is_public ?? true
+  visibilityError.value = ''
+  isVisibilityModalOpen.value = true
+}
+
+const closeVisibilityModal = () => {
+  if (visibilityLoading.value) return
+  isVisibilityModalOpen.value = false
+}
+
+const confirmChangeVisibility = async () => {
+  if (!team.value || !isCaptain.value) return
+  if (selectedVisibility.value === team.value.is_public) return
+
+  visibilityLoading.value = true
+  visibilityError.value = ''
+  hideNotification()
+
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/`, {
+      method: 'PATCH',
+      headers: authHeaders(true),
+      body: JSON.stringify({ is_public: selectedVisibility.value }),
+    })
+
+    if (response.status === 401) {
+      logoutToLogin()
+      return
+    }
+
+    if (!response.ok) {
+      visibilityError.value = await parseApiError(response, 'Unable to change team visibility.')
+      return
+    }
+
+    team.value = await response.json()
+    isVisibilityModalOpen.value = false
+    showNotification(
+      `Team visibility changed to ${team.value.is_public ? 'Public' : 'Private'}.`,
+      'success',
+    )
+  } catch {
+    visibilityError.value = 'Server connection error.'
+  } finally {
+    visibilityLoading.value = false
+  }
 }
 
 const openDeleteModal = () => {
@@ -1137,6 +1295,65 @@ watch(
   overflow: hidden;
 }
 
+.danger-zone-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  margin: 0.2rem 0 0;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.danger-zone-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+.danger-zone-box {
+  margin-top: 0.6rem;
+  border: 1px solid rgba(220, 38, 38, 0.22);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(254, 226, 226, 0.18);
+}
+
+.danger-zone-box .manage-row {
+  padding: 1rem;
+  border-top: 1px solid rgba(220, 38, 38, 0.14);
+}
+
+.danger-zone-box .manage-row:first-child {
+  border-top: none;
+}
+
+.visibility-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.visibility-public {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.visibility-private {
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
 .manage-row {
   display: flex;
   justify-content: space-between;
@@ -1209,6 +1426,82 @@ watch(
   gap: 0.6rem;
 }
 
+.visibility-options {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1rem 0 0.8rem;
+}
+
+.visibility-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid var(--line-soft);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.visibility-option:hover {
+  border-color: var(--brand-500, #14b8a6);
+  background: rgba(20, 184, 166, 0.04);
+}
+
+.visibility-option.selected {
+  border-color: var(--brand-500, #14b8a6);
+  background: rgba(20, 184, 166, 0.06);
+}
+
+.visibility-option input[type='radio'] {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  accent-color: var(--brand-500, #14b8a6);
+}
+
+.visibility-option-content {
+  flex: 1;
+}
+
+.visibility-option-content p {
+  margin: 0.2rem 0 0;
+  font-size: 0.84rem;
+  color: var(--ink-600);
+}
+
+.visibility-option-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.visibility-option-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--ink-600);
+}
+
+.visibility-confirm-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  font-size: 0.87rem;
+  color: #78350f;
+  margin-bottom: 0.5rem;
+}
+
+.note-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: #d97706;
+}
+
 .btn-soft {
   border: 1px solid var(--line-strong);
   background: #fff;
@@ -1217,6 +1510,22 @@ watch(
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+}
+
+.btn-warning {
+  border: 1px solid #d97706;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 10px;
+  padding: 0.45rem 0.7rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-warning:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .btn-danger {
