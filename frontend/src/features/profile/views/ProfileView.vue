@@ -12,32 +12,32 @@
       <div v-if="loadingProfile" class="state-box">Loading profile...</div>
       <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
       <div v-else class="details">
-        <div class="item">
-          <span>Username</span>
-          <strong>{{ profile.username || '-' }}</strong>
+        <div class="item item-text">
+          <span class="item-label">Username</span>
+          <strong class="item-value value-wrap">{{ profile.username || '-' }}</strong>
         </div>
-        <div class="item">
-          <span>Email</span>
-          <strong>{{ profile.email || '-' }}</strong>
+        <div class="item item-text">
+          <span class="item-label">Email</span>
+          <strong class="item-value value-wrap">{{ profile.email || '-' }}</strong>
         </div>
-        <div class="item">
-          <span>Role</span>
+        <div class="item item-role">
+          <span class="item-label">Role</span>
           <strong class="badge">{{ profile.role || '-' }}</strong>
         </div>
-        <div class="item">
-          <span>Full name</span>
-          <strong>{{ profile.full_name || '-' }}</strong>
+        <div class="item item-text">
+          <span class="item-label">Full name</span>
+          <strong class="item-value value-wrap">{{ profile.full_name || '-' }}</strong>
         </div>
-        <div class="item">
-          <span>Phone</span>
-          <strong>{{ profile.phone || '-' }}</strong>
+        <div class="item item-text">
+          <span class="item-label">City</span>
+          <strong class="item-value value-wrap">{{ profile.city || '-' }}</strong>
         </div>
-        <div class="item">
-          <span>City</span>
-          <strong>{{ profile.city || '-' }}</strong>
+        <div class="item item-phone">
+          <span class="item-label">Phone</span>
+          <strong class="item-value value-fixed">{{ profile.phone || '-' }}</strong>
         </div>
         <div class="item item-wide">
-          <span>Teams</span>
+          <span class="item-label">Teams</span>
           <div class="team-list">
             <router-link
               v-for="team in profile.teams || []"
@@ -268,6 +268,7 @@ onMounted(fetchProfile)
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
   margin-top: 1rem;
+  align-items: start;
 }
 
 .item {
@@ -275,16 +276,48 @@ onMounted(fetchProfile)
   border-radius: 14px;
   padding: 0.7rem;
   background: rgba(255, 255, 255, 0.85);
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
 }
 
-.item span {
-  display: block;
+.item-label {
   color: var(--ink-500);
   font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
-.item strong {
+.item-value {
   color: var(--ink-900);
+  line-height: 1.35;
+}
+
+.value-wrap {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.value-fixed {
+  white-space: nowrap;
+}
+
+.item-role {
+  align-content: start;
+  padding-left: 0.85rem;
+}
+
+.item-role .badge {
+  display: inline-flex;
+  justify-self: start;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.item-phone {
+  align-content: start;
 }
 
 .item-wide {
@@ -295,6 +328,7 @@ onMounted(fetchProfile)
   margin-top: 0.4rem;
   display: grid;
   gap: 0.35rem;
+  min-width: 0;
 }
 
 .team-list p {
@@ -305,6 +339,8 @@ onMounted(fetchProfile)
   color: var(--brand-700);
   text-decoration: none;
   font-weight: 700;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .badge {
