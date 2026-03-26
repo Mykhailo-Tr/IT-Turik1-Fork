@@ -151,7 +151,7 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span class="status-tag status-accepted">accepted</span>
+                        <!-- <span class="status-tag status-accepted">accepted</span> -->
                         <span class="status-tag status-source">{{ statusByUserId?.[member.id]?.source || 'Member' }}</span>
                       </div>
                     </template>
@@ -185,10 +185,10 @@
                       <span class="captain-tag">Captain</span>
                     </template>
                     <template v-else>
-                      <div class="status-tags">
+                      <!-- <div class="status-tags">
                         <span class="status-tag status-pending">pending</span>
                         <span class="status-tag status-source">Join request</span>
-                      </div>
+                      </div> -->
                       <div class="row-actions">
                         <button
                           type="button"
