@@ -115,6 +115,23 @@
               </div>
             </article>
           </div>
+          <div v-if="isCaptain" class="add-member-box">
+            <h3>Invitations status</h3>
+            <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
+            <div v-else class="member-list">
+              <article v-for="invitation in team.invitations" :key="`inv-${invitation.id}`" class="member-row">
+                <div>
+                  <p class="member-name">{{ invitation.user.username }}</p>
+                  <p class="text-muted member-email">{{ invitation.user.email }}</p>
+                </div>
+                <!-- if declined red -->
+                <span v-if="invitation.status === 'declined'" class="status-tag status-declined">
+                  {{ invitation.status }}
+                </span>
+                <span v-else class="captain-tag">{{ invitation.status }}</span>
+              </article>
+            </div>
+          </div>
 
           <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
 
@@ -138,19 +155,7 @@
             </button>
           </div>
 
-          <div v-if="isCaptain" class="add-member-box">
-            <h3>Invitations status</h3>
-            <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
-            <div v-else class="member-list">
-              <article v-for="invitation in team.invitations" :key="`inv-${invitation.id}`" class="member-row">
-                <div>
-                  <p class="member-name">{{ invitation.user.username }}</p>
-                  <p class="text-muted member-email">{{ invitation.user.email }}</p>
-                </div>
-                <span class="captain-tag">{{ invitation.status }}</span>
-              </article>
-            </div>
-          </div>
+
         </article>
       </div>
     </template>
