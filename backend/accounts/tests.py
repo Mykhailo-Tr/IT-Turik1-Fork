@@ -9,7 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import User
+from .models import RoleActivationCode, User
 
 
 @override_settings(GOOGLE_OAUTH_CLIENT_ID='test-google-client-id')
@@ -93,7 +93,7 @@ class GoogleAuthViewTests(APITestCase):
             self.profile_url,
             {
                 'username': 'updatedgoogleuser',
-                'role': 'jury',
+                'role': 'team',
                 'full_name': 'Updated Name',
                 'phone': '+380991112233',
                 'city': 'Kyiv',
@@ -104,11 +104,39 @@ class GoogleAuthViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
         self.assertEqual(user.username, 'updatedgoogleuser')
-        self.assertEqual(user.role, 'jury')
+        self.assertEqual(user.role, 'team')
         self.assertEqual(user.full_name, 'Updated Name')
         self.assertEqual(user.phone, '+380991112233')
         self.assertEqual(user.city, 'Kyiv')
         self.assertFalse(user.needs_onboarding)
+
+    def test_profile_update_requires_redeem_code_for_restricted_google_onboarding_role(self):
+        user = User.objects.create(
+            username='google-restricted-no-code',
+            email='google-restricted-no-code@example.com',
+            needs_onboarding=True,
+            is_active=True,
+            role='team',
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            self.profile_url,
+            {
+                'username': 'google-restricted-no-code-updated',
+                'role': 'jury',
+                'password': 'StrongerPass123!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('redeem_code', response.data)
+        user.refresh_from_db()
+        self.assertEqual(user.role, 'team')
+        self.assertTrue(user.needs_onboarding)
 
     def test_profile_update_requires_password_for_google_onboarding(self):
         user = User.objects.create(
@@ -146,6 +174,7 @@ class GoogleAuthViewTests(APITestCase):
         )
         user.set_unusable_password()
         user.save(update_fields=['password'])
+        role_code = RoleActivationCode.objects.create(code='ORG-GOOGLE-0001', role='organizer')
 
         self.client.force_authenticate(user=user)
         response = self.client.patch(
@@ -153,6 +182,7 @@ class GoogleAuthViewTests(APITestCase):
             {
                 'username': 'google-new-password-updated',
                 'role': 'organizer',
+                'redeem_code': role_code.code,
                 'password': 'StrongerPass123!',
             },
             format='json',
@@ -160,7 +190,11 @@ class GoogleAuthViewTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         user.refresh_from_db()
+        role_code.refresh_from_db()
         self.assertTrue(user.check_password('StrongerPass123!'))
+        self.assertEqual(user.role, 'organizer')
+        self.assertTrue(role_code.is_used)
+        self.assertEqual(role_code.used_by_id, user.id)
         self.assertFalse(user.needs_onboarding)
 
     def test_profile_update_rejects_weak_password_for_google_onboarding(self):
@@ -178,7 +212,7 @@ class GoogleAuthViewTests(APITestCase):
             self.profile_url,
             {
                 'username': 'google-weak-password-updated',
-                'role': 'jury',
+                'role': 'team',
                 'password': 'weakpass',
             },
             format='json',
@@ -409,3 +443,135 @@ class ChangePasswordFlowTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('non_field_errors', response.data)
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class RoleBasedRegistrationTests(APITestCase):
+    register_url = reverse('register')
+    role_codes_url = reverse('role_codes_admin')
+
+    def test_team_member_registration_does_not_require_code(self):
+        response = self.client.post(
+            self.register_url,
+            {
+                'username': 'team-user',
+                'email': 'team-user@example.com',
+                'password': 'StrongPass123!',
+                'role': 'team',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(username='team-user')
+        self.assertEqual(user.role, 'team')
+        self.assertFalse(user.is_superuser)
+
+    def test_restricted_role_registration_requires_redeem_code(self):
+        response = self.client.post(
+            self.register_url,
+            {
+                'username': 'jury-user',
+                'email': 'jury-user@example.com',
+                'password': 'StrongPass123!',
+                'role': 'jury',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('redeem_code', response.data)
+
+    def test_restricted_role_registration_consumes_code_once(self):
+        code = RoleActivationCode.objects.create(code='JURYCODE1234', role='jury')
+
+        first_response = self.client.post(
+            self.register_url,
+            {
+                'username': 'jury-user-1',
+                'email': 'jury-user-1@example.com',
+                'password': 'StrongPass123!',
+                'role': 'jury',
+                'redeem_code': 'JURYCODE1234',
+            },
+            format='json',
+        )
+        self.assertEqual(first_response.status_code, status.HTTP_201_CREATED)
+
+        code.refresh_from_db()
+        self.assertTrue(code.is_used)
+        self.assertEqual(code.used_by.username, 'jury-user-1')
+
+        second_response = self.client.post(
+            self.register_url,
+            {
+                'username': 'jury-user-2',
+                'email': 'jury-user-2@example.com',
+                'password': 'StrongPass123!',
+                'role': 'jury',
+                'redeem_code': 'JURYCODE1234',
+            },
+            format='json',
+        )
+        self.assertEqual(second_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('redeem_code', second_response.data)
+
+    def test_admin_role_registration_elevates_to_superuser(self):
+        RoleActivationCode.objects.create(code='ADMINCODE123', role='admin')
+
+        response = self.client.post(
+            self.register_url,
+            {
+                'username': 'admin-user',
+                'email': 'admin-user@example.com',
+                'password': 'StrongPass123!',
+                'role': 'admin',
+                'redeem_code': 'ADMINCODE123',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        user = User.objects.get(username='admin-user')
+        self.assertEqual(user.role, 'admin')
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+
+    def test_non_admin_cannot_manage_role_codes(self):
+        regular_user = User.objects.create_user(
+            username='regular',
+            email='regular@example.com',
+            password='StrongPass123!',
+        )
+        self.client.force_authenticate(user=regular_user)
+
+        response = self.client.get(self.role_codes_url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_can_generate_codes_with_limit_of_ten_active_per_role(self):
+        admin_user = User.objects.create_user(
+            username='platform-admin',
+            email='platform-admin@example.com',
+            password='StrongPass123!',
+            role='admin',
+            is_staff=True,
+            is_superuser=True,
+        )
+        self.client.force_authenticate(user=admin_user)
+
+        response = self.client.post(
+            self.role_codes_url,
+            {'role': 'jury', 'quantity': 10},
+            format='json',
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(RoleActivationCode.objects.filter(role='jury', is_used=False).count(), 10)
+
+        overflow_response = self.client.post(
+            self.role_codes_url,
+            {'role': 'jury', 'quantity': 1},
+            format='json',
+        )
+        self.assertEqual(overflow_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('role', overflow_response.data)

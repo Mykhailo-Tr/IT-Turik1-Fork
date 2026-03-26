@@ -11,11 +11,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User
+from .models import RoleActivationCode, User
 from .serializers import (
     ChangePasswordSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
+    RoleActivationCodeGenerateSerializer,
+    RoleActivationCodeSerializer,
     RegisterSerializer,
     UserSerializer,
     UserUpdateSerializer,
@@ -201,3 +203,59 @@ class ChangePasswordView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({'message': 'Password changed successfully.'}, status=status.HTTP_200_OK)
+
+
+class RoleActivationCodeAdminView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @staticmethod
+    def _is_platform_admin(user):
+        return bool(user and user.is_authenticated and (user.is_superuser or user.role == 'admin'))
+
+    def _deny_if_not_admin(self, request):
+        if not self._is_platform_admin(request.user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+        return None
+
+    @staticmethod
+    def _active_counts():
+        roles = ('jury', 'organizer', 'admin')
+        return {
+            role: RoleActivationCode.objects.filter(role=role, is_used=False).count()
+            for role in roles
+        }
+
+    def get(self, request):
+        denied = self._deny_if_not_admin(request)
+        if denied:
+            return denied
+
+        role = request.query_params.get('role', '').strip()
+        queryset = RoleActivationCode.objects.select_related('created_by', 'used_by').order_by('-created_at')
+        if role:
+            queryset = queryset.filter(role=role)
+
+        serializer = RoleActivationCodeSerializer(queryset, many=True)
+        return Response(
+            {
+                'codes': serializer.data,
+                'active_counts': self._active_counts(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request):
+        denied = self._deny_if_not_admin(request)
+        if denied:
+            return denied
+
+        serializer = RoleActivationCodeGenerateSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        codes = serializer.save()
+        return Response(
+            {
+                'created': RoleActivationCodeSerializer(codes, many=True).data,
+                'active_counts': self._active_counts(),
+            },
+            status=status.HTTP_201_CREATED,
+        )

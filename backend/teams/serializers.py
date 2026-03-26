@@ -54,6 +54,10 @@ def invite_user_to_team(*, team, user, invited_by):
     return invitation, created
 
 
+def is_platform_admin(user):
+    return bool(user and user.is_authenticated and (user.is_superuser or user.role == 'admin'))
+
+
 class TeamMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -147,7 +151,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     def get_invitations(self, obj):
         user = self._request_user()
-        if not self._is_captain_for_user(obj, user):
+        if not self._is_captain_for_user(obj, user) and not is_platform_admin(user):
             return []
         member_ids = {member.id for member in obj.members.all()}
         invitations = [invitation for invitation in obj.invitations.all() if invitation.user_id not in member_ids]
@@ -155,7 +159,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     def get_join_requests(self, obj):
         user = self._request_user()
-        if not self._is_captain_for_user(obj, user):
+        if not self._is_captain_for_user(obj, user) and not is_platform_admin(user):
             return []
         return TeamJoinRequestSerializer(obj.join_requests.all(), many=True).data
 

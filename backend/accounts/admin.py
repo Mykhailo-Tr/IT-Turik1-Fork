@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import User
+from .models import RoleActivationCode, User
 
 
 @admin.register(User)
@@ -27,3 +27,11 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
+
+
+@admin.register(RoleActivationCode)
+class RoleActivationCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'role', 'is_used', 'created_by', 'used_by', 'created_at', 'used_at')
+    list_filter = ('role', 'is_used', 'created_at')
+    search_fields = ('code', 'created_by__username', 'used_by__username')
+    readonly_fields = ('created_at', 'used_at')

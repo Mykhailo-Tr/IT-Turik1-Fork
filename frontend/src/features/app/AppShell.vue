@@ -18,6 +18,7 @@
           <template v-else>
             <router-link to="/teams" :class="navItemClass('teams')">Teams</router-link>
             <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
+            <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')">Admin</router-link>
             <button @click="logout" class="nav-item nav-danger">Logout</button>
           </template>
         </div>
@@ -47,14 +48,36 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { API_BASE } from '@/features/shared/config/api'
 
 const isLoggedIn = ref(false)
+const isAdmin = ref(false)
 const router = useRouter()
 const route = useRoute()
 const { notification, hideNotification } = useGlobalNotification()
 
-const checkAuth = () => {
-  isLoggedIn.value = !!localStorage.getItem('access')
+const checkAuth = async () => {
+  const token = localStorage.getItem('access')
+  isLoggedIn.value = !!token
+  if (!token) {
+    isAdmin.value = false
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!response.ok) {
+      isAdmin.value = false
+      return
+    }
+
+    const data = await response.json()
+    isAdmin.value = data.role === 'admin'
+  } catch {
+    isAdmin.value = false
+  }
 }
 
 const isSectionActive = (section) => {
@@ -70,6 +93,10 @@ const isSectionActive = (section) => {
 
   if (section === 'profile') {
     return path === '/profile' || path.startsWith('/profile/') || path === '/complete-profile'
+  }
+
+  if (section === 'admin') {
+    return path === '/admin/role-codes'
   }
 
   if (section === 'login') {
@@ -104,6 +131,7 @@ const logout = () => {
   localStorage.removeItem('access')
   localStorage.removeItem('refresh')
   localStorage.removeItem('needs_onboarding')
+  isAdmin.value = false
   checkAuth()
   router.push('/login')
 }

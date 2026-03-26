@@ -44,6 +44,18 @@
             </select>
           </label>
 
+          <label v-if="isRestrictedRole" class="form-label full-width">
+            Redeem code
+            <input
+              v-model="form.redeem_code"
+              class="input-control"
+              type="text"
+              placeholder="Enter one-time activation code"
+              required
+            />
+            <small v-if="errors.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+          </label>
+
           <label class="form-label full-width">
             Full name
             <input v-model="form.full_name" class="input-control" type="text" placeholder="John Doe" />
@@ -81,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
@@ -96,10 +108,23 @@ const form = ref({
   email: '',
   password: '',
   role: 'team',
+  redeem_code: '',
   full_name: '',
   phone: '',
   city: '',
 })
+
+const restrictedRoles = ['jury', 'organizer', 'admin']
+const isRestrictedRole = computed(() => restrictedRoles.includes(form.value.role))
+
+watch(
+  () => form.value.role,
+  (newRole) => {
+    if (!restrictedRoles.includes(newRole)) {
+      form.value.redeem_code = ''
+    }
+  },
+)
 
 const errors = ref({})
 const isLoading = ref(false)

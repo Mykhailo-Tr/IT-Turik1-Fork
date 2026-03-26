@@ -27,6 +27,14 @@ class TeamApiTests(APITestCase):
             email='other@example.com',
             password='StrongPass123!',
         )
+        self.admin_user = User.objects.create_user(
+            username='admin',
+            email='admin@example.com',
+            password='StrongPass123!',
+            role='admin',
+            is_staff=True,
+            is_superuser=True,
+        )
 
     def _create_team(self, payload):
         self.client.force_authenticate(user=self.captain)
@@ -427,6 +435,34 @@ class TeamApiTests(APITestCase):
 
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_admin_can_view_private_teams_and_hidden_team_details(self):
+        team = self._create_team(
+            {
+                'name': 'Admin Visibility Team',
+                'email': 'admin-visibility@example.com',
+                'is_public': False,
+                'member_ids': [self.member.id],
+            }
+        )
+        TeamJoinRequest.objects.create(
+            team_id=team['id'],
+            user=self.other_user,
+            status=TeamJoinRequest.STATUS_PENDING,
+        )
+
+        self.client.force_authenticate(user=self.admin_user)
+        list_response = self.client.get(self.teams_url)
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        listed_ids = {item['id'] for item in list_response.data}
+        self.assertIn(team['id'], listed_ids)
+
+        detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(detail_response.data['invitations']), 1)
+        self.assertEqual(detail_response.data['invitations'][0]['user']['id'], self.member.id)
+        self.assertEqual(len(detail_response.data['join_requests']), 1)
+        self.assertEqual(detail_response.data['join_requests'][0]['user']['id'], self.other_user.id)
 
     def test_captain_can_invite_additional_member_and_remove_without_confirmation(self):
         team = self._create_team({'name': 'Delta Team', 'email': 'delta@example.com'})

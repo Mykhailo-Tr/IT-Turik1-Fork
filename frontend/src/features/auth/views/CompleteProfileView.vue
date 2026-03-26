@@ -28,6 +28,18 @@
           <small v-if="errors.role" class="text-error">{{ errors.role[0] }}</small>
         </label>
 
+        <label v-if="isRestrictedRole" class="form-label full-width">
+          Redeem code
+          <input
+            v-model="form.redeem_code"
+            class="input-control"
+            type="text"
+            placeholder="Enter one-time activation code"
+            required
+          />
+          <small v-if="errors.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+        </label>
+
         <label class="form-label full-width">
           Password
           <PasswordField
@@ -66,7 +78,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
@@ -83,11 +95,24 @@ const errors = ref({})
 const form = ref({
   username: '',
   role: '',
+  redeem_code: '',
   password: '',
   full_name: '',
   phone: '',
   city: '',
 })
+
+const restrictedRoles = ['jury', 'organizer', 'admin']
+const isRestrictedRole = computed(() => restrictedRoles.includes(form.value.role))
+
+watch(
+  () => form.value.role,
+  (newRole) => {
+    if (!restrictedRoles.includes(newRole)) {
+      form.value.redeem_code = ''
+    }
+  },
+)
 
 const getPasswordError = (password) => {
   if (!password) return 'Password is required to complete registration.'
@@ -189,6 +214,7 @@ onMounted(async () => {
     form.value = {
       username: data.username || '',
       role: '',
+      redeem_code: '',
       password: '',
       full_name: data.full_name || '',
       phone: data.phone || '',

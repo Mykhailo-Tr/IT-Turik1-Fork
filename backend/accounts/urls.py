@@ -7,6 +7,7 @@ from .views import (
     GoogleAuthView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
+    RoleActivationCodeAdminView,
     RegisterView,
     UserProfileView,
 )
@@ -20,6 +21,7 @@ urlpatterns = [
     path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('password-reset/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('role-codes/', RoleActivationCodeAdminView.as_view(), name='role_codes_admin'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('', include('teams.urls')),
 ]

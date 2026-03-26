@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import Activate from '@/features/auth/views/ActivateView.vue'
+import RoleCodesAdmin from '@/features/admin/views/RoleCodesAdminView.vue'
 import CompleteProfile from '@/features/auth/views/CompleteProfileView.vue'
 import ForgotPassword from '@/features/auth/views/ForgotPasswordView.vue'
 import EditProfile from '@/features/profile/views/EditProfileView.vue'
@@ -48,6 +49,11 @@ const routes = [
   {
     path: '/profile/edit',
     component: EditProfile,
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/role-codes',
+    component: RoleCodesAdmin,
     meta: { requiresAuth: true },
   },
   {

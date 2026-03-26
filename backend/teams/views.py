@@ -44,11 +44,18 @@ def is_team_member(team, user):
     return any(member.id == user.id for member in team.members.all())
 
 
+def is_platform_admin(user):
+    return bool(user and user.is_authenticated and (user.is_superuser or user.role == 'admin'))
+
+
 class TeamListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TeamSerializer
 
     def get_queryset(self):
+        if is_platform_admin(self.request.user):
+            return get_team_queryset()
+
         user_id = self.request.user.id
         return (
             get_team_queryset()
@@ -73,7 +80,7 @@ class TeamDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         team = super().get_object()
-        if team.is_public or is_team_member(team, self.request.user):
+        if team.is_public or is_team_member(team, self.request.user) or is_platform_admin(self.request.user):
             return team
         raise PermissionDenied('You do not have access to this private team.')
 
