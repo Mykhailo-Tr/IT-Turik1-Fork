@@ -24,10 +24,21 @@
 
         <label class="form-label toggle-field">
           <span>Team visibility</span>
-          <span class="toggle-row">
-            <input v-model="createForm.is_public" type="checkbox" />
-            <span>{{ createForm.is_public ? 'Public' : 'Private' }}</span>
-          </span>
+          <div class="visibility-control">
+            <span class="visibility-label">Private</span>
+            <button
+              type="button"
+              class="visibility-switch"
+              role="switch"
+              :aria-checked="createForm.is_public ? 'true' : 'false'"
+              :aria-label="`Team visibility: ${createForm.is_public ? 'Public' : 'Private'}`"
+              @click="toggleVisibility"
+              @keydown="onVisibilityKeydown"
+            >
+              <span class="switch-knob" :class="{ 'is-public': createForm.is_public }"></span>
+            </button>
+            <span class="visibility-label">Public</span>
+          </div>
         </label>
 
         <label class="form-label">
@@ -91,6 +102,8 @@ const {
   createLoading,
   handleCreateTeam,
   memberSearch,
+  onVisibilityKeydown,
+  toggleVisibility,
 } = useTeamsCreatePage()
 </script>
 

@@ -33,6 +33,33 @@ export const useTeamsCreatePage = () => {
     })
   })
 
+  const setVisibility = (isPublic) => {
+    createForm.value.is_public = Boolean(isPublic)
+  }
+
+  const toggleVisibility = () => {
+    setVisibility(!createForm.value.is_public)
+  }
+
+  const onVisibilityKeydown = (event) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      setVisibility(false)
+      return
+    }
+
+    if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      setVisibility(true)
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      toggleVisibility()
+    }
+  }
+
   const fetchProfile = async () => {
     const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
       headers: createAuthHeaders(false),
@@ -130,6 +157,7 @@ export const useTeamsCreatePage = () => {
     createLoading,
     handleCreateTeam,
     memberSearch,
+    onVisibilityKeydown,
+    toggleVisibility,
   }
 }
-
