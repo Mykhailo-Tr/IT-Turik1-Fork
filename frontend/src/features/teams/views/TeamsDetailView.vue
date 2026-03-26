@@ -51,16 +51,6 @@
       </div>
     </article>
 
-    <Transition name="notice" mode="out-in">
-      <div
-        v-if="notification"
-        :key="notification.id"
-        :class="['notice', notification.type]"
-      >
-        {{ notification.message }}
-      </div>
-    </Transition>
-
     <div v-if="loading" class="card state-card text-muted">Loading team workspace...</div>
     <div v-else-if="loadError" class="card state-card text-error">{{ loadError }}</div>
 
@@ -371,10 +361,11 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const route = useRoute()
 const router = useRouter()
@@ -384,10 +375,7 @@ const currentUserId = ref(null)
 
 const loading = ref(true)
 const loadError = ref('')
-const notification = ref(null)
-const NOTIFICATION_DURATION_MS = 4200
-let notificationId = 0
-let notificationTimerId = null
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const memberSearch = ref('')
 const isLeaveModalOpen = ref(false)
@@ -559,27 +547,6 @@ const logoutToLogin = () => {
 const telegramLink = (username) => `https://t.me/${String(username || '').replace(/^@/, '')}`
 const discordLink = (username) => `https://discord.com/users/@${encodeURIComponent(String(username || '').replace(/^@/, ''))}`
 
-const clearNotificationTimer = () => {
-  if (notificationTimerId) {
-    clearTimeout(notificationTimerId)
-    notificationTimerId = null
-  }
-}
-
-const hideNotification = () => {
-  clearNotificationTimer()
-  notification.value = null
-}
-
-const showNotification = (type, message, duration = NOTIFICATION_DURATION_MS) => {
-  clearNotificationTimer()
-  notification.value = { id: ++notificationId, type, message }
-  notificationTimerId = setTimeout(() => {
-    notificationTimerId = null
-    notification.value = null
-  }, duration)
-}
-
 const parseApiError = async (response, fallbackMessage) => {
   try {
     const data = await response.json()
@@ -726,13 +693,13 @@ const sendJoinRequest = async () => {
       return
     }
     if (!response.ok) {
-      showNotification('error', await parseApiError(response, 'Unable to send join request.'))
+      showNotification(await parseApiError(response, 'Unable to send join request.'), 'error')
       return
     }
-    showNotification('success', 'Join request sent.')
+    showNotification('Join request sent.', 'success')
     await fetchTeam()
   } catch {
-    showNotification('error', 'Server connection error.')
+    showNotification('Server connection error.', 'error')
   } finally {
     joinRequestLoading.value = false
   }
@@ -769,7 +736,7 @@ const leaveTeam = async () => {
       return
     }
     if (!response.ok) {
-      showNotification('error', await parseApiError(response, 'Unable to leave team.'))
+      showNotification(await parseApiError(response, 'Unable to leave team.'), 'error')
       return
     }
 
@@ -784,7 +751,7 @@ const leaveTeam = async () => {
       can_request_to_join: Boolean(team.value.is_public),
     }
     isLeaveModalOpen.value = false
-    showNotification('success', 'You left the team.')
+    showNotification('You left the team.', 'success')
 
     if (!team.value.is_public) {
       router.push('/teams')
@@ -793,7 +760,7 @@ const leaveTeam = async () => {
 
     await fetchTeam()
   } catch {
-    showNotification('error', 'Server connection error.')
+    showNotification('Server connection error.', 'error')
   } finally {
     leaveTeamLoading.value = false
   }
@@ -816,13 +783,13 @@ const reviewJoinRequest = async (requestId, action) => {
       return
     }
     if (!response.ok) {
-      showNotification('error', await parseApiError(response, `Unable to ${action} join request.`))
+      showNotification(await parseApiError(response, `Unable to ${action} join request.`), 'error')
       return
     }
-    showNotification('success', `Join request ${action}ed.`)
+    showNotification(`Join request ${action}ed.`, 'success')
     team.value = await response.json()
   } catch {
-    showNotification('error', 'Server connection error.')
+    showNotification('Server connection error.', 'error')
   } finally {
     joinRequestActionLoading.value = {
       ...joinRequestActionLoading.value,
@@ -852,14 +819,14 @@ const resendInvitation = async (userId) => {
     }
 
     if (!response.ok) {
-      showNotification('error', await parseApiError(response, 'Unable to resend invitation.'))
+      showNotification(await parseApiError(response, 'Unable to resend invitation.'), 'error')
       return
     }
 
     team.value = await response.json()
-    showNotification('success', 'Invitation resent.')
+    showNotification('Invitation resent.', 'success')
   } catch {
-    showNotification('error', 'Server connection error.')
+    showNotification('Server connection error.', 'error')
   } finally {
     resendInvitationLoading.value = {
       ...resendInvitationLoading.value,
@@ -867,10 +834,6 @@ const resendInvitation = async (userId) => {
     }
   }
 }
-
-onBeforeUnmount(() => {
-  clearNotificationTimer()
-})
 
 onMounted(loadWorkspace)
 
@@ -943,33 +906,6 @@ watch(
   gap: 0.6rem;
   flex-wrap: wrap;
   margin-top: 0.8rem;
-}
-
-.notice {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  margin: 0;
-  width: min(92vw, 420px);
-  z-index: 1200;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
-}
-
-.notice-enter-active,
-.notice-leave-active {
-  transition: opacity 220ms ease, transform 220ms ease;
-}
-
-.notice-enter-from,
-.notice-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-.notice-enter-to,
-.notice-leave-from {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 .action-link {
@@ -1328,13 +1264,6 @@ watch(
 }
 
 @media (max-width: 640px) {
-  .notice {
-    top: 0.75rem;
-    left: 0.75rem;
-    right: 0.75rem;
-    width: auto;
-  }
-
   .member-row,
   .manage-row {
     flex-direction: column;

@@ -10,7 +10,6 @@
       </div>
     </article>
 
-    <div v-if="notification" :class="['notice', notification.type]">{{ notification.message }}</div>
     <div v-if="loading" class="card state-card text-muted">Loading teams...</div>
 
     <template v-else>
@@ -125,6 +124,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const PER_PAGE = 8
 
@@ -133,10 +133,10 @@ const teams = ref([])
 const inboxInvitations = ref([])
 const currentUserId = ref(null)
 const loading = ref(true)
-const notification = ref(null)
 const inboxLoading = ref(false)
 const invitationActionLoading = ref({})
 const joinRequestLoadingByTeam = ref({})
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const myPage = ref(1)
 const otherPage = ref(1)
@@ -201,7 +201,7 @@ const fetchProfile = async () => {
   }
 
   if (!response.ok) {
-    notification.value = { type: 'error', message: 'Unable to load profile information.' }
+    showNotification('Unable to load profile information.', 'error')
     return false
   }
 
@@ -228,7 +228,7 @@ const fetchTeams = async () => {
   }
 
   if (!response.ok) {
-    notification.value = { type: 'error', message: 'Unable to load teams.' }
+    showNotification('Unable to load teams.', 'error')
     return
   }
 
@@ -257,7 +257,7 @@ const fetchInvitations = async () => {
       return
     }
     if (!response.ok) {
-      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to load invitations.') }
+      showNotification(await parseApiError(response, 'Unable to load invitations.'), 'error')
       return
     }
     inboxInvitations.value = await response.json()
@@ -275,7 +275,7 @@ const respondToInvitation = async (invitationId, action) => {
     ...invitationActionLoading.value,
     [invitationId]: true,
   }
-  notification.value = null
+  hideNotification()
   try {
     const response = await fetch(`${API_BASE}/api/accounts/teams/invitations/${invitationId}/${action}/`, {
       method: 'POST',
@@ -286,19 +286,13 @@ const respondToInvitation = async (invitationId, action) => {
       return
     }
     if (!response.ok) {
-      notification.value = {
-        type: 'error',
-        message: await parseApiError(response, `Unable to ${action} invitation.`),
-      }
+      showNotification(await parseApiError(response, `Unable to ${action} invitation.`), 'error')
       return
     }
-    notification.value = {
-      type: 'success',
-      message: action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.',
-    }
+    showNotification(action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.', 'success')
     await Promise.all([fetchTeams(), fetchInvitations()])
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     invitationActionLoading.value = {
       ...invitationActionLoading.value,
@@ -312,7 +306,7 @@ const sendJoinRequest = async (teamId) => {
     ...joinRequestLoadingByTeam.value,
     [teamId]: true,
   }
-  notification.value = null
+  hideNotification()
   try {
     const response = await fetch(`${API_BASE}/api/accounts/teams/${teamId}/join-requests/`, {
       method: 'POST',
@@ -323,16 +317,13 @@ const sendJoinRequest = async (teamId) => {
       return
     }
     if (!response.ok) {
-      notification.value = {
-        type: 'error',
-        message: await parseApiError(response, 'Unable to send join request.'),
-      }
+      showNotification(await parseApiError(response, 'Unable to send join request.'), 'error')
       return
     }
-    notification.value = { type: 'success', message: 'Join request sent.' }
+    showNotification('Join request sent.', 'success')
     await fetchTeams()
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     joinRequestLoadingByTeam.value = {
       ...joinRequestLoadingByTeam.value,

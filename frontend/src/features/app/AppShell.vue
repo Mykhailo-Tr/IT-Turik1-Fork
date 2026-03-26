@@ -24,6 +24,19 @@
       </div>
     </nav>
 
+    <Transition name="global-notice" mode="out-in">
+      <div
+        v-if="notification"
+        :key="notification.id"
+        :class="['notice', 'app-notice', notification.type, `type-${notification.type}`]"
+        role="status"
+        aria-live="polite"
+      >
+        <span>{{ notification.message }}</span>
+        <button type="button" class="app-notice-close" @click="hideNotification()">Dismiss</button>
+      </div>
+    </Transition>
+
     <main class="page-content">
       <router-view @auth-change="checkAuth" />
     </main>
@@ -33,10 +46,12 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const isLoggedIn = ref(false)
 const router = useRouter()
 const route = useRoute()
+const { notification, hideNotification } = useGlobalNotification()
 
 const checkAuth = () => {
   isLoggedIn.value = !!localStorage.getItem('access')
@@ -208,6 +223,63 @@ const logout = () => {
   margin: 1.6rem auto 2.4rem;
 }
 
+.app-notice {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  margin: 0;
+  width: min(92vw, 420px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  z-index: 2000;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
+}
+
+.app-notice-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  font-size: 0.78rem;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.app-notice-close:hover {
+  opacity: 1;
+}
+
+.type-info {
+  color: #0f3a58;
+  background: #ecfeff;
+  border-color: #7dd3fc;
+}
+
+.type-warning {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.global-notice-enter-active,
+.global-notice-leave-active {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.global-notice-enter-from,
+.global-notice-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.global-notice-enter-to,
+.global-notice-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @media (max-width: 680px) {
   .app-shell {
     --nav-offset: 122px;
@@ -226,6 +298,13 @@ const logout = () => {
   .page-content {
     width: min(1100px, 100% - 1rem);
     margin-top: 1rem;
+  }
+
+  .app-notice {
+    top: 0.75rem;
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
   }
 }
 </style>

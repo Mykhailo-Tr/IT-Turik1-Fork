@@ -12,10 +12,6 @@
         Update your account details below and save your changes.
       </p>
 
-      <div v-if="notification" :class="['notice', notification.type]">
-        {{ notification.message }}
-      </div>
-
       <div v-if="loadingProfile" class="state-box">Loading profile...</div>
       <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
 
@@ -59,14 +55,15 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import { API_BASE } from '@/features/shared/config/api'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const form = ref({ username: '', full_name: '', phone: '', city: '' })
 const loading = ref(false)
 const loadingProfile = ref(true)
 const profileError = ref('')
 const errors = ref({})
-const notification = ref(null)
 const router = useRouter()
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const logoutToLogin = () => {
   localStorage.removeItem('access')
@@ -118,7 +115,7 @@ const fetchProfile = async () => {
 const handleUpdate = async () => {
   loading.value = true
   errors.value = {}
-  notification.value = null
+  hideNotification()
 
   const token = localStorage.getItem('access')
   try {
@@ -139,7 +136,7 @@ const handleUpdate = async () => {
     const data = await res.json()
 
     if (res.ok) {
-      notification.value = { type: 'success', message: 'Profile updated successfully.' }
+      showNotification('Profile updated successfully.', 'success')
       setTimeout(() => {
         router.push('/profile')
       }, 550)
@@ -147,9 +144,9 @@ const handleUpdate = async () => {
     }
 
     errors.value = data
-    notification.value = { type: 'error', message: 'Validation error. Please check your data.' }
+    showNotification('Validation error. Please check your data.', 'error')
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     loading.value = false
   }
@@ -250,4 +247,3 @@ onMounted(fetchProfile)
   }
 }
 </style>
-

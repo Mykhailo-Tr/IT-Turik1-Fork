@@ -8,8 +8,6 @@
       </div>
     </article>
 
-    <div v-if="notification" :class="['notice', notification.type]">{{ notification.message }}</div>
-
     <div v-if="loading" class="card state-card text-muted">Loading team editor...</div>
     <div v-else-if="loadError" class="card state-card text-error">{{ loadError }}</div>
 
@@ -164,6 +162,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const route = useRoute()
 const router = useRouter()
@@ -174,8 +173,8 @@ const users = ref([])
 
 const loading = ref(true)
 const loadError = ref('')
-const notification = ref(null)
 const saveLoading = ref(false)
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const form = ref({
   name: '',
@@ -315,7 +314,7 @@ const fetchUsers = async () => {
   }
 
   if (!response.ok) {
-    notification.value = { type: 'error', message: 'Unable to load users list.' }
+    showNotification('Unable to load users list.', 'error')
     return false
   }
 
@@ -345,7 +344,7 @@ const saveTeam = async () => {
   if (!team.value || !isCaptain.value) return
 
   saveLoading.value = true
-  notification.value = null
+  hideNotification()
 
   try {
     const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/`, {
@@ -360,13 +359,13 @@ const saveTeam = async () => {
     }
 
     if (!response.ok) {
-      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to update team.') }
+      showNotification(await parseApiError(response, 'Unable to update team.'), 'error')
       return
     }
 
     router.push(`/teams/${team.value.id}`)
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     saveLoading.value = false
   }
@@ -375,12 +374,12 @@ const saveTeam = async () => {
 const addMember = async () => {
   if (!team.value || !isCaptain.value) return
   if (!addMemberSelection.value) {
-    notification.value = { type: 'error', message: 'Select a user to add.' }
+    showNotification('Select a user to add.', 'error')
     return
   }
 
   addMemberLoading.value = true
-  notification.value = null
+  hideNotification()
   try {
     const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/members/`, {
       method: 'POST',
@@ -394,15 +393,15 @@ const addMember = async () => {
     }
 
     if (!response.ok) {
-      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to add member.') }
+      showNotification(await parseApiError(response, 'Unable to add member.'), 'error')
       return
     }
 
     addMemberSelection.value = ''
-    notification.value = { type: 'success', message: 'Invitation sent.' }
+    showNotification('Invitation sent.', 'success')
     await Promise.all([fetchTeam(), fetchUsers()])
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     addMemberLoading.value = false
   }
@@ -415,7 +414,7 @@ const removeMember = async (member) => {
     ...kickLoadingByUser.value,
     [member.id]: true,
   }
-  notification.value = null
+  hideNotification()
 
   try {
     const response = await fetch(
@@ -429,14 +428,14 @@ const removeMember = async (member) => {
     }
 
     if (!response.ok && response.status !== 204) {
-      notification.value = { type: 'error', message: await parseApiError(response, 'Unable to remove member.') }
+      showNotification(await parseApiError(response, 'Unable to remove member.'), 'error')
       return
     }
 
-    notification.value = { type: 'success', message: 'Member removed.' }
+    showNotification('Member removed.', 'success')
     await Promise.all([fetchTeam(), fetchUsers()])
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     kickLoadingByUser.value = {
       ...kickLoadingByUser.value,

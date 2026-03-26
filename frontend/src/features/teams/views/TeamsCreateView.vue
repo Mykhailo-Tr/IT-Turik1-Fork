@@ -6,8 +6,6 @@
       <p class="section-subtitle">Create a team and optionally add initial members.</p>
       <router-link to="/teams" class="back-link">Back to teams list</router-link>
 
-      <p v-if="notification" :class="['notice', notification.type]">{{ notification.message }}</p>
-
       <form class="form-grid" @submit.prevent="handleCreateTeam">
         <label class="form-label">
           Team name
@@ -89,14 +87,15 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const router = useRouter()
 
 const createLoading = ref(false)
-const notification = ref(null)
 const memberSearch = ref('')
 const currentUserId = ref(null)
 const users = ref([])
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const createForm = ref({
   name: '',
@@ -140,7 +139,7 @@ const fetchProfile = async () => {
     return false
   }
   if (!response.ok) {
-    notification.value = { type: 'error', message: 'Unable to load profile information.' }
+    showNotification('Unable to load profile information.', 'error')
     return false
   }
 
@@ -165,7 +164,7 @@ const fetchUsers = async () => {
   }
 
   if (!response.ok) {
-    notification.value = { type: 'error', message: 'Unable to load users list.' }
+    showNotification('Unable to load users list.', 'error')
     return
   }
 
@@ -186,7 +185,7 @@ const resetCreateForm = () => {
 
 const handleCreateTeam = async () => {
   createLoading.value = true
-  notification.value = null
+  hideNotification()
 
   try {
     const response = await fetch(`${API_BASE}/api/accounts/teams/`, {
@@ -202,15 +201,15 @@ const handleCreateTeam = async () => {
 
     const data = await response.json()
     if (!response.ok) {
-      notification.value = { type: 'error', message: JSON.stringify(data) }
+      showNotification(JSON.stringify(data), 'error')
       return
     }
 
-    notification.value = { type: 'success', message: 'Team created successfully.' }
+    showNotification('Team created successfully.', 'success')
     resetCreateForm()
     router.push(`/teams/${data.id}`)
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     createLoading.value = false
   }

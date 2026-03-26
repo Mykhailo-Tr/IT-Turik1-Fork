@@ -9,10 +9,6 @@
         <p class="meta">Joined: {{ formatDate(profile.created_at) || 'N/A' }}</p>
       </div>
 
-      <div v-if="notification" :class="['notice', notification.type]">
-        {{ notification.message }}
-      </div>
-
       <div v-if="loadingProfile" class="state-box">Loading profile...</div>
       <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
       <div v-else class="details">
@@ -109,13 +105,14 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_BASE } from '@/features/shared/config/api'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const profile = ref({})
-const notification = ref(null)
 const profileError = ref('')
 const loadingProfile = ref(true)
 
 const router = useRouter()
+const { showNotification, hideNotification } = useGlobalNotification()
 const isDeleteModalOpen = ref(false)
 const deleteConfirmInput = ref('')
 const deleteError = ref('')
@@ -196,7 +193,7 @@ const handleDeleteAccount = async () => {
 
   isDeleting.value = true
   deleteError.value = ''
-  notification.value = null
+  hideNotification()
 
   const token = localStorage.getItem('access')
   try {
@@ -212,9 +209,9 @@ const handleDeleteAccount = async () => {
       return
     }
 
-    notification.value = { type: 'error', message: 'Unable to delete account.' }
+    showNotification('Unable to delete account.', 'error')
   } catch {
-    notification.value = { type: 'error', message: 'Server connection error.' }
+    showNotification('Server connection error.', 'error')
   } finally {
     isDeleting.value = false
   }
