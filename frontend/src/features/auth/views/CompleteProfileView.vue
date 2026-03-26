@@ -29,6 +29,20 @@
         </label>
 
         <label class="form-label full-width">
+          Password
+          <PasswordField
+            v-model="form.password"
+            autocomplete="new-password"
+            placeholder="Create a strong password"
+            required
+          />
+          <small v-if="errors.password" class="text-error">{{ errors.password[0] }}</small>
+          <small v-else class="field-help">
+            Use at least 8 characters, including upper/lowercase letters, a number, and a special character.
+          </small>
+        </label>
+
+        <label class="form-label full-width">
           Full name
           <input v-model="form.full_name" class="input-control" type="text" />
         </label>
@@ -56,6 +70,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
+import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
 import { API_BASE } from '@/features/shared/config/api'
 
 const router = useRouter()
@@ -68,10 +83,21 @@ const errors = ref({})
 const form = ref({
   username: '',
   role: '',
+  password: '',
   full_name: '',
   phone: '',
   city: '',
 })
+
+const getPasswordError = (password) => {
+  if (!password) return 'Password is required to complete registration.'
+  if (password.length < 8) return 'Password must be at least 8 characters long.'
+  if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter.'
+  if (!/[a-z]/.test(password)) return 'Password must include at least one lowercase letter.'
+  if (!/\d/.test(password)) return 'Password must include at least one digit.'
+  if (!/[^A-Za-z0-9]/.test(password)) return 'Password must include at least one special character.'
+  return null
+}
 
 const logoutToLogin = () => {
   localStorage.removeItem('access')
@@ -84,6 +110,15 @@ const handleSubmit = async () => {
   loading.value = true
   errors.value = {}
   message.value = ''
+
+  const passwordError = getPasswordError(form.value.password)
+  if (passwordError) {
+    errors.value = { password: [passwordError] }
+    messageType.value = 'error'
+    message.value = 'Please fix form errors and try again.'
+    loading.value = false
+    return
+  }
 
   const token = localStorage.getItem('access')
   try {
@@ -154,6 +189,7 @@ onMounted(async () => {
     form.value = {
       username: data.username || '',
       role: '',
+      password: '',
       full_name: data.full_name || '',
       phone: data.phone || '',
       city: data.city || '',
@@ -186,6 +222,10 @@ onMounted(async () => {
 .submit-btn {
   margin-top: 0.5rem;
   grid-column: 1 / -1;
+}
+
+.field-help {
+  color: var(--text-muted);
 }
 
 @media (max-width: 760px) {

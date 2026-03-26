@@ -1,6 +1,7 @@
 import re
 
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes
@@ -8,6 +9,22 @@ from django.utils.http import urlsafe_base64_encode
 from rest_framework import serializers
 
 from .models import User
+
+
+def validate_strong_password(password, user=None):
+    errors = []
+    if not re.search(r'[A-Z]', password):
+        errors.append('Password must include at least one uppercase letter.')
+    if not re.search(r'[a-z]', password):
+        errors.append('Password must include at least one lowercase letter.')
+    if not re.search(r'\d', password):
+        errors.append('Password must include at least one digit.')
+    if not re.search(r'[^A-Za-z0-9]', password):
+        errors.append('Password must include at least one special character.')
+    if errors:
+        raise serializers.ValidationError(errors)
+
+    validate_password(password, user=user)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -21,6 +38,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         if value and not re.match(r'^\+?1?\d{9,15}$', value):
             raise serializers.ValidationError('Invalid phone number format.')
         return value
+
+    def validate(self, attrs):
+        password = attrs.get('password')
+        if password:
+            user_for_validation = User(
+                username=attrs.get('username', ''),
+                email=attrs.get('email', ''),
+                full_name=attrs.get('full_name', ''),
+            )
+            validate_strong_password(password, user=user_for_validation)
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -78,9 +106,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False)
+
     class Meta:
         model = User
-        fields = ('username', 'role', 'full_name', 'phone', 'city')
+        fields = ('username', 'role', 'full_name', 'phone', 'city', 'password')
 
     def validate_username(self, value):
         if self.instance and self.instance.username == value:
@@ -97,11 +127,42 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if self.instance and self.instance.needs_onboarding and 'role' not in self.initial_data:
             raise serializers.ValidationError({'role': 'Please select a role to complete Google registration.'})
+        if (
+            self.instance
+            and self.instance.needs_onboarding
+            and not self.instance.has_usable_password()
+            and 'password' not in self.initial_data
+        ):
+            raise serializers.ValidationError(
+                {'password': 'Please set a password to complete Google registration.'}
+            )
+        password = attrs.get('password')
+        if password and self.instance:
+            user_for_validation = User(
+                username=attrs.get('username', self.instance.username),
+                email=self.instance.email,
+                full_name=attrs.get('full_name', self.instance.full_name),
+            )
+            validate_strong_password(password, user=user_for_validation)
         return attrs
 
     def update(self, instance, validated_data):
-        user = super().update(instance, validated_data)
-        if user.needs_onboarding:
-            user.needs_onboarding = False
-            user.save(update_fields=['needs_onboarding'])
-        return user
+        password = validated_data.pop('password', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if password:
+            instance.set_password(password)
+
+        update_fields = list(validated_data.keys())
+        if password:
+            update_fields.append('password')
+        if instance.needs_onboarding:
+            instance.needs_onboarding = False
+            update_fields.append('needs_onboarding')
+
+        if update_fields:
+            instance.save(update_fields=update_fields)
+
+        return instance

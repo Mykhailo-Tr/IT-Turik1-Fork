@@ -13,7 +13,11 @@
 
         <label class="form-label">
           Password
-          <input v-model="form.password" class="input-control" type="password" autocomplete="current-password" required />
+          <PasswordField
+            v-model="form.password"
+            autocomplete="current-password"
+            required
+          />
         </label>
 
         <button type="submit" class="btn-primary" :disabled="isLoading">
@@ -42,6 +46,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
+import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
 import { API_BASE } from '@/features/shared/config/api'
 
 const form = ref({ username: '', password: '' })

@@ -106,6 +106,86 @@ class GoogleAuthViewTests(APITestCase):
         self.assertEqual(user.city, 'Kyiv')
         self.assertFalse(user.needs_onboarding)
 
+    def test_profile_update_requires_password_for_google_onboarding(self):
+        user = User.objects.create(
+            username='google-no-password',
+            email='google-no-password@example.com',
+            needs_onboarding=True,
+            is_active=True,
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            self.profile_url,
+            {
+                'username': 'google-no-password-updated',
+                'role': 'team',
+                'full_name': 'Google User',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('password', response.data)
+        user.refresh_from_db()
+        self.assertTrue(user.needs_onboarding)
+        self.assertFalse(user.has_usable_password())
+
+    def test_profile_update_sets_password_for_google_onboarding(self):
+        user = User.objects.create(
+            username='google-new-password',
+            email='google-new-password@example.com',
+            needs_onboarding=True,
+            is_active=True,
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            self.profile_url,
+            {
+                'username': 'google-new-password-updated',
+                'role': 'organizer',
+                'password': 'StrongerPass123!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password('StrongerPass123!'))
+        self.assertFalse(user.needs_onboarding)
+
+    def test_profile_update_rejects_weak_password_for_google_onboarding(self):
+        user = User.objects.create(
+            username='google-weak-password',
+            email='google-weak-password@example.com',
+            needs_onboarding=True,
+            is_active=True,
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            self.profile_url,
+            {
+                'username': 'google-weak-password-updated',
+                'role': 'jury',
+                'password': 'weakpass',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('password', response.data)
+        user.refresh_from_db()
+        self.assertFalse(user.has_usable_password())
+        self.assertTrue(user.needs_onboarding)
+
     def test_profile_delete_removes_current_user(self):
         user = User.objects.create_user(
             username='delete-me',

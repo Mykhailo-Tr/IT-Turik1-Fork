@@ -25,7 +25,12 @@
 
           <label class="form-label">
             Password
-            <input v-model="form.password" class="input-control" type="password" placeholder="********" required />
+            <PasswordField
+              v-model="form.password"
+              autocomplete="new-password"
+              placeholder="********"
+              required
+            />
             <small v-if="errors.password" class="text-error">{{ errors.password[0] }}</small>
           </label>
 
@@ -80,6 +85,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
+import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import { API_BASE } from '@/features/shared/config/api'
 

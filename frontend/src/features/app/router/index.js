@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import Activate from '@/features/auth/views/ActivateView.vue'
-import CompleteProfile from '@/features/profile/views/CompleteProfileView.vue'
+import CompleteProfile from '@/features/auth/views/CompleteProfileView.vue'
 import EditProfile from '@/features/profile/views/EditProfileView.vue'
 import Home from '@/features/home/views/HomeView.vue'
 import Login from '@/features/auth/views/LoginView.vue'
