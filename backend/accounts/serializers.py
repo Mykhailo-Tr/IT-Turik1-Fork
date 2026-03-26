@@ -216,3 +216,32 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         user.set_password(self.validated_data['new_password'])
         user.save(update_fields=['password'])
         return user
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        user = self.context.get('user')
+        if user is None:
+            raise serializers.ValidationError({'detail': 'Invalid request context.'})
+
+        current_password = attrs.get('current_password')
+        if not user.check_password(current_password):
+            raise serializers.ValidationError({'current_password': 'Current password is incorrect.'})
+
+        new_password = attrs.get('new_password')
+        confirm_password = attrs.get('confirm_password')
+        if new_password != confirm_password:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+
+        validate_strong_password(new_password, user=user)
+        return attrs
+
+    def save(self):
+        user = self.context['user']
+        user.set_password(self.validated_data['new_password'])
+        user.save(update_fields=['password'])
+        return user

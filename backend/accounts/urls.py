@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .views import (
     ActivationView,
+    ChangePasswordView,
     GoogleAuthView,
     PasswordResetConfirmView,
     PasswordResetRequestView,
@@ -18,6 +19,7 @@ urlpatterns = [
     path('activate/<uidb64>/<token>/', ActivationView.as_view(), name='activate'),
     path('password-reset/', PasswordResetRequestView.as_view(), name='password_reset_request'),
     path('password-reset/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('', include('teams.urls')),
 ]

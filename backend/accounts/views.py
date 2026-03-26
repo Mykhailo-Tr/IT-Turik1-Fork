@@ -13,6 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
 from .serializers import (
+    ChangePasswordSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetRequestSerializer,
     RegisterSerializer,
@@ -190,3 +191,13 @@ class PasswordResetConfirmView(APIView):
             {'message': 'Password has been reset successfully.'},
             status=status.HTTP_200_OK,
         )
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'user': request.user})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'message': 'Password changed successfully.'}, status=status.HTTP_200_OK)

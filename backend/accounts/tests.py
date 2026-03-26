@@ -339,3 +339,73 @@ class PasswordResetFlowTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('non_field_errors', response.data)
+
+
+class ChangePasswordFlowTests(APITestCase):
+    change_url = reverse('change_password')
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='change-password-user',
+            email='change-password-user@example.com',
+            password='StrongPass123!',
+            is_active=True,
+        )
+        self.client.force_authenticate(user=self.user)
+
+    def test_change_password_success(self):
+        response = self.client.post(
+            self.change_url,
+            {
+                'current_password': 'StrongPass123!',
+                'new_password': 'EvenStrongerPass456!',
+                'confirm_password': 'EvenStrongerPass456!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password('EvenStrongerPass456!'))
+
+    def test_change_password_rejects_wrong_current_password(self):
+        response = self.client.post(
+            self.change_url,
+            {
+                'current_password': 'WrongPassword123!',
+                'new_password': 'EvenStrongerPass456!',
+                'confirm_password': 'EvenStrongerPass456!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('current_password', response.data)
+
+    def test_change_password_rejects_mismatch(self):
+        response = self.client.post(
+            self.change_url,
+            {
+                'current_password': 'StrongPass123!',
+                'new_password': 'EvenStrongerPass456!',
+                'confirm_password': 'AnotherPass456!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('confirm_password', response.data)
+
+    def test_change_password_rejects_weak_new_password(self):
+        response = self.client.post(
+            self.change_url,
+            {
+                'current_password': 'StrongPass123!',
+                'new_password': 'weakpass',
+                'confirm_password': 'weakpass',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
