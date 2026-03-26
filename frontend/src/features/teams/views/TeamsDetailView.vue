@@ -149,7 +149,7 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span class="status-tag status-source">{{ statusByUserId?.[member.id]?.source || 'Member' }}</span>
+                        <span class="status status--source">{{ statusByUserId?.[member.id]?.source || 'Member' }}</span>
                       </div>
                     </template>
                   </div>
@@ -241,7 +241,7 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span class="status-tag status-invited">invited</span>
+                        <span class="status status--invited">invited</span>
                       </div>
                     </template>
                   </div>
@@ -263,8 +263,8 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span class="status-tag status-declined">declined</span>
-                        <span class="status-tag status-source">Invitation</span>
+                        <span class="status status--declined">declined</span>
+                        <span class="status status--source">Invitation</span>
                       </div>
                       <div class="row-actions">
                         <button
@@ -508,4 +508,5 @@ const {
 </script>
 
 <style scoped src="../styles/teams-detail-view.css"></style>
+<style scoped src="../styles/status-tags.css"></style>
 

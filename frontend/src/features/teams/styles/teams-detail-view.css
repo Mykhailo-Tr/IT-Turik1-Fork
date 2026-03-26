@@ -203,7 +203,7 @@
   gap: 0.45rem;
 }
 
-.status-tags {
+/* .status-tags {
   display: flex;
   gap: 0.35rem;
   flex-wrap: wrap;
@@ -248,7 +248,7 @@
   background: rgba(15, 23, 42, 0.03);
   color: var(--ink-700);
   text-transform: none;
-}
+} */
 
 .member-name,
 .member-email {

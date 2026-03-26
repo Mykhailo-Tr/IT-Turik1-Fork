@@ -125,10 +125,10 @@
                   <p class="text-muted member-email">{{ invitation.user.email }}</p>
                 </div>
                 <!-- if declined red -->
-                <span v-if="invitation.status === 'declined'" class="status-tag status-declined">
+                <span v-if="invitation.status === 'declined'" class="status status--declined">
                   {{ invitation.status }}
                 </span>
-                <span v-else class="captain-tag">{{ invitation.status }}</span>
+                <span v-else class="status status--source">{{ invitation.status }}</span>
               </article>
             </div>
           </div>
@@ -185,5 +185,6 @@ const {
 </script>
 
 <style scoped src="../styles/teams-edit-view.css"></style>
+<style scoped src="../styles/status-tags.css"></style>
 
 

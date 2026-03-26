@@ -25,7 +25,7 @@
           <article v-for="invitation in pendingInboxInvitations" :key="`invite-${invitation.id}`" class="team-item">
             <div class="team-meta">
               <h3>{{ invitation.team.name }}</h3>
-              <span class="status-badge">invited</span>
+              <span class="status status--invited">invited</span>
             </div>
             <p class="text-muted">Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}</p>
             <div class="row-actions">
@@ -145,5 +145,6 @@ const {
 </script>
 
 <style scoped src="../styles/teams-view.css"></style>
+<style scoped src="../styles/status-tags.css"></style>
 
 

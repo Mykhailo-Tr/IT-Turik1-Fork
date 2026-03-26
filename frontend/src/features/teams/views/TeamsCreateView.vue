@@ -108,5 +108,6 @@ const {
 </script>
 
 <style scoped src="../styles/teams-create-view.css"></style>
+<style scoped src="../styles/status-tags.css"></style>
 
 
