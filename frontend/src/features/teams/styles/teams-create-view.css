@@ -1,0 +1,69 @@
+.teams-page {
+  gap: 1.2rem;
+}
+
+.create-card {
+  padding: 1.2rem;
+  background:
+    linear-gradient(135deg, rgba(13, 148, 136, 0.12), rgba(15, 23, 42, 0.03)),
+    #fff;
+  border: 1px solid rgba(13, 148, 136, 0.22);
+}
+
+.back-link {
+  display: inline-block;
+  color: var(--brand-700);
+  font-weight: 700;
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.member-picker {
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.6rem;
+  max-height: 180px;
+  overflow: auto;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.toggle-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.toggle-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ink-800);
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-800);
+}
+
+.empty-note {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
