@@ -1,0 +1,235 @@
+Table teams [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	name varchar [ not null ]
+	email varchar [ not null ]
+	capitan_id integer [ not null ]
+	"organization " varchar
+	contact varchar
+}
+
+Table users [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	username varchar [ not null ]
+	email varchar [ not null ]
+	password_hash varchar [ not null ]
+	role varchar [ not null ]
+	full_name varchar
+	phone varchar
+	city varchar
+	created_at varchar [ not null ]
+}
+
+Table team_members [headercolor: #175e7a] {
+	user_id integer [ pk, not null ]
+	team_id integer [ pk, not null ]
+
+	indexes {
+		(user_id, team_id) [ name: 'team_members_index_0' ]
+	}
+}
+
+Table tasks [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	title varchar [ not null ]
+	description text
+	requirements text
+	start_time timestamp
+	end_time timestamp
+	status varchar [ not null ]
+}
+
+Table task_requirements [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	task_id integer [ not null ]
+	requirement text [ not null ]
+}
+
+Table task_materials [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	task_id integer [ not null ]
+	title varchar
+	type varchar [ not null ]
+	url text
+	file_path text
+}
+
+Table tournaments [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	title varchar [ not null ]
+	description text
+	registration_start timestamp
+	registration_end timestamp
+	start_date timestamp
+	end_date timestamp
+	max_teams integer
+	status varchar [ not null ]
+	created_by integer [ not null ]
+	created_at timestamp [ not null ]
+}
+
+Table tournament_teams [headercolor: #175e7a] {
+	tournament_id integer [ pk, increment, not null ]
+	team_id integer [ pk, increment, not null ]
+	joined_at timestamp [ not null ]
+
+	indexes {
+		(tournament_id, team_id) [ name: 'tournament_teams_index_1' ]
+	}
+}
+
+Table submissions [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	task_id integer [ not null ]
+	team_id integer [ not null ]
+	github_url varchar [ not null ]
+	demo_video_url varchar [ not null ]
+	live_demo_url varchar
+	description text
+	created_at timestamp [ not null ]
+	updated_at timestamp [ default: null ]
+}
+
+Table jury_assignments [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	submission_id integer [ not null ]
+	jury_id integer [ not null ]
+	assigned_at timestamp [ not null ]
+	status varchar
+}
+
+Table evaluation_criteria [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	task_id integer [ not null ]
+	name varchar [ not null ]
+	description text [ not null ]
+	max_score integer [ not null ]
+}
+
+Table evaluations [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	assignment_id integer [ not null ]
+	criterion_id integer [ not null ]
+	score integer [ not null ]
+	comment text
+	created_at timestamp [ not null ]
+}
+
+Table leaderboard [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	tournament_id integer [ not null ]
+	team_id integer [ not null ]
+	total_score real [ not null ]
+	rank integer [ not null ]
+	updated_at timestamp [ not null ]
+}
+
+Table announcements [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	tournament_id integer [ not null ]
+	title varchar [ not null ]
+	content text
+	created_by integer [ not null ]
+	created_at timestamp [ not null ]
+}
+
+Table events [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	tournament_id integer [ not null ]
+	title varchar [ not null ]
+	description text
+	event_time timestamp [ not null ]
+	created_by timestamp [ not null ]
+}
+
+Table notifications [headercolor: #175e7a] {
+	id integer [ pk, increment, not null, unique ]
+	user_id integer [ not null ]
+	title varchar [ not null ]
+	message varchar
+	is_read integer [ not null ]
+	created_at timestamp [ not null ]
+}
+
+Ref fk_users_id_teams {
+	users.id < teams.capitan_id [ delete: no action, update: no action ]
+}
+
+Ref fk_team_members_user_id_users {
+	team_members.user_id > users.id [ delete: no action, update: no action ]
+}
+
+Ref fk_team_members_team_id_teams {
+	team_members.team_id > teams.id [ delete: no action, update: no action ]
+}
+
+Ref fk_task_requirements_task_id_tasks {
+	task_requirements.task_id > tasks.id [ delete: no action, update: no action ]
+}
+
+Ref fk_task_materials_task_id_tasks {
+	task_materials.task_id > tasks.id [ delete: no action, update: no action ]
+}
+
+Ref fk_tournaments_created_by_users {
+	tournaments.created_by > users.id [ delete: no action, update: no action ]
+}
+
+Ref fk_tournaments_id_tournament_teams {
+	tournaments.id < tournament_teams.tournament_id [ delete: no action, update: no action ]
+}
+
+Ref fk_tournament_teams_team_id_teams {
+	tournament_teams.team_id < teams.id [ delete: no action, update: no action ]
+}
+
+Ref fk_tasks_id_submissions {
+	tasks.id < submissions.task_id [ delete: no action, update: no action ]
+}
+
+Ref fk_teams_id_submissions {
+	teams.id < submissions.task_id [ delete: no action, update: no action ]
+}
+
+Ref fk_submissions_id_jury_assignments {
+	submissions.id < jury_assignments.submission_id [ delete: no action, update: no action ]
+}
+
+Ref fk_users_id_jury_assignments {
+	users.id < jury_assignments.jury_id [ delete: no action, update: no action ]
+}
+
+Ref fk_evaluation_criteria_task_id_tasks {
+	evaluation_criteria.task_id > tasks.id [ delete: no action, update: no action ]
+}
+
+Ref fk_evaluations_assignment_id_jury_assignments {
+	evaluations.assignment_id > jury_assignments.id [ delete: no action, update: no action ]
+}
+
+Ref fk_evaluations_criterion_id_evaluation_criteria {
+	evaluations.criterion_id > evaluation_criteria.id [ delete: no action, update: no action ]
+}
+
+Ref fk_tournaments_id_leaderboard {
+	tournaments.id < leaderboard.tournament_id [ delete: no action, update: no action ]
+}
+
+Ref fk_leaderboard_team_id_teams {
+	leaderboard.team_id > teams.id [ delete: no action, update: no action ]
+}
+
+Ref fk_announcements_tournament_id_tournaments {
+	announcements.tournament_id > tournaments.id [ delete: no action, update: no action ]
+}
+
+Ref fk_announcements_created_by_users {
+	announcements.created_by > users.id [ delete: no action, update: no action ]
+}
+
+Ref fk_events_tournament_id_tournaments {
+	events.tournament_id > tournaments.id [ delete: no action, update: no action ]
+}
+
+Ref fk_users_id_notifications {
+	users.id < notifications.user_id [ delete: no action, update: no action ]
+}
