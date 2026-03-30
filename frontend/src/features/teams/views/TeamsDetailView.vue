@@ -1,3 +1,5 @@
+<!-- TODO: split into smaller components -->
+
 <template>
   <section class="page-shell teams-detail-page">
     <article class="card hero-card">
@@ -89,8 +91,12 @@
             </div>
           </div>
           <div v-if="!isCaptain" class="status-line">
-            <p v-if="team.my_invitation_status" class="text-muted">Your invitation status: {{ team.my_invitation_status }}</p>
-            <p v-if="team.my_join_request_status" class="text-muted">Your join request status: {{ team.my_join_request_status }}</p>
+            <p v-if="team.my_invitation_status" class="text-muted">
+              Your invitation status: {{ team.my_invitation_status }}
+            </p>
+            <p v-if="team.my_join_request_status" class="text-muted">
+              Your join request status: {{ team.my_join_request_status }}
+            </p>
           </div>
           <div class="info-actions">
             <button
@@ -138,7 +144,11 @@
               </header>
 
               <div class="member-list">
-                <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
+                <article
+                  v-for="member in filteredMembers"
+                  :key="`member-${member.id}`"
+                  class="member-row"
+                >
                   <div>
                     <p class="member-name">{{ member.username }}</p>
                     <p class="text-muted member-email">{{ member.email }}</p>
@@ -149,14 +159,18 @@
                     </template>
                     <template v-else>
                       <div class="status-tags">
-                        <span class="status status--source">{{ statusByUserId?.[member.id]?.source || 'Member' }}</span>
+                        <span class="status status--source">{{
+                          statusByUserId?.[member.id]?.source || 'Member'
+                        }}</span>
                       </div>
                     </template>
                   </div>
                 </article>
               </div>
 
-              <p v-if="filteredMembers.length === 0" class="text-muted member-note">No accepted members match your search.</p>
+              <p v-if="filteredMembers.length === 0" class="text-muted member-note">
+                No accepted members match your search.
+              </p>
             </section>
 
             <section v-if="isCaptain" class="members-section">
@@ -165,7 +179,9 @@
                 <span class="text-muted">{{ filteredPendingJoinRequests.length }} pending</span>
               </header>
 
-              <p v-if="filteredPendingJoinRequests.length === 0" class="text-muted member-note">No pending join requests.</p>
+              <p v-if="filteredPendingJoinRequests.length === 0" class="text-muted member-note">
+                No pending join requests.
+              </p>
 
               <div v-else class="member-list">
                 <article
@@ -211,21 +227,23 @@
                 <h3>Invitations</h3>
                 <span class="text-muted">
                   {{ filteredPendingInvitations.length }} awaiting response
-                  <span v-if="filteredDeclinedInvitations.length">, {{ filteredDeclinedInvitations.length }} declined</span>
+                  <span v-if="filteredDeclinedInvitations.length"
+                    >, {{ filteredDeclinedInvitations.length }} declined</span
+                  >
                 </span>
               </header>
 
               <p
-                v-if="filteredPendingInvitations.length === 0 && filteredDeclinedInvitations.length === 0"
+                v-if="
+                  filteredPendingInvitations.length === 0 &&
+                  filteredDeclinedInvitations.length === 0
+                "
                 class="text-muted member-note"
               >
                 No invitations yet.
               </p>
 
-              <div
-                v-else
-                class="member-list invitations-list"
-              >
+              <div v-else class="member-list invitations-list">
                 <article
                   v-for="invitation in filteredPendingInvitations"
                   :key="`invitation-${invitation.id}`"
@@ -246,7 +264,6 @@
                     </template>
                   </div>
                 </article>
-
 
                 <article
                   v-for="invitation in filteredDeclinedInvitations"
@@ -273,7 +290,11 @@
                           :disabled="resendInvitationLoading[invitation.user.id]"
                           @click="resendInvitation(invitation.user.id)"
                         >
-                          {{ resendInvitationLoading[invitation.user.id] ? 'Resending...' : 'Resend invitation' }}
+                          {{
+                            resendInvitationLoading[invitation.user.id]
+                              ? 'Resending...'
+                              : 'Resend invitation'
+                          }}
                         </button>
                       </div>
                     </template>
@@ -291,12 +312,21 @@
             <h3>Edit team</h3>
             <p class="text-muted">Update team profile and manage members in edit workspace.</p>
           </div>
-          <router-link :to="`/teams/${team.id}/edit`" class="btn-soft action-link action-btn">Edit team</router-link>
+          <router-link :to="`/teams/${team.id}/edit`" class="btn-soft action-link action-btn"
+            >Edit team</router-link
+          >
         </div>
 
         <div class="danger-zone-header">
           <svg viewBox="0 0 24 24" class="danger-zone-icon" aria-hidden="true">
-            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path
+              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              fill="none"
+            />
           </svg>
           <span>Danger Zone</span>
         </div>
@@ -307,13 +337,25 @@
               <h3>Change visibility</h3>
               <p class="text-muted">
                 This team is currently
-                <span class="visibility-badge" :class="team.is_public ? 'visibility-public' : 'visibility-private'">
-                  {{ team.is_public ? 'Public' : 'Private' }}
-                </span>.
-                {{ team.is_public ? 'Anyone can find and request to join this team.' : 'Only invited members can see this team.' }}
+                <span
+                  class="visibility-badge"
+                  :class="team.is_public ? 'visibility-public' : 'visibility-private'"
+                >
+                  {{ team.is_public ? 'Public' : 'Private' }} </span
+                >.
+                {{
+                  team.is_public
+                    ? 'Anyone can find and request to join this team.'
+                    : 'Only invited members can see this team.'
+                }}
               </p>
             </div>
-            <button class="btn-warning" type="button" :disabled="visibilityLoading" @click="openVisibilityModal">
+            <button
+              class="btn-warning"
+              type="button"
+              :disabled="visibilityLoading"
+              @click="openVisibilityModal"
+            >
               Change visibility
             </button>
           </div>
@@ -321,9 +363,16 @@
           <div class="manage-row danger">
             <div>
               <h3>Delete team</h3>
-              <p class="text-muted">This action permanently deletes the team and cannot be undone.</p>
+              <p class="text-muted">
+                This action permanently deletes the team and cannot be undone.
+              </p>
             </div>
-            <button class="btn-danger" type="button" :disabled="deleteTeamLoading" @click="openDeleteModal">
+            <button
+              class="btn-danger"
+              type="button"
+              :disabled="deleteTeamLoading"
+              @click="openDeleteModal"
+            >
               Delete team
             </button>
           </div>
@@ -337,10 +386,20 @@
         <p class="modal-text">Are you sure you want to leave this team?</p>
 
         <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="leaveTeamLoading" @click="closeLeaveModal">
+          <button
+            class="btn-cancel"
+            type="button"
+            :disabled="leaveTeamLoading"
+            @click="closeLeaveModal"
+          >
             Cancel
           </button>
-          <button class="btn-danger" type="button" :disabled="leaveTeamLoading" @click="confirmLeaveTeam">
+          <button
+            class="btn-danger"
+            type="button"
+            :disabled="leaveTeamLoading"
+            @click="confirmLeaveTeam"
+          >
             {{ leaveTeamLoading ? 'Leaving...' : 'Leave' }}
           </button>
         </div>
@@ -348,10 +407,16 @@
     </div>
 
     <div v-if="isVisibilityModalOpen" class="modal-backdrop" @click.self="closeVisibilityModal">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="visibility-modal-title">
+      <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="visibility-modal-title"
+      >
         <h3 id="visibility-modal-title">Change team visibility</h3>
         <p class="modal-text">
-          Select the new visibility for <code>{{ team?.name }}</code>. This affects who can discover and join your team.
+          Select the new visibility for <code>{{ team?.name }}</code
+          >. This affects who can discover and join your team.
         </p>
 
         <div class="visibility-options">
@@ -366,9 +431,21 @@
             <div class="visibility-option-content">
               <div class="visibility-option-header">
                 <svg viewBox="0 0 24 24" class="visibility-option-icon" aria-hidden="true">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" stroke="currentColor" stroke-width="2" fill="none"/>
-                  <circle cx="12" cy="12" r="3" fill="currentColor"/>
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <path
+                    d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <circle cx="12" cy="12" r="3" fill="currentColor" />
                 </svg>
                 <strong>Public</strong>
               </div>
@@ -387,8 +464,24 @@
             <div class="visibility-option-content">
               <div class="visibility-option-header">
                 <svg viewBox="0 0 24 24" class="visibility-option-icon" aria-hidden="true">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                  <rect
+                    x="3"
+                    y="11"
+                    width="18"
+                    height="11"
+                    rx="2"
+                    ry="2"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                  />
+                  <path
+                    d="M7 11V7a5 5 0 0 1 10 0v4"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    fill="none"
+                  />
                 </svg>
                 <strong>Private</strong>
               </div>
@@ -399,20 +492,33 @@
 
         <div v-if="selectedVisibility !== team?.is_public" class="visibility-confirm-note">
           <svg viewBox="0 0 24 24" class="note-icon" aria-hidden="true">
-            <path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path
+              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              fill="none"
+            />
           </svg>
           <span>
             You are about to change this team from
             <strong>{{ team?.is_public ? 'Public' : 'Private' }}</strong>
             to
-            <strong>{{ selectedVisibility ? 'Public' : 'Private' }}</strong>.
+            <strong>{{ selectedVisibility ? 'Public' : 'Private' }}</strong
+            >.
           </span>
         </div>
 
         <p v-if="visibilityError" class="text-error modal-error">{{ visibilityError }}</p>
 
         <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="visibilityLoading" @click="closeVisibilityModal">
+          <button
+            class="btn-cancel"
+            type="button"
+            :disabled="visibilityLoading"
+            @click="closeVisibilityModal"
+          >
             Cancel
           </button>
           <button
@@ -447,10 +553,20 @@
         <p v-if="deleteError" class="text-error modal-error">{{ deleteError }}</p>
 
         <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="deleteTeamLoading" @click="closeDeleteModal">
+          <button
+            class="btn-cancel"
+            type="button"
+            :disabled="deleteTeamLoading"
+            @click="closeDeleteModal"
+          >
             Cancel
           </button>
-          <button class="btn-danger" type="button" :disabled="!canDeleteTeam" @click="confirmDeleteTeam">
+          <button
+            class="btn-danger"
+            type="button"
+            :disabled="!canDeleteTeam"
+            @click="confirmDeleteTeam"
+          >
             {{ deleteTeamLoading ? 'Deleting...' : 'Delete permanently' }}
           </button>
         </div>
@@ -459,7 +575,7 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { useTeamsDetailWorkspace } from '@/features/teams/composables/useTeamsDetailWorkspace'
 
 const {
@@ -509,4 +625,3 @@ const {
 
 <style scoped src="../styles/teams-detail-view.css"></style>
 <style scoped src="../styles/status-tags.css"></style>
-

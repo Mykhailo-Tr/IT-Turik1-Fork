@@ -8,4 +8,3 @@ export const parseApiError = async (response, fallbackMessage) => {
     return fallbackMessage
   }
 }
-

@@ -3,9 +3,13 @@
     <article class="card header-card">
       <p class="section-eyebrow">Teams</p>
       <h1 class="section-title">Team directory</h1>
-      <p class="section-subtitle">Open a team workspace to view details, edit info, and manage members.</p>
+      <p class="section-subtitle">
+        Open a team workspace to view details, edit info, and manage members.
+      </p>
       <div class="hero-actions">
-        <router-link to="/teams/create" class="btn-primary manage-link">Create new team</router-link>
+        <router-link to="/teams/create" class="btn-primary manage-link"
+          >Create new team</router-link
+        >
         <span class="meta-pill">Total teams: {{ teams.length }}</span>
       </div>
     </article>
@@ -20,14 +24,22 @@
         </header>
 
         <p v-if="inboxLoading" class="text-muted">Loading invitations...</p>
-        <p v-else-if="pendingInboxInvitations.length === 0" class="text-muted">No pending invitations.</p>
+        <p v-else-if="pendingInboxInvitations.length === 0" class="text-muted">
+          No pending invitations.
+        </p>
         <div v-else class="team-grid">
-          <article v-for="invitation in pendingInboxInvitations" :key="`invite-${invitation.id}`" class="team-item">
+          <article
+            v-for="invitation in pendingInboxInvitations"
+            :key="`invite-${invitation.id}`"
+            class="team-item"
+          >
             <div class="team-meta">
               <h3>{{ invitation.team.name }}</h3>
               <span class="status status--invited">invited</span>
             </div>
-            <p class="text-muted">Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}</p>
+            <p class="text-muted">
+              Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}
+            </p>
             <div class="row-actions">
               <button
                 type="button"
@@ -66,16 +78,31 @@
             <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
             <p class="text-muted">Captain: {{ captainName(team) }}</p>
             <p class="text-muted">Members: {{ team.members.length }}</p>
-            <p v-if="team.my_invitation_status" class="text-muted">My invitation: {{ team.my_invitation_status }}</p>
-            <p v-if="team.my_join_request_status" class="text-muted">My join request: {{ team.my_join_request_status }}</p>
-            <router-link :to="`/teams/${team.id}`" class="btn-soft open-link">Open workspace</router-link>
+            <p v-if="team.my_invitation_status" class="text-muted">
+              My invitation: {{ team.my_invitation_status }}
+            </p>
+            <p v-if="team.my_join_request_status" class="text-muted">
+              My join request: {{ team.my_join_request_status }}
+            </p>
+            <router-link :to="`/teams/${team.id}`" class="btn-soft open-link"
+              >Open workspace</router-link
+            >
           </article>
         </div>
 
         <div v-if="myPages > 1" class="pagination">
-          <button class="btn-soft" :disabled="myPage === 1" @click="myPage -= 1" type="button">Prev</button>
+          <button class="btn-soft" :disabled="myPage === 1" @click="myPage -= 1" type="button">
+            Prev
+          </button>
           <span>Page {{ myPage }} / {{ myPages }}</span>
-          <button class="btn-soft" :disabled="myPage === myPages" @click="myPage += 1" type="button">Next</button>
+          <button
+            class="btn-soft"
+            :disabled="myPage === myPages"
+            @click="myPage += 1"
+            type="button"
+          >
+            Next
+          </button>
         </div>
       </article>
 
@@ -94,8 +121,12 @@
             <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
             <p class="text-muted">Captain: {{ captainName(team) }}</p>
             <p class="text-muted">Members: {{ team.members.length }}</p>
-            <p v-if="team.my_invitation_status" class="text-muted">My invitation: {{ team.my_invitation_status }}</p>
-            <p v-if="team.my_join_request_status" class="text-muted">My join request: {{ team.my_join_request_status }}</p>
+            <p v-if="team.my_invitation_status" class="text-muted">
+              My invitation: {{ team.my_invitation_status }}
+            </p>
+            <p v-if="team.my_join_request_status" class="text-muted">
+              My join request: {{ team.my_join_request_status }}
+            </p>
             <button
               v-if="team.can_request_to_join"
               type="button"
@@ -105,14 +136,30 @@
             >
               {{ joinRequestLoadingByTeam[team.id] ? 'Sending...' : 'Request to join' }}
             </button>
-            <router-link :to="`/teams/${team.id}`" class="btn-soft open-link">Open workspace</router-link>
+            <router-link :to="`/teams/${team.id}`" class="btn-soft open-link"
+              >Open workspace</router-link
+            >
           </article>
         </div>
 
         <div v-if="otherPages > 1" class="pagination">
-          <button class="btn-soft" :disabled="otherPage === 1" @click="otherPage -= 1" type="button">Prev</button>
+          <button
+            class="btn-soft"
+            :disabled="otherPage === 1"
+            @click="otherPage -= 1"
+            type="button"
+          >
+            Prev
+          </button>
           <span>Page {{ otherPage }} / {{ otherPages }}</span>
-          <button class="btn-soft" :disabled="otherPage === otherPages" @click="otherPage += 1" type="button">Next</button>
+          <button
+            class="btn-soft"
+            :disabled="otherPage === otherPages"
+            @click="otherPage += 1"
+            type="button"
+          >
+            Next
+          </button>
         </div>
       </article>
     </template>
@@ -146,5 +193,3 @@ const {
 
 <style scoped src="../styles/teams-view.css"></style>
 <style scoped src="../styles/status-tags.css"></style>
-
-

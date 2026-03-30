@@ -6,6 +6,8 @@ export const clearAuthSession = () => {
   }
 }
 
+// TODO: remove this bullshit???
+
 export const createAuthHeaders = (json = false) => {
   const token = localStorage.getItem('access')
   const headers = { Authorization: `Bearer ${token}` }
@@ -13,8 +15,9 @@ export const createAuthHeaders = (json = false) => {
   return headers
 }
 
+// TODO: remove this bullshit???
+
 export const logoutToLogin = (router) => {
   clearAuthSession()
   router.push('/login')
 }
-

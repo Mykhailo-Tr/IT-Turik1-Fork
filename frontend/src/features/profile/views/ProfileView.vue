@@ -6,7 +6,7 @@
           <p class="section-eyebrow">User Center</p>
           <h1 class="section-title profile-title">My profile</h1>
         </div>
-        <p class="meta">Joined: {{ formatDate(profile.created_at) || 'N/A' }}</p>
+        <p class="meta">Joined: {{ profile ? formatDate(profile.created_at) : 'N/A' }}</p>
       </div>
 
       <div v-if="loadingProfile" class="state-box">Loading profile...</div>
@@ -14,56 +14,71 @@
       <div v-else class="details">
         <div class="item item-text">
           <span class="item-label">Username</span>
-          <strong class="item-value value-wrap">{{ profile.username || '-' }}</strong>
+          <strong class="item-value value-wrap">{{ profile?.username || '-' }}</strong>
         </div>
         <div class="item item-text">
           <span class="item-label">Email</span>
-          <strong class="item-value value-wrap">{{ profile.email || '-' }}</strong>
+          <strong class="item-value value-wrap">{{ profile?.email || '-' }}</strong>
         </div>
         <div class="item item-role">
           <span class="item-label">Role</span>
-          <strong class="badge">{{ profile.role || '-' }}</strong>
+          <strong class="badge">{{ profile?.role || '-' }}</strong>
         </div>
         <div class="item item-text">
           <span class="item-label">Full name</span>
-          <strong class="item-value value-wrap">{{ profile.full_name || '-' }}</strong>
+          <strong class="item-value value-wrap">{{ profile?.full_name || '-' }}</strong>
         </div>
         <div class="item item-text">
           <span class="item-label">City</span>
-          <strong class="item-value value-wrap">{{ profile.city || '-' }}</strong>
+          <strong class="item-value value-wrap">{{ profile?.city || '-' }}</strong>
         </div>
         <div class="item item-phone">
           <span class="item-label">Phone</span>
-          <strong class="item-value value-fixed">{{ profile.phone || '-' }}</strong>
+          <strong class="item-value value-fixed">{{ profile?.phone || '-' }}</strong>
         </div>
         <div class="item item-wide">
           <span class="item-label">Teams</span>
           <div class="team-list">
             <router-link
-              v-for="team in profile.teams || []"
+              v-for="team in profile?.teams || []"
               :key="team.id"
               :to="`/teams/${team.id}`"
               class="team-link"
             >
               {{ team.name }}
             </router-link>
-            <p v-if="!(profile.teams || []).length" class="text-muted">No teams yet.</p>
+            <p v-if="!(profile?.teams || []).length" class="text-muted">No teams yet.</p>
           </div>
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn-primary" type="button" :disabled="loadingProfile" @click="goToEditProfile">
+        <button
+          class="btn-primary"
+          type="button"
+          :disabled="loadingProfile"
+          @click="goToEditProfile"
+        >
           Edit Profile
         </button>
-        <button class="btn-secondary" type="button" :disabled="loadingProfile || isDeleting" @click="logoutToLogin">
+        <button
+          class="btn-secondary"
+          type="button"
+          :disabled="loadingProfile || isDeleting"
+          @click="logoutToLogin"
+        >
           Log Out
         </button>
       </div>
 
       <div class="danger-zone">
         <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
-        <button class="btn-danger" :disabled="loadingProfile || isDeleting" @click="openDeleteModal" type="button">
+        <button
+          class="btn-danger"
+          :disabled="loadingProfile || isDeleting"
+          @click="openDeleteModal"
+          type="button"
+        >
           Delete account
         </button>
       </div>
@@ -92,7 +107,12 @@
           <button class="btn-cancel" type="button" :disabled="isDeleting" @click="closeDeleteModal">
             Cancel
           </button>
-          <button class="btn-danger" type="button" :disabled="!canConfirmDelete" @click="handleDeleteAccount">
+          <button
+            class="btn-danger"
+            type="button"
+            :disabled="!canConfirmDelete"
+            @click="handleDeleteAccount"
+          >
             {{ isDeleting ? 'Deleting...' : 'Delete permanently' }}
           </button>
         </div>
@@ -101,13 +121,16 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { API_BASE } from '@/features/shared/config/api'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import type { Profile } from '@/services/accounts'
 
-const profile = ref({})
+const profile = ref<Profile | null>(null)
 const profileError = ref('')
 const loadingProfile = ref(true)
 
@@ -118,7 +141,7 @@ const deleteConfirmInput = ref('')
 const deleteError = ref('')
 const isDeleting = ref(false)
 
-const expectedDeleteText = computed(() => profile.value.username || '')
+const expectedDeleteText = computed(() => profile.value?.username || '')
 const canConfirmDelete = computed(
   () =>
     Boolean(expectedDeleteText.value) &&
@@ -142,31 +165,26 @@ const fetchProfile = async () => {
   profileError.value = ''
 
   const token = localStorage.getItem('access')
+  if (!token) return router.push('/login')
+
   try {
-    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const response = await $api.accounts.getProfile(token)
 
-    if (res.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (!res.ok) {
-      profileError.value = 'Could not load profile information.'
-      return
-    }
-
-    const data = await res.json()
-    if (data.needs_onboarding) {
+    if (response.data.needs_onboarding) {
       localStorage.setItem('needs_onboarding', '1')
       router.push('/complete-profile')
       return
     }
 
-    profile.value = data
-  } catch {
-    profileError.value = 'Server connection error.'
+    profile.value = response.data
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        profileError.value = 'Could not load profile information.'
+      } else {
+        profileError.value = 'Server connection error.'
+      }
+    }
   } finally {
     loadingProfile.value = false
   }
@@ -196,30 +214,32 @@ const handleDeleteAccount = async () => {
   hideNotification()
 
   const token = localStorage.getItem('access')
-  try {
-    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+  if (!token) return router.push('/login')
 
-    if (res.status === 204 || res.status === 200 || res.status === 401) {
-      logoutToLogin()
+  try {
+    const response = await $api.accounts.getProfile(token)
+
+    if (response.status === 204 || response.status === 200) {
+      router.push('/login')
       return
     }
-
-    showNotification('Unable to delete account.', 'error')
-  } catch {
-    showNotification('Server connection error.', 'error')
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+        showNotification('Unable to delete account.', 'error')
+      } else {
+        showNotification('Server connection error.', 'error')
+      }
+    }
   } finally {
     isDeleting.value = false
   }
 }
 
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('uk-UA')
+const formatDate = (date: Date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('uk-UA')
 }
 
 onMounted(fetchProfile)

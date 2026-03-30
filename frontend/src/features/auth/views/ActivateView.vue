@@ -18,7 +18,7 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { API_BASE } from '@/features/shared/config/api'
@@ -75,4 +75,3 @@ onMounted(async () => {
   font-weight: 700;
 }
 </style>
-

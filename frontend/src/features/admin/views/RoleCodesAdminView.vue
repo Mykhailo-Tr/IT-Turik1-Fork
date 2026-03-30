@@ -11,9 +11,7 @@
 
       <div v-if="loading" class="state-box">Loading...</div>
 
-      <div v-else-if="forbidden" class="state-box error">
-        You do not have access to this page.
-      </div>
+      <div v-else-if="forbidden" class="state-box error">You do not have access to this page.</div>
 
       <template v-else>
         <div class="counts">
@@ -31,13 +29,20 @@
               <option value="organizer">Organizer</option>
               <option value="admin">Admin</option>
             </select>
-            <small v-if="errors.role" class="text-error">{{ errors.role[0] }}</small>
+            <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
           </label>
 
           <label class="form-label">
             Quantity
-            <input v-model.number="generateForm.quantity" class="input-control" type="number" min="1" max="10" required />
-            <small v-if="errors.quantity" class="text-error">{{ errors.quantity[0] }}</small>
+            <input
+              v-model.number="generateForm.quantity"
+              class="input-control"
+              type="number"
+              min="1"
+              max="10"
+              required
+            />
+            <small v-if="errors?.quantity" class="text-error">{{ errors.quantity[0] }}</small>
           </label>
 
           <button class="btn-primary generate-btn" :disabled="submitting">
@@ -49,7 +54,7 @@
           <label class="form-label">
             Filter by role
             <select v-model="selectedRoleFilter" class="select-control" @change="fetchCodes">
-              <option value="">All restricted roles</option>
+              <option value="all">All restricted roles</option>
               <option value="jury">Jury</option>
               <option value="organizer">Organizer</option>
               <option value="admin">Admin</option>
@@ -68,7 +73,7 @@
             <p><strong>Role:</strong> {{ code.role }}</p>
             <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
             <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
-            <p><strong>Used by:</strong> {{ code.used_by_username || '-' }}</p>
+            <p><strong>Used by:</strong> {{ code.is_used ? code.used_by : '-' }}</p>
             <p><strong>Used at:</strong> {{ code.used_at ? formatDateTime(code.used_at) : '-' }}</p>
           </article>
           <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
@@ -78,11 +83,14 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import type { RoleCode, RoleCodesUserRole } from '@/services/accounts'
 
 const router = useRouter()
 const loading = ref(true)
@@ -90,11 +98,14 @@ const submitting = ref(false)
 const forbidden = ref(false)
 const statusMessage = ref('')
 const statusType = ref('success')
-const errors = ref({})
-const codes = ref([])
+const errors = ref<{
+  role: string[]
+  quantity: string[]
+} | null>(null)
+const codes = ref<RoleCode[]>([])
 const activeCounts = ref({ jury: 0, organizer: 0, admin: 0 })
-const restrictedRoles = ['jury', 'organizer', 'admin']
-const selectedRoleFilter = ref('')
+const restrictedRoles = ['jury', 'organizer', 'admin'] as const
+const selectedRoleFilter = ref<RoleCodesUserRole | 'all'>('all')
 const generateForm = ref({
   role: 'jury',
   quantity: 1,
@@ -115,14 +126,14 @@ const authHeaders = () => ({
 const fetchCodes = async () => {
   loading.value = true
   statusMessage.value = ''
-  errors.value = {}
+  errors.value = null
 
-  const query = selectedRoleFilter.value ? `?role=${selectedRoleFilter.value}` : ''
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/role-codes/${query}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('access')}`,
-      },
+    const token = localStorage.getItem('access')
+    if (!token) return router.push('/login')
+
+    const response = await $api.accounts.getRoleCodes(token, {
+      role: selectedRoleFilter.value,
     })
 
     if (response.status === 401) {
@@ -135,19 +146,25 @@ const fetchCodes = async () => {
       return
     }
 
-    const data = await response.json()
-    if (!response.ok) {
-      statusType.value = 'error'
-      statusMessage.value = data.detail || 'Unable to load activation codes.'
-      return
-    }
-
     forbidden.value = false
-    codes.value = data.codes || []
-    activeCounts.value = data.active_counts || activeCounts.value
-  } catch {
-    statusType.value = 'error'
-    statusMessage.value = 'Server connection error.'
+    codes.value = response.data.codes || []
+    activeCounts.value = response.data.active_counts || activeCounts.value
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+        if (err.response.status === 403) {
+          forbidden.value = true
+          return
+        }
+
+        statusType.value = 'error'
+        statusMessage.value = err.response.data.detail || 'Unable to load activation codes.'
+      } else {
+        statusType.value = 'error'
+        statusMessage.value = 'Server connection error.'
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -155,47 +172,42 @@ const fetchCodes = async () => {
 
 const handleGenerate = async () => {
   submitting.value = true
-  errors.value = {}
+  errors.value = null
   statusMessage.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/role-codes/`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify(generateForm.value),
-    })
+    const token = localStorage.getItem('access')
+    if (!token) return router.push('/login')
 
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (response.status === 403) {
-      forbidden.value = true
-      return
-    }
-
-    const data = await response.json()
-    if (!response.ok) {
-      errors.value = data
-      statusType.value = 'error'
-      statusMessage.value = data.detail || 'Unable to generate codes.'
-      return
-    }
+    const response = await $api.accounts.generateCodes(token, generateForm.value)
 
     statusType.value = 'success'
-    statusMessage.value = `Generated ${data.created?.length || 0} code(s) successfully.`
-    activeCounts.value = data.active_counts || activeCounts.value
+    statusMessage.value = `Generated ${response.data.created?.length || 0} code(s) successfully.`
+    activeCounts.value = response.data.active_counts || activeCounts.value
     await fetchCodes()
-  } catch {
-    statusType.value = 'error'
-    statusMessage.value = 'Server connection error.'
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+        if (err.response.status === 403) {
+          forbidden.value = true
+          return
+        }
+
+        errors.value = err.response.data
+        statusType.value = 'error'
+        statusMessage.value = err.response.data.detail || 'Unable to generate codes.'
+      } else {
+        statusType.value = 'error'
+        statusMessage.value = 'Server connection error.'
+      }
+    }
   } finally {
     submitting.value = false
   }
 }
 
-const formatDateTime = (value) => {
+const formatDateTime = (value: string | number | Date) => {
   if (!value) return '-'
   return new Date(value).toLocaleString()
 }

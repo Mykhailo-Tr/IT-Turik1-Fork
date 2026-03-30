@@ -13,14 +13,26 @@
         <div class="form-grid">
           <label class="form-label">
             Username
-            <input v-model="form.username" class="input-control" type="text" placeholder="johndoe" required />
-            <small v-if="errors.username" class="text-error">{{ errors.username[0] }}</small>
+            <input
+              v-model="form.username"
+              class="input-control"
+              type="text"
+              placeholder="johndoe"
+              required
+            />
+            <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
           </label>
 
           <label class="form-label">
             Email
-            <input v-model="form.email" class="input-control" type="email" placeholder="name@mail.com" required />
-            <small v-if="errors.email" class="text-error">{{ errors.email[0] }}</small>
+            <input
+              v-model="form.email"
+              class="input-control"
+              type="email"
+              placeholder="name@mail.com"
+              required
+            />
+            <small v-if="errors?.email" class="text-error">{{ errors.email[0] }}</small>
           </label>
 
           <label class="form-label">
@@ -31,7 +43,7 @@
               placeholder="********"
               required
             />
-            <small v-if="errors.password" class="text-error">{{ errors.password[0] }}</small>
+            <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
           </label>
 
           <label class="form-label">
@@ -53,17 +65,26 @@
               placeholder="Enter one-time activation code"
               required
             />
-            <small v-if="errors.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+            <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
           </label>
 
           <label class="form-label full-width">
             Full name
-            <input v-model="form.full_name" class="input-control" type="text" placeholder="John Doe" />
+            <input
+              v-model="form.full_name"
+              class="input-control"
+              type="text"
+              placeholder="John Doe"
+            />
           </label>
 
           <label class="form-label">
             Phone
-            <PhoneField v-model="form.phone" :error="errors.phone?.[0]" placeholder="Enter phone number" />
+            <PhoneField
+              v-model="form.phone"
+              :error="errors?.phone?.[0]"
+              placeholder="Enter phone number"
+            />
           </label>
 
           <label class="form-label">
@@ -75,7 +96,7 @@
         <button type="submit" class="btn-primary submit-btn" :disabled="isLoading">
           {{ isLoading ? 'Creating account...' : 'Create account' }}
         </button>
-        <p v-if="errors.form" class="text-error text-center">{{ errors.form[0] }}</p>
+        <p v-if="errors?.form" class="text-error text-center">{{ errors.form[0] }}</p>
 
         <GoogleAuthButton
           :api-base="API_BASE"
@@ -92,14 +113,17 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
 import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
-import { API_BASE } from '@/features/shared/config/api'
+import { API_BASE } from '@/features/shared/config/api.ts'
+import type { RegisterResponse } from '@/services/accounts'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
 
 const router = useRouter()
 
@@ -126,11 +150,20 @@ watch(
   },
 )
 
-const errors = ref({})
+interface Errors {
+  username?: string[]
+  email?: string[]
+  password?: string[]
+  redeem_code?: string[]
+  phone?: string[]
+  form?: string[]
+}
+
+const errors = ref<Errors | null>(null)
 const isLoading = ref(false)
 const isSuccess = ref(false)
 
-const saveTokensAndRedirect = (data) => {
+const saveTokensAndRedirect = (data: RegisterResponse) => {
   localStorage.setItem('access', data.access)
   localStorage.setItem('refresh', data.refresh)
   if (data.onboarding_required) {
@@ -145,27 +178,19 @@ const saveTokensAndRedirect = (data) => {
 
 const handleRegister = async () => {
   isLoading.value = true
-  errors.value = {}
+  errors.value = null
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/register/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value),
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-      isSuccess.value = true
-      return
+    await $api.accounts.register(form.value)
+    isSuccess.value = true
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        errors.value = err.response.data || 'Something went wrong.'
+      } else {
+        errors.value = { form: ['Server connection error.'] }
+      }
     }
-
-    errors.value = data
-  } catch {
-    errors.value = { form: ['Unable to connect to server.'] }
   } finally {
     isLoading.value = false
   }
@@ -204,4 +229,3 @@ const handleRegister = async () => {
   }
 }
 </style>
-

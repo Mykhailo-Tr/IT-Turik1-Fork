@@ -2,7 +2,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
-import { createAuthHeaders, logoutToLogin as redirectToLogin } from '@/features/shared/lib/auth-session'
+import {
+  createAuthHeaders,
+  logoutToLogin as redirectToLogin,
+} from '@/features/shared/lib/auth-session'
 import { parseApiError } from '@/features/shared/lib/http-errors'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
@@ -30,13 +33,9 @@ export const useTeamsViewPage = () => {
   const isCaptain = (team) => team.captain_id === currentUserId.value
   const isAcceptedMember = (team) => team.is_member || isCaptain(team)
 
-  const myTeams = computed(() =>
-    teams.value.filter((team) => isAcceptedMember(team)),
-  )
+  const myTeams = computed(() => teams.value.filter((team) => isAcceptedMember(team)))
 
-  const otherTeams = computed(() =>
-    teams.value.filter((team) => !isAcceptedMember(team)),
-  )
+  const otherTeams = computed(() => teams.value.filter((team) => !isAcceptedMember(team)))
 
   const myPages = computed(() => Math.max(1, Math.ceil(myTeams.value.length / PER_PAGE)))
   const otherPages = computed(() => Math.max(1, Math.ceil(otherTeams.value.length / PER_PAGE)))
@@ -135,10 +134,13 @@ export const useTeamsViewPage = () => {
     }
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/invitations/${invitationId}/${action}/`, {
-        method: 'POST',
-        headers: createAuthHeaders(),
-      })
+      const response = await fetch(
+        `${API_BASE}/api/accounts/teams/invitations/${invitationId}/${action}/`,
+        {
+          method: 'POST',
+          headers: createAuthHeaders(),
+        },
+      )
       if (response.status === 401) {
         redirectToLogin(router)
         return
@@ -147,7 +149,10 @@ export const useTeamsViewPage = () => {
         showNotification(await parseApiError(response, `Unable to ${action} invitation.`), 'error')
         return
       }
-      showNotification(action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.', 'success')
+      showNotification(
+        action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.',
+        'success',
+      )
       await Promise.all([fetchTeams(), fetchInvitations()])
     } catch {
       showNotification('Server connection error.', 'error')
@@ -223,4 +228,3 @@ export const useTeamsViewPage = () => {
     teams,
   }
 }
-

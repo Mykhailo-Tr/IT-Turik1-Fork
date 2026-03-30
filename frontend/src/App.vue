@@ -54,8 +54,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import { API_BASE } from '@/features/shared/config/api'
 
-type Section = 'home' | 'teams' | 'profile' | 'admin' | 'login' | 'register'
-
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
 const router = useRouter()
@@ -85,6 +83,8 @@ const checkAuth = async () => {
     isAdmin.value = false
   }
 }
+
+type Section = 'home' | 'teams' | 'profile' | 'admin' | 'login' | 'register'
 
 const isSectionActive = (section: Section) => {
   const path = route.path

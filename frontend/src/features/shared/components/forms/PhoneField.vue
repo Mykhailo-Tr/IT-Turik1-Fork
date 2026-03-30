@@ -13,7 +13,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch } from 'vue'
 import { VueTelInput } from 'vue-tel-input'
 
@@ -35,7 +35,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const phoneUiValue = ref(props.modelValue || '')
 
-const normalizePhoneNumber = (value) => {
+const normalizePhoneNumber = (value: string) => {
   if (!value) {
     return ''
   }
@@ -90,4 +90,3 @@ watch(phoneUiValue, (newValue) => {
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
 }
 </style>
-

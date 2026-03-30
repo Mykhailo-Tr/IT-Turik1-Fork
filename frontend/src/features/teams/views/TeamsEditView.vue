@@ -4,7 +4,9 @@
       <p class="section-eyebrow">Team workspace</p>
       <h1 class="section-title">Edit {{ team?.name || 'team' }}</h1>
       <div class="hero-actions">
-        <router-link :to="team ? `/teams/${team.id}` : '/teams'" class="btn-soft action-link">Back to team</router-link>
+        <router-link :to="team ? `/teams/${team.id}` : '/teams'" class="btn-soft action-link"
+          >Back to team</router-link
+        >
       </div>
     </article>
 
@@ -26,7 +28,13 @@
           <form class="form-grid" @submit.prevent="saveTeam">
             <label class="form-label">
               Team name
-              <input v-model="form.name" class="input-control" type="text" required :disabled="!isCaptain || saveLoading" />
+              <input
+                v-model="form.name"
+                class="input-control"
+                type="text"
+                required
+                :disabled="!isCaptain || saveLoading"
+              />
             </label>
 
             <label class="form-label">
@@ -42,7 +50,12 @@
 
             <label class="form-label">
               Organization
-              <input v-model="form.organization" class="input-control" type="text" :disabled="!isCaptain || saveLoading" />
+              <input
+                v-model="form.organization"
+                class="input-control"
+                type="text"
+                :disabled="!isCaptain || saveLoading"
+              />
             </label>
 
             <label class="form-label">
@@ -73,7 +86,9 @@
               <button class="btn-primary" type="submit" :disabled="!isCaptain || saveLoading">
                 {{ saveLoading ? 'Saving...' : 'Save changes' }}
               </button>
-              <router-link :to="`/teams/${team.id}`" class="btn-soft action-link">Cancel</router-link>
+              <router-link :to="`/teams/${team.id}`" class="btn-soft action-link"
+                >Cancel</router-link
+              >
             </div>
           </form>
         </article>
@@ -95,7 +110,11 @@
           </label>
 
           <div class="member-list">
-            <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
+            <article
+              v-for="member in filteredMembers"
+              :key="`member-${member.id}`"
+              class="member-row"
+            >
               <div>
                 <p class="member-name">{{ member.username }}</p>
                 <p class="text-muted member-email">{{ member.email }}</p>
@@ -119,7 +138,11 @@
             <h3>Invitations status</h3>
             <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
             <div v-else class="member-list">
-              <article v-for="invitation in team.invitations" :key="`inv-${invitation.id}`" class="member-row">
+              <article
+                v-for="invitation in team.invitations"
+                :key="`inv-${invitation.id}`"
+                class="member-row"
+              >
                 <div>
                   <p class="member-name">{{ invitation.user.username }}</p>
                   <p class="text-muted member-email">{{ invitation.user.email }}</p>
@@ -133,7 +156,9 @@
             </div>
           </div>
 
-          <p v-if="filteredMembers.length === 0" class="text-muted member-note">No members match your search.</p>
+          <p v-if="filteredMembers.length === 0" class="text-muted member-note">
+            No members match your search.
+          </p>
 
           <div v-if="isCaptain" class="add-member-box">
             <h3>Invite user</h3>
@@ -142,7 +167,11 @@
               Select user
               <select v-model="addMemberSelection" class="select-control">
                 <option value="">Select user</option>
-                <option v-for="user in availableUsers" :key="`add-${user.id}`" :value="String(user.id)">
+                <option
+                  v-for="user in availableUsers"
+                  :key="`add-${user.id}`"
+                  :value="String(user.id)"
+                >
                   {{ user.username }} ({{ user.email }})
                 </option>
               </select>
@@ -150,12 +179,15 @@
 
             <p v-if="availableUsers.length === 0" class="text-muted">No available users to add.</p>
 
-            <button class="btn-primary" type="button" @click="addMember" :disabled="addMemberLoading">
+            <button
+              class="btn-primary"
+              type="button"
+              @click="addMember"
+              :disabled="addMemberLoading"
+            >
               {{ addMemberLoading ? 'Sending...' : 'Send invitation' }}
             </button>
           </div>
-
-
         </article>
       </div>
     </template>
@@ -186,5 +218,3 @@ const {
 
 <style scoped src="../styles/teams-edit-view.css"></style>
 <style scoped src="../styles/status-tags.css"></style>
-
-

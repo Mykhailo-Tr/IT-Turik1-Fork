@@ -2,7 +2,10 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { API_BASE } from '@/features/shared/config/api'
-import { createAuthHeaders, logoutToLogin as redirectToLogin } from '@/features/shared/lib/auth-session'
+import {
+  createAuthHeaders,
+  logoutToLogin as redirectToLogin,
+} from '@/features/shared/lib/auth-session'
 import { parseApiError } from '@/features/shared/lib/http-errors'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
@@ -33,7 +36,9 @@ export const useTeamsEditPage = () => {
   const kickLoadingByUser = ref({})
 
   const teamId = computed(() => Number(route.params.id))
-  const isCaptain = computed(() => Boolean(team.value) && team.value.captain_id === currentUserId.value)
+  const isCaptain = computed(
+    () => Boolean(team.value) && team.value.captain_id === currentUserId.value,
+  )
 
   const filteredMembers = computed(() => {
     if (!team.value) return []
@@ -41,7 +46,10 @@ export const useTeamsEditPage = () => {
     if (!search) return team.value.members
 
     return team.value.members.filter((member) => {
-      return [member.username, member.email, member.full_name || ''].join(' ').toLowerCase().includes(search)
+      return [member.username, member.email, member.full_name || '']
+        .join(' ')
+        .toLowerCase()
+        .includes(search)
     })
   })
 
@@ -289,4 +297,3 @@ export const useTeamsEditPage = () => {
     team,
   }
 }
-

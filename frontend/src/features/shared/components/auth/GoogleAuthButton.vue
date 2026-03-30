@@ -1,15 +1,17 @@
 <template>
   <div class="google-auth">
-    <div v-if="dividerLabel" class="divider-line"><span>{{ dividerLabel }}</span></div>
+    <div v-if="dividerLabel" class="divider-line">
+      <span>{{ dividerLabel }}</span>
+    </div>
     <div ref="googleButtonRef" class="google-slot"></div>
     <p v-if="errorMessage" class="text-error text-center feedback">{{ errorMessage }}</p>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { renderGoogleButton } from '@/features/shared/lib/googleAuth'
+import { renderGoogleButton, type GoogleCredentialResponse } from '@/features/shared/lib/googleAuth'
 
 import { API_BASE } from '@/features/shared/config/api'
 
@@ -30,11 +32,11 @@ const props = defineProps({
 
 const emit = defineEmits(['success'])
 
-const googleButtonRef = ref(null)
+const googleButtonRef = ref<HTMLDivElement | null>(null)
 const errorMessage = ref('')
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-const handleGoogleCredential = async (response) => {
+const handleGoogleCredential = async (response: GoogleCredentialResponse) => {
   if (!response?.credential) {
     errorMessage.value = 'Google did not return a credential token.'
     return
@@ -64,6 +66,8 @@ const handleGoogleCredential = async (response) => {
 
 onMounted(async () => {
   try {
+    if (!googleButtonRef.value) throw new Error('container is not mounted')
+
     await renderGoogleButton({
       container: googleButtonRef.value,
       clientId: googleClientId,
@@ -71,7 +75,8 @@ onMounted(async () => {
       width: props.buttonWidth,
     })
   } catch (error) {
-    errorMessage.value = error.message || 'Google auth initialization failed.'
+    errorMessage.value =
+      (error instanceof Error && error.message) || 'Google auth initialization failed.'
   }
 })
 </script>
@@ -81,4 +86,3 @@ onMounted(async () => {
   margin-top: 0.6rem;
 }
 </style>
-

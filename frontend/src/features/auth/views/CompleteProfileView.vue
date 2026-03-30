@@ -13,7 +13,7 @@
         <label class="form-label">
           Username
           <input v-model="form.username" class="input-control" type="text" required />
-          <small v-if="errors.username" class="text-error">{{ errors.username[0] }}</small>
+          <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
         </label>
 
         <label class="form-label">
@@ -25,7 +25,7 @@
             <option value="jury">Jury</option>
             <option value="admin">Admin</option>
           </select>
-          <small v-if="errors.role" class="text-error">{{ errors.role[0] }}</small>
+          <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
         </label>
 
         <label v-if="isRestrictedRole" class="form-label full-width">
@@ -37,7 +37,7 @@
             placeholder="Enter one-time activation code"
             required
           />
-          <small v-if="errors.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+          <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
         </label>
 
         <label class="form-label full-width">
@@ -48,9 +48,10 @@
             placeholder="Create a strong password"
             required
           />
-          <small v-if="errors.password" class="text-error">{{ errors.password[0] }}</small>
+          <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
           <small v-else class="field-help">
-            Use at least 8 characters, including upper/lowercase letters, a number, and a special character.
+            Use at least 8 characters, including upper/lowercase letters, a number, and a special
+            character.
           </small>
         </label>
 
@@ -61,7 +62,11 @@
 
         <label class="form-label">
           Phone
-          <PhoneField v-model="form.phone" :error="errors.phone?.[0]" placeholder="Enter phone number" />
+          <PhoneField
+            v-model="form.phone"
+            :error="errors?.phone?.[0]"
+            placeholder="Enter phone number"
+          />
         </label>
 
         <label class="form-label">
@@ -77,20 +82,31 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api'
+import { API_BASE } from '@/features/shared/config/api.ts'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+
+interface Errors {
+  username?: string[]
+  role?: string[]
+  redeem_code?: string[]
+  password?: string[]
+  phone?: string[]
+  form?: string[]
+}
 
 const router = useRouter()
 const loading = ref(false)
 const bootLoading = ref(true)
 const message = ref('')
 const messageType = ref('success')
-const errors = ref({})
+const errors = ref<Errors | null>(null)
 
 const form = ref({
   username: '',
@@ -114,7 +130,7 @@ watch(
   },
 )
 
-const getPasswordError = (password) => {
+const getPasswordError = (password: string) => {
   if (!password) return 'Password is required to complete registration.'
   if (password.length < 8) return 'Password must be at least 8 characters long.'
   if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter.'
@@ -124,12 +140,13 @@ const getPasswordError = (password) => {
   return null
 }
 
-const logoutToLogin = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
+// TODO: Remove
+// const logoutToLogin = () => {
+//   localStorage.removeItem('access')
+//   localStorage.removeItem('refresh')
+//   localStorage.removeItem('needs_onboarding')
+//   router.push('/login')
+// }
 
 const handleSubmit = async () => {
   loading.value = true
@@ -146,36 +163,32 @@ const handleSubmit = async () => {
   }
 
   const token = localStorage.getItem('access')
+
+  if (!token) {
+    router.push('/login')
+    return
+  }
+
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value),
-    })
-
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    const data = await response.json()
-    if (!response.ok) {
-      errors.value = data
-      messageType.value = 'error'
-      message.value = 'Please fix form errors and try again.'
-      return
-    }
+    await $api.accounts.updateProfile(token, form.value)
 
     localStorage.removeItem('needs_onboarding')
     messageType.value = 'success'
     message.value = 'Profile completed successfully.'
     router.push('/')
-  } catch {
-    messageType.value = 'error'
-    message.value = 'Server connection error.'
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+
+        errors.value = err.response.data
+        messageType.value = 'error'
+        message.value = 'Please fix form errors and try again.'
+      } else {
+        messageType.value = 'error'
+        message.value = 'Server connection error.'
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -184,45 +197,39 @@ const handleSubmit = async () => {
 onMounted(async () => {
   const token = localStorage.getItem('access')
   if (!token) {
-    logoutToLogin()
+    router.push('/login')
     return
   }
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const response = await $api.accounts.getProfile(token)
 
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (!response.ok) {
-      messageType.value = 'error'
-      message.value = 'Could not load your profile.'
-      return
-    }
-
-    const data = await response.json()
-    if (!data.needs_onboarding) {
+    if (!response.data.needs_onboarding) {
       localStorage.removeItem('needs_onboarding')
       router.push('/')
       return
     }
 
     form.value = {
-      username: data.username || '',
+      username: response.data.username || '',
       role: '',
       redeem_code: '',
       password: '',
-      full_name: data.full_name || '',
-      phone: data.phone || '',
-      city: data.city || '',
+      full_name: response.data.full_name || '',
+      phone: response.data.phone || '',
+      city: response.data.city || '',
     }
-  } catch {
-    messageType.value = 'error'
-    message.value = 'Server connection error.'
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+        messageType.value = 'error'
+        message.value = 'Could not load your profile.'
+      } else {
+        messageType.value = 'error'
+        message.value = 'Server connection error.'
+      }
+    }
   } finally {
     bootLoading.value = false
   }
@@ -268,4 +275,3 @@ onMounted(async () => {
   }
 }
 </style>
-

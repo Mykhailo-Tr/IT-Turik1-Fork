@@ -3,21 +3,25 @@
     <div class="card auth-card">
       <p class="section-eyebrow">Account Access</p>
       <h1 class="section-title">Sign in to TournamentOS</h1>
-      <p class="section-subtitle">Track your team, profile, and upcoming tournaments in one place.</p>
+      <p class="section-subtitle">
+        Track your team, profile, and upcoming tournaments in one place.
+      </p>
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <label class="form-label">
           Username
-          <input v-model="form.username" class="input-control" type="text" autocomplete="username" required />
+          <input
+            v-model="form.username"
+            class="input-control"
+            type="text"
+            autocomplete="username"
+            required
+          />
         </label>
 
         <label class="form-label">
           Password
-          <PasswordField
-            v-model="form.password"
-            autocomplete="current-password"
-            required
-          />
+          <PasswordField v-model="form.password" autocomplete="current-password" required />
         </label>
         <p class="forgot-link">
           <router-link to="/forgot-password">Forgot password?</router-link>
@@ -44,20 +48,23 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
 import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api'
+import { API_BASE } from '@/features/shared/config/api.ts'
+import $api from '@/services'
+import type { LoginResponse } from '@/services/accounts'
+import { isApiError } from '@/services/apiClient'
 
 const form = ref({ username: '', password: '' })
 const error = ref('')
 const isLoading = ref(false)
 const router = useRouter()
 
-const saveTokensAndRedirect = (data) => {
+const saveTokensAndRedirect = (data: LoginResponse) => {
   localStorage.setItem('access', data.access)
   localStorage.setItem('refresh', data.refresh)
   if (data.onboarding_required) {
@@ -75,22 +82,18 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/login/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form.value),
-    })
+    const response = await $api.accounts.login(form.value.username, form.value.password)
 
-    const data = await response.json()
-
-    if (response.ok) {
-      saveTokensAndRedirect(data)
-      return
+    console.log('here')
+    saveTokensAndRedirect(response.data)
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        error.value = 'Invalid credentials or account not activated.'
+      } else {
+        error.value = 'Network error. Please try again.'
+      }
     }
-
-    error.value = 'Invalid credentials or account not activated.'
-  } catch {
-    error.value = 'Network error. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -131,4 +134,3 @@ const handleLogin = async () => {
   }
 }
 </style>
-

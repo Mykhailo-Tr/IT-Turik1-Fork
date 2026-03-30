@@ -1,15 +1,24 @@
 const GOOGLE_SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
 
+export interface GoogleCredentialResponse {
+  credential: string
+  select_by: string
+}
+
 export const loadGoogleScript = () => {
-  if (window.google?.accounts?.id) {
+  if ((window as any).google?.accounts?.id) {
     return Promise.resolve()
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const existingScript = document.querySelector(`script[src="${GOOGLE_SCRIPT_SRC}"]`)
     if (existingScript) {
       existingScript.addEventListener('load', () => resolve(), { once: true })
-      existingScript.addEventListener('error', () => reject(new Error('Google script load failed')), { once: true })
+      existingScript.addEventListener(
+        'error',
+        () => reject(new Error('Google script load failed')),
+        { once: true },
+      )
       return
     }
 
@@ -23,7 +32,19 @@ export const loadGoogleScript = () => {
   })
 }
 
-export const renderGoogleButton = async ({ container, clientId, callback, width = 340 }) => {
+interface RenderGoogleButtonOptions {
+  container: HTMLElement
+  clientId: string
+  callback: (response: GoogleCredentialResponse) => void
+  width?: number
+}
+
+export const renderGoogleButton = async ({
+  container,
+  clientId,
+  callback,
+  width = 340,
+}: RenderGoogleButtonOptions) => {
   if (!container) {
     throw new Error('Google button container is missing')
   }
@@ -34,13 +55,19 @@ export const renderGoogleButton = async ({ container, clientId, callback, width 
 
   await loadGoogleScript()
 
-  window.google.accounts.id.initialize({
+  const google = (window as any).google?.accounts?.id
+
+  if (!google) {
+    throw new Error('Google API not available')
+  }
+
+  google.initialize({
     client_id: clientId,
     callback,
   })
 
   container.innerHTML = ''
-  window.google.accounts.id.renderButton(container, {
+  google.renderButton(container, {
     type: 'standard',
     theme: 'outline',
     size: 'large',
@@ -50,4 +77,3 @@ export const renderGoogleButton = async ({ container, clientId, callback, width 
     logo_alignment: 'left',
   })
 }
-

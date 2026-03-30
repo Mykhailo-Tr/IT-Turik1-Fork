@@ -29,59 +29,70 @@
       <article class="card info-card accent">
         <h2>Quick status</h2>
         <ul>
-          <li>Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span></li>
-          <li>City set: <span>{{ userProfile.city ? 'Yes' : 'No' }}</span></li>
-          <li>Phone set: <span>{{ userProfile.phone ? 'Yes' : 'No' }}</span></li>
+          <li>
+            Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span>
+          </li>
+          <li>
+            City set: <span>{{ userProfile.city ? 'Yes' : 'No' }}</span>
+          </li>
+          <li>
+            Phone set: <span>{{ userProfile.phone ? 'Yes' : 'No' }}</span>
+          </li>
         </ul>
       </article>
     </div>
   </section>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from 'vue'
+<script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
 import { API_BASE } from '@/features/shared/config/api'
 import { useRouter } from 'vue-router'
+import $api from '@/services'
+import type { Profile } from '@/services/accounts'
+import { isApiError } from '@/services/apiClient'
 
-const userProfile = ref(null)
+const userProfile = ref<Profile | null>(null)
 const isLoading = ref(true)
 const error = ref('')
 const router = useRouter()
 
-const displayName = computed(() => userProfile.value?.full_name || userProfile.value?.username || 'User')
-const profileReady = computed(() => Boolean(userProfile.value?.full_name && userProfile.value?.city))
-const teamNames = computed(() => (userProfile.value?.teams || []).map((team) => team.name).join(', '))
+watch(userProfile, (val) => {
+  console.log(val)
+})
+
+const displayName = computed(
+  () => userProfile.value?.full_name || userProfile.value?.username || 'User',
+)
+const profileReady = computed(() =>
+  Boolean(userProfile.value?.full_name && userProfile.value?.city),
+)
+const teamNames = computed(() =>
+  (userProfile.value?.teams || []).map((team) => team.name).join(', '),
+)
 
 onMounted(async () => {
-  const token = localStorage.getItem('access')
+  const token = localStorage.getItem('access') as string
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    })
+    const response = await $api.accounts.getProfile(token)
 
-    if (response.ok) {
-      userProfile.value = await response.json()
-      if (userProfile.value.needs_onboarding) {
-        localStorage.setItem('needs_onboarding', '1')
-        router.push('/complete-profile')
-        return
+    userProfile.value = response.data
+
+    if (userProfile.value.needs_onboarding) {
+      localStorage.setItem('needs_onboarding', '1')
+      router.push('/complete-profile')
+      return
+    }
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+        error.value = 'Could not load profile data.'
+      } else {
+        error.value = 'Server is unavailable. Please try again later.'
       }
-      return
     }
-
-    if (response.status === 401) {
-      handleLogout()
-      return
-    }
-
-    error.value = 'Could not load profile data.'
-  } catch {
-    error.value = 'Server is unavailable. Please try again later.'
   } finally {
     isLoading.value = false
   }
@@ -192,8 +203,7 @@ h1 {
 }
 
 .accent {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(237, 254, 255, 0.95));
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(237, 254, 255, 0.95));
 }
 
 ul {
@@ -230,4 +240,3 @@ li span {
   }
 }
 </style>
-
