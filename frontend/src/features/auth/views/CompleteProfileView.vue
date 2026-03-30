@@ -88,7 +88,6 @@ import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api.ts'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
 

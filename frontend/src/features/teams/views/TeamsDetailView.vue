@@ -17,12 +17,7 @@
             target="_blank"
             rel="noopener noreferrer"
           >
-            <svg viewBox="0 0 24 24" class="contact-icon" aria-hidden="true">
-              <path
-                d="M9.04 15.57 8.9 19.47c.45 0 .64-.19.87-.43l2.09-1.98 4.34 3.17c.8.44 1.36.21 1.57-.74l2.85-13.37h.01c.25-1.15-.42-1.6-1.2-1.31L2.64 11.2c-1.12.44-1.1 1.07-.2 1.35l4.8 1.5L18.4 6.9c.53-.35 1.02-.16.62.2L9.04 15.57z"
-                fill="currentColor"
-              />
-            </svg>
+            <telegram-icon />
             <span>@{{ team.contact_telegram }}</span>
           </a>
 
@@ -35,12 +30,7 @@
             target="_blank"
             rel="noopener noreferrer"
           >
-            <svg viewBox="0 0 24 24" class="contact-icon" aria-hidden="true">
-              <path
-                d="M20.32 4.37A19.8 19.8 0 0 0 15.3 3l-.27.54a18.7 18.7 0 0 1 4.82 1.48c-2.97-1.39-6.16-2.1-9.36-2.05-3.2-.05-6.39.66-9.36 2.05a18.7 18.7 0 0 1 4.82-1.48L5.68 3A19.8 19.8 0 0 0 .66 4.37C-2.53 9.1-3.39 13.7-2.97 18.22a19.9 19.9 0 0 0 6.11 3.08l1.31-1.8c-.72-.27-1.4-.6-2.04-.98.17.12.36.23.55.34 3.84 2.1 8 2.1 11.84 0 .19-.11.38-.22.55-.34-.64.38-1.32.71-2.04.98l1.31 1.8a19.9 19.9 0 0 0 6.11-3.08c.5-5.29-.86-9.86-3.4-13.85ZM8.02 15.45c-1.2 0-2.17-1.1-2.17-2.45 0-1.36.95-2.45 2.17-2.45 1.22 0 2.2 1.1 2.17 2.45 0 1.35-.95 2.45-2.17 2.45Zm7.96 0c-1.2 0-2.17-1.1-2.17-2.45 0-1.36.95-2.45 2.17-2.45 1.22 0 2.2 1.1 2.17 2.45 0 1.35-.95 2.45-2.17 2.45Z"
-                fill="currentColor"
-              />
-            </svg>
+            <discord-icon />
             <span>{{ team.contact_discord }}</span>
           </a>
 
@@ -318,16 +308,7 @@
         </div>
 
         <div class="danger-zone-header">
-          <svg viewBox="0 0 24 24" class="danger-zone-icon" aria-hidden="true">
-            <path
-              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              fill="none"
-            />
-          </svg>
+          <danger-icon />
           <span>Danger Zone</span>
         </div>
 
@@ -430,23 +411,7 @@
             />
             <div class="visibility-option-content">
               <div class="visibility-option-header">
-                <svg viewBox="0 0 24 24" class="visibility-option-icon" aria-hidden="true">
-                  <circle
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                  />
-                  <path
-                    d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                  />
-                  <circle cx="12" cy="12" r="3" fill="currentColor" />
-                </svg>
+                <eye-in-circle />
                 <strong>Public</strong>
               </div>
               <p>Anyone can find and request to join this team.</p>
@@ -463,26 +428,7 @@
             />
             <div class="visibility-option-content">
               <div class="visibility-option-header">
-                <svg viewBox="0 0 24 24" class="visibility-option-icon" aria-hidden="true">
-                  <rect
-                    x="3"
-                    y="11"
-                    width="18"
-                    height="11"
-                    rx="2"
-                    ry="2"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    fill="none"
-                  />
-                  <path
-                    d="M7 11V7a5 5 0 0 1 10 0v4"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    fill="none"
-                  />
-                </svg>
+                <lock-icon />
                 <strong>Private</strong>
               </div>
               <p>Only invited members can find and access this team.</p>
@@ -491,16 +437,8 @@
         </div>
 
         <div v-if="selectedVisibility !== team?.is_public" class="visibility-confirm-note">
-          <svg viewBox="0 0 24 24" class="note-icon" aria-hidden="true">
-            <path
-              d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              fill="none"
-            />
-          </svg>
+          <danger-icon />
+
           <span>
             You are about to change this team from
             <strong>{{ team?.is_public ? 'Public' : 'Private' }}</strong>
@@ -577,6 +515,11 @@
 
 <script setup lang="ts">
 import { useTeamsDetailWorkspace } from '@/features/teams/composables/useTeamsDetailWorkspace'
+import DangerIcon from '@/icons/DangerIcon.vue'
+import DiscordIcon from '@/icons/DiscordIcon.vue'
+import EyeInCircle from '@/icons/EyeInCircle.vue'
+import LockIcon from '@/icons/LockIcon.vue'
+import TelegramIcon from '@/icons/TelegramIcon.vue'
 
 const {
   canDeleteTeam,

@@ -17,19 +17,14 @@
 import { ref, watch } from 'vue'
 import { VueTelInput } from 'vue-tel-input'
 
-const props = defineProps({
-  modelValue: {
-    type: String,
-    default: '',
-  },
-  error: {
-    type: String,
-    default: '',
-  },
-  placeholder: {
-    type: String,
-    default: 'Enter phone number',
-  },
+interface Props {
+  modelValue?: string
+  error?: string
+  placeholder?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placeholder: 'Enter phone number',
 })
 
 const emit = defineEmits(['update:modelValue'])

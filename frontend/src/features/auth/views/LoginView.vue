@@ -21,7 +21,7 @@
 
         <label class="form-label">
           Password
-          <PasswordField v-model="form.password" autocomplete="current-password" required />
+          <PasswordField v-model="form.password" autocomplete="current-password" />
         </label>
         <p class="forgot-link">
           <router-link to="/forgot-password">Forgot password?</router-link>
