@@ -11,7 +11,6 @@ from .views import (
     TeamLeaveView,
     TeamListCreateView,
     TeamMemberManageView,
-    UserListView,
 )
 
 urlpatterns = [
@@ -42,5 +41,4 @@ urlpatterns = [
         TeamInvitationDeclineView.as_view(),
         name='team_invitation_decline',
     ),
-    path('users/', UserListView.as_view(), name='users'),
 ]

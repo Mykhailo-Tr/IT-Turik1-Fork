@@ -168,6 +168,12 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
+class TeamUserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'full_name', 'role')
+
+
 class UserUpdateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     redeem_code = serializers.CharField(write_only=True, required=False, allow_blank=True)
