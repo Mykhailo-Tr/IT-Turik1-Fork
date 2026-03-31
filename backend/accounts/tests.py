@@ -445,6 +445,54 @@ class ChangePasswordFlowTests(APITestCase):
         self.assertIn('non_field_errors', response.data)
 
 
+class UserRoleBehaviorTests(APITestCase):
+    users_url = reverse('users')
+
+    def test_create_superuser_uses_admin_role(self):
+        user = User.objects.create_superuser(
+            username='root-admin',
+            email='root-admin@example.com',
+            password='StrongPass123!',
+        )
+
+        self.assertEqual(user.role, 'admin')
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+
+    def test_user_list_excludes_superusers_even_if_their_role_is_team(self):
+        requester = User.objects.create_user(
+            username='requester',
+            email='requester@example.com',
+            password='StrongPass123!',
+            role='team',
+            is_active=True,
+        )
+        User.objects.create_user(
+            username='team-user',
+            email='team-user@example.com',
+            password='StrongPass123!',
+            role='team',
+            is_active=True,
+        )
+        User.objects.create_user(
+            username='legacy-super-team',
+            email='legacy-super-team@example.com',
+            password='StrongPass123!',
+            role='team',
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
+        )
+
+        self.client.force_authenticate(user=requester)
+        response = self.client.get(self.users_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        usernames = [user['username'] for user in response.data]
+        self.assertIn('team-user', usernames)
+        self.assertNotIn('legacy-super-team', usernames)
+
+
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class RoleBasedRegistrationTests(APITestCase):
     register_url = reverse('register')

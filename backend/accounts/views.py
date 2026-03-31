@@ -152,7 +152,7 @@ class UserListView(generics.ListAPIView):
     serializer_class = TeamUserListSerializer
 
     def get_queryset(self):
-        queryset = User.objects.filter(role='team').order_by('id')
+        queryset = User.objects.filter(role='team', is_superuser=False).order_by('id')
         search = self.request.query_params.get('search', '').strip()
         if search:
             queryset = queryset.filter(
