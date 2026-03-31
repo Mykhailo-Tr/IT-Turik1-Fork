@@ -95,7 +95,7 @@ export const useTeamsEditPage = () => {
       return false
     }
 
-    const response = await fetch(`${API_BASE}/api/accounts/teams/${teamId.value}/`, {
+    const response = await fetch(`${API_BASE}/api/teams/${teamId.value}/`, {
       headers: createAuthHeaders(false),
     })
 
@@ -165,7 +165,7 @@ export const useTeamsEditPage = () => {
     hideNotification()
 
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/`, {
         method: 'PATCH',
         headers: createAuthHeaders(true),
         body: JSON.stringify(form.value),
@@ -199,7 +199,7 @@ export const useTeamsEditPage = () => {
     addMemberLoading.value = true
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/members/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/members/`, {
         method: 'POST',
         headers: createAuthHeaders(true),
         body: JSON.stringify({ user_id: Number(addMemberSelection.value) }),
@@ -236,7 +236,7 @@ export const useTeamsEditPage = () => {
 
     try {
       const response = await fetch(
-        `${API_BASE}/api/accounts/teams/${team.value.id}/members/${member.id}/`,
+        `${API_BASE}/api/teams/${team.value.id}/members/${member.id}/`,
         { method: 'DELETE', headers: createAuthHeaders(false) },
       )
 

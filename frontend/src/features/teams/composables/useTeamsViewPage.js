@@ -87,7 +87,7 @@ export const useTeamsViewPage = () => {
   }
 
   const fetchTeams = async () => {
-    const response = await fetch(`${API_BASE}/api/accounts/teams/`, {
+    const response = await fetch(`${API_BASE}/api/teams/`, {
       headers: createAuthHeaders(),
     })
 
@@ -107,7 +107,7 @@ export const useTeamsViewPage = () => {
   const fetchInvitations = async () => {
     inboxLoading.value = true
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/invitations/`, {
+      const response = await fetch(`${API_BASE}/api/teams/invitations/`, {
         headers: createAuthHeaders(),
       })
       if (response.status === 401) {
@@ -135,7 +135,7 @@ export const useTeamsViewPage = () => {
     }
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/invitations/${invitationId}/${action}/`, {
+      const response = await fetch(`${API_BASE}/api/teams/invitations/${invitationId}/${action}/`, {
         method: 'POST',
         headers: createAuthHeaders(),
       })
@@ -166,7 +166,7 @@ export const useTeamsViewPage = () => {
     }
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${teamId}/join-requests/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${teamId}/join-requests/`, {
         method: 'POST',
         headers: createAuthHeaders(),
       })

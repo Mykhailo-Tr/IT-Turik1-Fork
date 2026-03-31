@@ -118,7 +118,7 @@ export const useTeamsCreatePage = () => {
     hideNotification()
 
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/`, {
+      const response = await fetch(`${API_BASE}/api/teams/`, {
         method: 'POST',
         headers: createAuthHeaders(true),
         body: JSON.stringify(createForm.value),

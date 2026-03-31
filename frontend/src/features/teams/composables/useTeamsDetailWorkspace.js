@@ -210,7 +210,7 @@ export const useTeamsDetailWorkspace = () => {
       return false
     }
 
-    const response = await fetch(`${API_BASE}/api/accounts/teams/${teamId.value}/`, {
+    const response = await fetch(`${API_BASE}/api/teams/${teamId.value}/`, {
       headers: createAuthHeaders(false),
     })
 
@@ -273,7 +273,7 @@ export const useTeamsDetailWorkspace = () => {
     hideNotification()
 
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/`, {
         method: 'PATCH',
         headers: createAuthHeaders(true),
         body: JSON.stringify({ is_public: selectedVisibility.value }),
@@ -321,7 +321,7 @@ export const useTeamsDetailWorkspace = () => {
     deleteError.value = ''
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/`, {
         method: 'DELETE',
         headers: createAuthHeaders(false),
       })
@@ -349,7 +349,7 @@ export const useTeamsDetailWorkspace = () => {
     joinRequestLoading.value = true
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/join-requests/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/join-requests/`, {
         method: 'POST',
         headers: createAuthHeaders(false),
       })
@@ -392,7 +392,7 @@ export const useTeamsDetailWorkspace = () => {
     hideNotification()
 
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/leave/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/leave/`, {
         method: 'POST',
         headers: createAuthHeaders(false),
       })
@@ -439,7 +439,7 @@ export const useTeamsDetailWorkspace = () => {
     }
     hideNotification()
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/join-requests/${requestId}/${action}/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/join-requests/${requestId}/${action}/`, {
         method: 'POST',
         headers: createAuthHeaders(false),
       })
@@ -472,7 +472,7 @@ export const useTeamsDetailWorkspace = () => {
     hideNotification()
 
     try {
-      const response = await fetch(`${API_BASE}/api/accounts/teams/${team.value.id}/members/`, {
+      const response = await fetch(`${API_BASE}/api/teams/${team.value.id}/members/`, {
         method: 'POST',
         headers: createAuthHeaders(true),
         body: JSON.stringify({ user_id: userId }),
