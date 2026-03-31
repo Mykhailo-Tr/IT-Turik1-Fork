@@ -12,9 +12,9 @@
 
           <template v-if="!isLoggedIn">
             <router-link to="/login" :class="navItemClass('login')">Sign in</router-link>
-            <router-link to="/register" :class="navItemClass('register', true)"
-              >Register</router-link
-            >
+            <router-link to="/register">
+              <ui-button :class="navItemClass('register', true)">Register</ui-button>
+            </router-link>
           </template>
 
           <template v-else>
@@ -23,7 +23,7 @@
             <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
               >Admin</router-link
             >
-            <button @click="logout" class="nav-item nav-danger">Logout</button>
+            <ui-button @click="logout" variant="danger" class="logout-btn">Logout</ui-button>
           </template>
         </div>
       </div>
@@ -53,6 +53,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import { API_BASE } from '@/features/shared/config/api'
+import UiButton from './components/UiButton.vue'
 
 const isLoggedIn = ref(false)
 const isAdmin = ref(false)
@@ -103,14 +104,6 @@ const isSectionActive = (section: Section) => {
 
   if (section === 'admin') {
     return path === '/admin/role-codes'
-  }
-
-  if (section === 'login') {
-    return path === '/login' || path.startsWith('/activate/')
-  }
-
-  if (section === 'register') {
-    return path === '/register'
   }
 
   return false
@@ -214,8 +207,7 @@ const logout = () => {
 }
 
 .nav-item {
-  border: none;
-  background: transparent;
+  border: 100%;
   color: var(--ink-700);
   text-decoration: none;
   font-weight: 700;
@@ -223,6 +215,11 @@ const logout = () => {
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.logout-btn {
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
 }
 
 .nav-item:hover {
@@ -246,10 +243,6 @@ const logout = () => {
 .nav-cta.active {
   color: white;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-}
-
-.nav-danger {
-  color: #b91c1c;
 }
 
 .page-content {

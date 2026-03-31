@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <article class="card forgot-card">
+    <ui-card class="forgot-card">
       <p class="section-eyebrow">Password Recovery</p>
       <h1 class="section-title">Forgot your password?</h1>
       <p class="section-subtitle">
@@ -12,9 +12,8 @@
       <form class="forgot-form" @submit.prevent="handleSubmit">
         <label class="form-label">
           Email
-          <input
+          <ui-input
             v-model="email"
-            class="input-control"
             type="email"
             autocomplete="email"
             placeholder="name@mail.com"
@@ -23,16 +22,16 @@
           <small v-if="errors.email" class="text-error">{{ errors.email[0] }}</small>
         </label>
 
-        <button class="btn-primary" :disabled="isLoading" type="submit">
+        <ui-button :disabled="isLoading" type="submit">
           {{ isLoading ? 'Sending...' : 'Send reset link' }}
-        </button>
+        </ui-button>
       </form>
 
       <p class="auth-link">
         Remembered your password?
         <router-link to="/login">Back to sign in</router-link>
       </p>
-    </article>
+    </ui-card>
   </section>
 </template>
 
@@ -41,6 +40,9 @@ import { ref } from 'vue'
 
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiCard from '@/components/UiCard.vue'
 
 const email = ref('')
 const isLoading = ref(false)

@@ -1,10 +1,10 @@
 <template>
   <div class="password-field">
-    <input
+    <ui-input
       v-bind="$attrs"
       :type="isVisible ? 'text' : 'password'"
       :value="modelValue"
-      class="input-control password-input"
+      class="password-input"
       @input="onInput"
     />
 
@@ -23,6 +23,7 @@
 </template>
 
 <script setup lang="ts">
+import UiInput from '@/components/UiInput.vue'
 import IconEye from '@/icons/EyeIcon.vue'
 import { ref } from 'vue'
 
@@ -54,6 +55,7 @@ const onInput = (event: InputEvent) => {
 }
 
 .password-input {
+  width: 100%;
   padding-right: 2.8rem;
 }
 

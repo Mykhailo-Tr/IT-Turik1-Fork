@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell">
-    <article class="card profile-card">
+    <ui-card class="profile-card">
       <div class="head">
         <div>
           <p class="section-eyebrow">User Center</p>
@@ -12,31 +12,25 @@
       <div v-if="loadingProfile" class="state-box">Loading profile...</div>
       <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
       <div v-else class="details">
-        <div class="item item-text">
-          <span class="item-label">Username</span>
+        <ui-card class="item-text" title="Username">
           <strong class="item-value value-wrap">{{ profile?.username || '-' }}</strong>
-        </div>
-        <div class="item item-text">
-          <span class="item-label">Email</span>
+        </ui-card>
+        <ui-card class="item-text" title="Email">
           <strong class="item-value value-wrap">{{ profile?.email || '-' }}</strong>
-        </div>
-        <div class="item item-role">
-          <span class="item-label">Role</span>
-          <strong class="badge">{{ profile?.role || '-' }}</strong>
-        </div>
-        <div class="item item-text">
-          <span class="item-label">Full name</span>
+        </ui-card>
+        <ui-card class="item-role" title="Role">
+          <ui-badge variant="green" :value="profile?.role ?? '-'" />
+        </ui-card>
+        <ui-card class="item-text" title="Full name">
           <strong class="item-value value-wrap">{{ profile?.full_name || '-' }}</strong>
-        </div>
-        <div class="item item-text">
-          <span class="item-label">City</span>
+        </ui-card>
+        <ui-card class="item-text" title="City">
           <strong class="item-value value-wrap">{{ profile?.city || '-' }}</strong>
-        </div>
-        <div class="item item-phone">
-          <span class="item-label">Phone</span>
+        </ui-card>
+        <ui-card class="item-phone" title="phone">
           <strong class="item-value value-fixed">{{ profile?.phone || '-' }}</strong>
-        </div>
-        <div class="item item-wide">
+        </ui-card>
+        <ui-card class="item-wide">
           <span class="item-label">Teams</span>
           <div class="team-list">
             <router-link
@@ -49,40 +43,32 @@
             </router-link>
             <p v-if="!(profile?.teams || []).length" class="text-muted">No teams yet.</p>
           </div>
-        </div>
+        </ui-card>
       </div>
 
       <div class="actions">
-        <button
-          class="btn-primary"
-          type="button"
-          :disabled="loadingProfile"
-          @click="goToEditProfile"
-        >
-          Edit Profile
-        </button>
-        <button
-          class="btn-secondary"
-          type="button"
+        <ui-button :disabled="loadingProfile" @click="goToEditProfile"> Edit Profile </ui-button>
+        <ui-button
+          variant="outline"
           :disabled="loadingProfile || isDeleting"
           @click="logoutToLogin"
         >
           Log Out
-        </button>
+        </ui-button>
       </div>
 
       <div class="danger-zone">
         <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
-        <button
-          class="btn-danger"
+        <ui-button
+          variant="danger"
           :disabled="loadingProfile || isDeleting"
           @click="openDeleteModal"
           type="button"
         >
           Delete account
-        </button>
+        </ui-button>
       </div>
-    </article>
+    </ui-card>
 
     <div v-if="isDeleteModalOpen" class="modal-backdrop" @click.self="closeDeleteModal">
       <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
@@ -93,10 +79,8 @@
           to confirm.
         </p>
 
-        <input
+        <ui-input
           v-model="deleteConfirmInput"
-          class="input-control"
-          type="text"
           :placeholder="expectedDeleteText"
           :disabled="isDeleting"
         />
@@ -124,11 +108,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_BASE } from '@/features/shared/config/api'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
 import type { Profile } from '@/services/accounts'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiCard from '@/components/UiCard.vue'
+import UiBadge from '@/components/UiBadge.vue'
 
 const profile = ref<Profile | null>(null)
 const profileError = ref('')
@@ -334,6 +321,14 @@ onMounted(fetchProfile)
   justify-self: start;
   width: fit-content;
   max-width: 100%;
+}
+
+.item-role,
+.item-phone,
+.item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .item-phone {

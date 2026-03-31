@@ -34,10 +34,6 @@
   background: rgba(255, 255, 255, 0.8);
 }
 
-.teams-card {
-  border: 1px solid rgba(15, 23, 42, 0.09);
-}
-
 .section-head {
   display: flex;
   align-items: center;
@@ -75,16 +71,6 @@
 .team-meta h3 {
   margin: 0;
   font-family: var(--font-display);
-}
-
-.status-badge {
-  border-radius: 999px;
-  border: 1px solid rgba(20, 184, 166, 0.4);
-  background: rgba(20, 184, 166, 0.15);
-  color: var(--brand-700);
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
 }
 
 .team-item p {

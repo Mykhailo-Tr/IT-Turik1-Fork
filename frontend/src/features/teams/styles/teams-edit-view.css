@@ -119,16 +119,6 @@
   gap: 0.45rem;
 }
 
-.captain-tag {
-  border-radius: 999px;
-  border: 1px solid rgba(14, 116, 144, 0.35);
-  background: rgba(14, 116, 144, 0.14);
-  color: #0e7490;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-}
-
 .member-note {
   margin-top: 0.8rem;
 }

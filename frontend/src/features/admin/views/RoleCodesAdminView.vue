@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell">
-    <article class="card admin-card">
+    <ui-card class="admin-card">
       <p class="section-eyebrow">Admin</p>
       <h1 class="section-title">Activation Codes</h1>
       <p class="section-subtitle">
@@ -24,19 +24,26 @@
         <form class="generator" @submit.prevent="handleGenerate">
           <label class="form-label">
             Role
-            <select v-model="generateForm.role" class="select-control" required>
+            <ui-select
+              v-model="generateForm.role"
+              :options="[
+                { value: 'jury', label: 'Jury' },
+                { value: 'organizer', label: 'Organizer' },
+                { value: 'admin', label: 'Admin' },
+              ]"
+              required
+            >
               <option value="jury">Jury</option>
               <option value="organizer">Organizer</option>
               <option value="admin">Admin</option>
-            </select>
+            </ui-select>
             <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
           </label>
 
           <label class="form-label">
             Quantity
-            <input
+            <ui-input
               v-model.number="generateForm.quantity"
-              class="input-control"
               type="number"
               min="1"
               max="10"
@@ -45,20 +52,27 @@
             <small v-if="errors?.quantity" class="text-error">{{ errors.quantity[0] }}</small>
           </label>
 
-          <button class="btn-primary generate-btn" :disabled="submitting">
+          <ui-button type="submit" class="generate-btn" :disabled="submitting">
             {{ submitting ? 'Generating...' : 'Generate Codes' }}
-          </button>
+          </ui-button>
         </form>
 
         <div class="filters">
+          <!-- TODO: select component wrapped around label??????? -->
+          <!-- Fix later cuz it depends on some class styles -->
           <label class="form-label">
             Filter by role
-            <select v-model="selectedRoleFilter" class="select-control" @change="fetchCodes">
-              <option value="all">All restricted roles</option>
-              <option value="jury">Jury</option>
-              <option value="organizer">Organizer</option>
-              <option value="admin">Admin</option>
-            </select>
+
+            <ui-select
+              v-model="selectedRoleFilter"
+              :options="[
+                { value: 'all', label: 'All restricted roles' },
+                { value: 'jury', label: 'Jury' },
+                { value: 'organizer', label: 'Organizer' },
+                { value: 'admin', label: 'Admin' },
+              ]"
+            >
+            </ui-select>
           </label>
         </div>
 
@@ -79,18 +93,21 @@
           <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
         </div>
       </template>
-    </article>
+    </ui-card>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { API_BASE } from '@/features/shared/config/api'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
 import type { RoleCode, RoleCodesUserRole } from '@/services/accounts'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiSelect from '@/components/UiSelect.vue'
+import UiCard from '@/components/UiCard.vue'
 
 const router = useRouter()
 const loading = ref(true)
@@ -109,6 +126,10 @@ const selectedRoleFilter = ref<RoleCodesUserRole | 'all'>('all')
 const generateForm = ref({
   role: 'jury',
   quantity: 1,
+})
+
+watch(selectedRoleFilter, async () => {
+  await fetchCodes()
 })
 
 const logoutToLogin = () => {

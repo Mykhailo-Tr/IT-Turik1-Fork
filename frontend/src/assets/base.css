@@ -15,6 +15,7 @@
   --ink-600: #475569;
   --ink-500: #64748b;
 
+  --radius: 12px;
   --surface-strong: rgba(255, 255, 255, 0.9);
   --line-soft: rgba(15, 23, 42, 0.08);
   --line-strong: rgba(15, 23, 42, 0.2);
@@ -27,8 +28,7 @@
 }
 
 html,
-body,
-#app {
+body {
   min-height: 100%;
 }
 
@@ -44,14 +44,6 @@ body {
 
 a {
   color: inherit;
-}
-
-.card {
-  border-radius: 20px;
-  background: var(--surface-strong);
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(8px);
 }
 
 .page-shell {
@@ -91,40 +83,6 @@ a {
   color: var(--ink-800);
   font-weight: 600;
   min-width: 0;
-}
-
-.input-control,
-.select-control {
-  width: 100%;
-  min-width: 0;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0.75rem 0.85rem;
-  font: inherit;
-  background: #fff;
-}
-
-.input-control:focus,
-.select-control:focus {
-  outline: none;
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
-}
-
-.btn-primary {
-  border: none;
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  color: white;
-  background: linear-gradient(120deg, var(--brand-600), var(--brand-500));
-  cursor: pointer;
-}
-
-.btn-primary:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 .divider-line {

@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <article class="card reset-card">
+    <ui-card class="reset-card">
       <p class="section-eyebrow">Password Recovery</p>
       <h1 class="section-title">Reset password</h1>
 
@@ -8,7 +8,7 @@
 
       <div v-else-if="status === 'success'" class="notice success reset-success">
         {{ message }}
-        <router-link class="btn-primary back-btn" to="/login">Back to Login</router-link>
+        <ui-button asLink to="/login">Back to Login</ui-button>
       </div>
 
       <div v-else-if="status === 'invalid'" class="notice error">
@@ -18,7 +18,7 @@
       <form v-else class="reset-form" @submit.prevent="handleReset">
         <label class="form-label">
           New password
-          <PasswordField
+          <ui-password-field
             v-model="form.new_password"
             autocomplete="new-password"
             placeholder="Create a strong password"
@@ -33,7 +33,7 @@
 
         <label class="form-label">
           Confirm new password
-          <PasswordField
+          <ui-password-field
             v-model="form.confirm_password"
             autocomplete="new-password"
             placeholder="Repeat your new password"
@@ -49,11 +49,11 @@
         }}</small>
         <small v-if="errors?.message" class="text-error">{{ errors.message[0] }}</small>
 
-        <button class="btn-primary" :disabled="isLoading" type="submit">
+        <ui-button :disabled="isLoading" type="submit">
           {{ isLoading ? 'Saving...' : 'Set new password' }}
-        </button>
+        </ui-button>
       </form>
-    </article>
+    </ui-card>
   </section>
 </template>
 
@@ -61,10 +61,11 @@
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api.ts'
+import UiPasswordField from '@/components/UiPasswordField.vue'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
 
 interface Errors {
   new_password?: string[]

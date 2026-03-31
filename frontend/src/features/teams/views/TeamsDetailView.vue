@@ -2,7 +2,7 @@
 
 <template>
   <section class="page-shell teams-detail-page">
-    <article class="card hero-card">
+    <ui-card class="hero-card">
       <div class="hero-top">
         <div>
           <p class="section-eyebrow">Team workspace</p>
@@ -39,16 +39,16 @@
       </div>
 
       <div class="hero-actions">
-        <router-link to="/teams" class="btn-soft action-link">Back to teams</router-link>
+        <ui-button asLink variant="outline" size="sm" to="/teams">Back to teams</ui-button>
       </div>
-    </article>
+    </ui-card>
 
-    <div v-if="loading" class="card state-card text-muted">Loading team workspace...</div>
-    <div v-else-if="loadError" class="card state-card text-error">{{ loadError }}</div>
+    <ui-card v-if="loading" class="state-card text-muted">Loading team workspace...</ui-card>
+    <ui-card v-else-if="loadError" class="state-card text-error">{{ loadError }}</ui-card>
 
     <template v-else-if="team">
       <div class="workspace-grid">
-        <article class="card panel info-panel">
+        <ui-card class="panel info-panel">
           <header class="panel-head">
             <h2>Team profile</h2>
             <span v-if="isCaptain" class="status-badge">You are captain</span>
@@ -108,9 +108,9 @@
               {{ leaveTeamLoading ? 'Leaving...' : 'Leave team' }}
             </button>
           </div>
-        </article>
+        </ui-card>
 
-        <article class="card panel members-panel">
+        <ui-card class="panel members-panel">
           <header class="panel-head">
             <h2>Members</h2>
             <span class="text-muted">{{ team.members.length }} accepted</span>
@@ -118,12 +118,7 @@
 
           <label class="form-label member-search">
             Search members
-            <input
-              v-model="memberSearch"
-              class="input-control"
-              type="text"
-              placeholder="Search by username or email"
-            />
+            <ui-input v-model="memberSearch" placeholder="Search by username or email" />
           </label>
 
           <div class="members-sections">
@@ -145,7 +140,7 @@
                   </div>
                   <div class="member-side">
                     <template v-if="member.id === team.captain_id">
-                      <span class="captain-tag">Captain</span>
+                      <ui-badge variant="green" value="Captain" />
                     </template>
                     <template v-else>
                       <div class="status-tags">
@@ -185,7 +180,7 @@
                   </div>
                   <div class="member-side">
                     <template v-if="joinRequest.user.id === team.captain_id">
-                      <span class="captain-tag">Captain</span>
+                      <ui-badge variant="green" value="Captain" />
                     </template>
                     <template v-else>
                       <div class="row-actions">
@@ -245,7 +240,7 @@
                   </div>
                   <div class="member-side">
                     <template v-if="invitation.user.id === team.captain_id">
-                      <span class="captain-tag">Captain</span>
+                      <ui-badge variant="green" value="Captain" />
                     </template>
                     <template v-else>
                       <div class="status-tags">
@@ -266,7 +261,7 @@
                   </div>
                   <div class="member-side">
                     <template v-if="invitation.user.id === team.captain_id">
-                      <span class="captain-tag">Captain</span>
+                      <ui-badge variant="green" value="Captain" />
                     </template>
                     <template v-else>
                       <div class="status-tags">
@@ -293,17 +288,17 @@
               </div>
             </section>
           </div>
-        </article>
+        </ui-card>
       </div>
 
-      <article v-if="isCaptain" class="card manage-zone">
+      <ui-card v-if="isCaptain" class="manage-zone">
         <div class="manage-row">
           <div>
             <h3>Edit team</h3>
             <p class="text-muted">Update team profile and manage members in edit workspace.</p>
           </div>
-          <router-link :to="`/teams/${team.id}/edit`" class="btn-soft action-link action-btn"
-            >Edit team</router-link
+          <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}/edit`"
+            >Edit team</ui-button
           >
         </div>
 
@@ -331,14 +326,14 @@
                 }}
               </p>
             </div>
-            <button
-              class="btn-warning"
-              type="button"
+            <ui-button
+              size="sm"
+              variant="warning"
               :disabled="visibilityLoading"
               @click="openVisibilityModal"
             >
               Change visibility
-            </button>
+            </ui-button>
           </div>
 
           <div class="manage-row danger">
@@ -348,17 +343,17 @@
                 This action permanently deletes the team and cannot be undone.
               </p>
             </div>
-            <button
-              class="btn-danger"
-              type="button"
+            <ui-button
+              size="sm"
+              variant="danger"
               :disabled="deleteTeamLoading"
               @click="openDeleteModal"
             >
               Delete team
-            </button>
+            </ui-button>
           </div>
         </div>
-      </article>
+      </ui-card>
     </template>
 
     <div v-if="isLeaveModalOpen" class="modal-backdrop" @click.self="closeLeaveModal">
@@ -402,7 +397,7 @@
 
         <div class="visibility-options">
           <label class="visibility-option" :class="{ selected: selectedVisibility === true }">
-            <input
+            <ui-input
               v-model="selectedVisibility"
               type="radio"
               name="visibility"
@@ -419,7 +414,7 @@
           </label>
 
           <label class="visibility-option" :class="{ selected: selectedVisibility === false }">
-            <input
+            <ui-input
               v-model="selectedVisibility"
               type="radio"
               name="visibility"
@@ -451,22 +446,26 @@
         <p v-if="visibilityError" class="text-error modal-error">{{ visibilityError }}</p>
 
         <div class="modal-actions">
-          <button
+          <ui-button
+            size="sm"
+            variant="outline"
             class="btn-cancel"
             type="button"
             :disabled="visibilityLoading"
             @click="closeVisibilityModal"
           >
             Cancel
-          </button>
-          <button
+          </ui-button>
+          <ui-button
+            variant="warning"
+            size="sm"
             class="btn-warning"
             type="button"
             :disabled="visibilityLoading || selectedVisibility === team?.is_public"
             @click="confirmChangeVisibility"
           >
             {{ visibilityLoading ? 'Saving...' : 'Confirm change' }}
-          </button>
+          </ui-button>
         </div>
       </div>
     </div>
@@ -480,10 +479,8 @@
           to confirm.
         </p>
 
-        <input
+        <ui-input
           v-model="deleteConfirmInput"
-          class="input-control"
-          type="text"
           :placeholder="expectedDeleteText"
           :disabled="deleteTeamLoading"
         />
@@ -520,6 +517,10 @@ import DiscordIcon from '@/icons/DiscordIcon.vue'
 import EyeInCircle from '@/icons/EyeInCircle.vue'
 import LockIcon from '@/icons/LockIcon.vue'
 import TelegramIcon from '@/icons/TelegramIcon.vue'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiCard from '@/components/UiCard.vue'
+import UiBadge from '@/components/UiBadge.vue'
 
 const {
   canDeleteTeam,

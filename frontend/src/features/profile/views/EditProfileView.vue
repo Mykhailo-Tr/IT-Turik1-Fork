@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell">
-    <article class="card profile-card">
+    <ui-card class="profile-card">
       <div class="head">
         <div>
           <p class="section-eyebrow">User Center</p>
@@ -17,9 +17,8 @@
         <div class="form-grid">
           <label class="form-label">
             Full name
-            <input
+            <ui-input
               v-model="form.full_name"
-              class="input-control"
               :class="{ 'field-invalid': getFieldError('full_name') }"
               type="text"
               placeholder="John Doe"
@@ -33,11 +32,9 @@
 
           <label class="form-label">
             Username
-            <input
+            <ui-input
               v-model="form.username"
-              class="input-control"
               :class="{ 'field-invalid': getFieldError('username') }"
-              type="text"
               placeholder="johndoe"
               required
               @blur="touchField('username')"
@@ -58,9 +55,8 @@
 
           <label class="form-label">
             City
-            <input
+            <ui-input
               v-model="form.city"
-              class="input-control"
               :class="{ 'field-invalid': getFieldError('city') }"
               type="text"
               placeholder="Kyiv"
@@ -74,23 +70,18 @@
         </div>
 
         <div class="actions">
-          <button type="submit" class="btn-primary" :disabled="loading">
+          <ui-button type="submit" :disabled="loading">
             {{ loading ? 'Saving...' : 'Save changes' }}
-          </button>
-          <button
-            class="btn-secondary accent-hover"
-            type="button"
-            :disabled="loading"
-            @click="openPasswordModal"
-          >
+          </ui-button>
+          <ui-button variant="outline" :disabled="loading" @click="openPasswordModal">
             Change Password
-          </button>
-          <button class="btn-secondary" type="button" :disabled="loading" @click="goBackToProfile">
+          </ui-button>
+          <ui-button variant="outline" :disabled="loading" @click="goBackToProfile">
             Cancel
-          </button>
+          </ui-button>
         </div>
       </form>
-    </article>
+    </ui-card>
 
     <div v-if="isPasswordModalOpen" class="modal-backdrop" @click.self="closePasswordModal">
       <article
@@ -112,24 +103,24 @@
         </div>
 
         <div class="mode-switch">
-          <button
-            class="btn-secondary switch-btn"
+          <ui-button
+            variant="outline-accent"
+            class="switch-btn"
             :class="{ active: passwordMode === 'manual' }"
-            type="button"
             :disabled="passwordLoading"
             @click="setPasswordMode('manual')"
           >
             Use Current Password
-          </button>
-          <button
-            class="btn-secondary switch-btn"
+          </ui-button>
+          <ui-button
+            variant="outline-accent"
+            class="switch-btn"
             :class="{ active: passwordMode === 'recovery' }"
-            type="button"
             :disabled="passwordLoading"
             @click="setPasswordMode('recovery')"
           >
             Forgot Password
-          </button>
+          </ui-button>
         </div>
 
         <p v-if="passwordMessage" :class="['notice', passwordMessageType]">{{ passwordMessage }}</p>
@@ -141,7 +132,7 @@
         >
           <label class="form-label">
             Current password
-            <PasswordField
+            <ui-password-field
               v-model="passwordForm.current_password"
               autocomplete="current-password"
               required
@@ -153,7 +144,7 @@
 
           <label class="form-label">
             New password
-            <PasswordField
+            <ui-password-field
               v-model="passwordForm.new_password"
               autocomplete="new-password"
               required
@@ -165,7 +156,7 @@
 
           <label class="form-label">
             Confirm new password
-            <PasswordField
+            <ui-password-field
               v-model="passwordForm.confirm_password"
               autocomplete="new-password"
               required
@@ -178,18 +169,17 @@
           <small v-if="passwordErrors?.non_field_errors" class="text-error">{{
             passwordErrors.non_field_errors[0]
           }}</small>
-          <button class="btn-primary" type="submit" :disabled="passwordLoading">
+          <ui-button type="submit" :disabled="passwordLoading">
             {{ passwordLoading ? 'Updating...' : 'Update password' }}
-          </button>
+          </ui-button>
         </form>
 
         <form v-else class="password-form" @submit.prevent="handleRecoveryRequest">
           <p class="text-muted">No worries. We will send a secure reset link to your email.</p>
           <label class="form-label">
             Account email
-            <input
+            <ui-input
               v-model="recoveryEmail"
-              class="input-control"
               :class="{ 'field-invalid': passwordErrors?.email }"
               type="email"
               autocomplete="email"
@@ -200,9 +190,9 @@
             }}</small>
           </label>
 
-          <button class="btn-primary" type="submit" :disabled="passwordLoading">
+          <ui-button type="submit" :disabled="passwordLoading">
             {{ passwordLoading ? 'Sending...' : 'Send reset link' }}
-          </button>
+          </ui-button>
         </form>
       </article>
     </div>
@@ -213,11 +203,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api.ts'
+import UiPasswordField from '@/components/UiPasswordField.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiCard from '@/components/UiCard.vue'
 
 interface PasswordErrors {
   current_password?: string[]
@@ -238,10 +230,6 @@ interface ProfileForm {
   full_name: string
   phone: string
   city: string
-}
-
-interface ProfileErrors {
-  [key: string]: string[] | undefined
 }
 
 interface TouchedFields {
@@ -640,22 +628,6 @@ onMounted(fetchProfile)
 .password-form {
   display: grid;
   gap: 0.75rem;
-}
-
-.btn-secondary {
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  background: #fff;
-  color: var(--ink-800);
-  cursor: pointer;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 @media (max-width: 760px) {

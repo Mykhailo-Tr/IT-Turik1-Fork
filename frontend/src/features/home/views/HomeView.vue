@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell home-page">
-    <article class="card hero">
+    <ui-card class="hero">
       <div>
         <p class="eyebrow">Dashboard</p>
         <h1 v-if="userProfile">Welcome back, {{ displayName }}</h1>
@@ -8,25 +8,24 @@
         <p class="sub">Manage your profile and stay ready for upcoming competitions.</p>
       </div>
 
-      <div class="hero-actions">
-        <router-link to="/profile" class="ghost-btn">Open profile</router-link>
-        <button @click="handleLogout" class="danger-btn">Logout</button>
-      </div>
-    </article>
+      <ui-button asLink to="/profile" variant="outline" class="open-profile-btn"
+        >Open profile</ui-button
+      >
+    </ui-card>
 
     <div v-if="isLoading" class="state-box">Loading profile...</div>
     <div v-else-if="error" class="state-box error">{{ error }}</div>
 
     <div v-else-if="userProfile" class="grid">
-      <article class="card info-card">
+      <ui-card class="info-card">
         <h2>Account details</h2>
         <p><strong>Username:</strong> {{ userProfile.username }}</p>
         <p><strong>Email:</strong> {{ userProfile.email }}</p>
         <p><strong>Role:</strong> {{ userProfile.role }}</p>
         <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
-      </article>
+      </ui-card>
 
-      <article class="card info-card accent">
+      <ui-card class="info-card accent">
         <h2>Quick status</h2>
         <ul>
           <li>
@@ -39,18 +38,19 @@
             Phone set: <span>{{ userProfile.phone ? 'Yes' : 'No' }}</span>
           </li>
         </ul>
-      </article>
+      </ui-card>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { API_BASE } from '@/features/shared/config/api'
 import { useRouter } from 'vue-router'
 import $api from '@/services'
 import type { Profile } from '@/services/accounts'
 import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
 
 const userProfile = ref<Profile | null>(null)
 const isLoading = ref(true)
@@ -151,22 +151,9 @@ h1 {
   justify-content: flex-end;
 }
 
-.ghost-btn,
-.danger-btn {
-  border-radius: 999px;
-  padding: 0.52rem 0.95rem;
-  font: inherit;
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.12);
+.open-profile-btn {
   color: white;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.danger-btn {
-  border-color: rgba(254, 202, 202, 0.75);
-  background: rgba(220, 38, 38, 0.28);
+  border-color: white;
 }
 
 .state-box {

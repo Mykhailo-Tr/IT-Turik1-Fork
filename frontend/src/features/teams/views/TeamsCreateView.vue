@@ -1,25 +1,27 @@
 <template>
   <section class="page-shell teams-page">
-    <article class="card create-card">
+    <ui-card class="create-card">
       <p class="section-eyebrow">Teams</p>
       <h1 class="section-title">Create new team</h1>
       <p class="section-subtitle">Create a team and optionally add initial members.</p>
-      <router-link to="/teams" class="back-link">Back to teams list</router-link>
+      <ui-button asLink class="back-link" variant="outline" size="sm" to="/teams"
+        >Back to teams list</ui-button
+      >
 
       <form class="form-grid" @submit.prevent="handleCreateTeam">
         <label class="form-label">
           Team name
-          <input v-model="form.name" class="input-control" type="text" required />
+          <ui-input v-model="form.name" required />
         </label>
 
         <label class="form-label">
           Team email
-          <input v-model="form.email" class="input-control" type="email" required />
+          <ui-input v-model="form.email" type="email" required />
         </label>
 
         <label class="form-label">
           Organization
-          <input v-model="form.organization" class="input-control" type="text" />
+          <ui-input v-model="form.organization" />
         </label>
 
         <label class="form-label toggle-field">
@@ -43,10 +45,8 @@
 
         <label class="form-label">
           Telegram
-          <input
+          <ui-input
             v-model="form.contact_telegram"
-            class="input-control"
-            type="text"
             placeholder="@team_username"
             pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
             title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
@@ -55,10 +55,8 @@
 
         <label class="form-label">
           Discord
-          <input
+          <ui-input
             v-model="form.contact_discord"
-            class="input-control"
-            type="text"
             placeholder="team.username"
             pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
             title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
@@ -68,10 +66,8 @@
         <div class="full-width">
           <label class="form-label">
             Add initial members
-            <input
+            <ui-input
               v-model="memberSearchInput"
-              class="input-control"
-              type="text"
               placeholder="Search by username, email, full name"
             />
           </label>
@@ -82,7 +78,7 @@
               :key="`create-${user.id}`"
               class="picker-item"
             >
-              <input v-model="form.member_ids" type="checkbox" :value="user.id" />
+              <ui-input v-model="form.member_ids" type="checkbox" :value="user.id" />
               <span>{{ user.username }} ({{ user.email }})</span>
             </label>
             <p v-if="createCandidateUsers.length === 0" class="text-muted empty-note">
@@ -91,15 +87,18 @@
           </div>
         </div>
 
-        <button class="btn-primary full-width" :disabled="loading" type="submit">
+        <ui-button class="full-width" :disabled="loading" type="submit">
           {{ loading ? 'Creating...' : 'Create team' }}
-        </button>
+        </ui-button>
       </form>
-    </article>
+    </ui-card>
   </section>
 </template>
 
 <script setup lang="ts">
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
+import UiInput from '@/components/UiInput.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import $api from '@/services'
 import type { GetUsersResponse } from '@/services/accounts'

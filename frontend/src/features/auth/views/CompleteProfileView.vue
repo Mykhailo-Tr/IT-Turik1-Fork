@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <article class="card complete-card">
+    <ui-card class="complete-card">
       <p class="section-eyebrow">Final Step</p>
       <h1 class="section-title">Complete your profile</h1>
       <p class="section-subtitle">
@@ -12,28 +12,29 @@
       <form class="form-grid" @submit.prevent="handleSubmit">
         <label class="form-label">
           Username
-          <input v-model="form.username" class="input-control" type="text" required />
+          <ui-input v-model="form.username" required />
           <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
         </label>
 
         <label class="form-label">
           Role
-          <select v-model="form.role" class="select-control" required>
-            <option value="" disabled>Select role</option>
-            <option value="team">Team Member</option>
-            <option value="organizer">Organizer</option>
-            <option value="jury">Jury</option>
-            <option value="admin">Admin</option>
-          </select>
+          <ui-select
+            :options="[
+              { value: 'team', label: 'Team Member' },
+              { value: 'organizer', label: 'Organizer' },
+              { value: 'jury', label: 'Jury' },
+              { value: 'admin', label: 'Admin' },
+            ]"
+            v-model="form.role"
+            required
+          />
           <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
         </label>
 
         <label v-if="isRestrictedRole" class="form-label full-width">
           Redeem code
-          <input
+          <ui-input
             v-model="form.redeem_code"
-            class="input-control"
-            type="text"
             placeholder="Enter one-time activation code"
             required
           />
@@ -42,7 +43,7 @@
 
         <label class="form-label full-width">
           Password
-          <PasswordField
+          <ui-password-field
             v-model="form.password"
             autocomplete="new-password"
             placeholder="Create a strong password"
@@ -57,7 +58,7 @@
 
         <label class="form-label full-width">
           Full name
-          <input v-model="form.full_name" class="input-control" type="text" />
+          <ui-input v-model="form.full_name" />
         </label>
 
         <label class="form-label">
@@ -71,14 +72,14 @@
 
         <label class="form-label">
           City
-          <input v-model="form.city" class="input-control" type="text" />
+          <ui-input v-model="form.city" />
         </label>
 
-        <button class="btn-primary submit-btn" :disabled="loading || bootLoading" type="submit">
+        <ui-button class="submit-btn" :disabled="loading || bootLoading" type="submit">
           {{ loading ? 'Saving...' : 'Complete registration' }}
-        </button>
+        </ui-button>
       </form>
-    </article>
+    </ui-card>
   </section>
 </template>
 
@@ -87,9 +88,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
+import UiPasswordField from '@/components/UiPasswordField.vue'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiSelect from '@/components/UiSelect.vue'
+import UiCard from '@/components/UiCard.vue'
 
 interface Errors {
   username?: string[]

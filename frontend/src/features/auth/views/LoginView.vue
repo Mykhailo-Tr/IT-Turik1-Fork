@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <div class="card auth-card">
+    <ui-card class="auth-card">
       <p class="section-eyebrow">Account Access</p>
       <h1 class="section-title">Sign in to TournamentOS</h1>
       <p class="section-subtitle">
@@ -10,26 +10,20 @@
       <form @submit.prevent="handleLogin" class="auth-form">
         <label class="form-label">
           Username
-          <input
-            v-model="form.username"
-            class="input-control"
-            type="text"
-            autocomplete="username"
-            required
-          />
+          <ui-input v-model="form.username" autocomplete="username" required />
         </label>
 
         <label class="form-label">
           Password
-          <PasswordField v-model="form.password" autocomplete="current-password" />
+          <ui-password-field v-model="form.password" autocomplete="current-password" />
         </label>
         <p class="forgot-link">
           <router-link to="/forgot-password">Forgot password?</router-link>
         </p>
 
-        <button type="submit" class="btn-primary" :disabled="isLoading">
+        <ui-button type="submit" :disabled="isLoading">
           {{ isLoading ? 'Signing in...' : 'Sign in' }}
-        </button>
+        </ui-button>
       </form>
 
       <p v-if="error" class="text-error feedback">{{ error }}</p>
@@ -44,7 +38,7 @@
         No account yet?
         <router-link to="/register">Create one</router-link>
       </p>
-    </div>
+    </ui-card>
   </section>
 </template>
 
@@ -53,11 +47,14 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
 import { API_BASE } from '@/features/shared/config/api.ts'
 import $api from '@/services'
 import type { LoginResponse } from '@/services/accounts'
 import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiPasswordField from '@/components/UiPasswordField.vue'
+import UiCard from '@/components/UiCard.vue'
 
 const form = ref({ username: '', password: '' })
 const error = ref('')
