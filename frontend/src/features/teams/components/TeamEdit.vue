@@ -20,10 +20,9 @@
         <div>
           <h3>Change visibility</h3>
           <p class="text-muted">
-            <ui-badge
-              :value="team.is_public ? 'Public' : 'Private'"
-              :variant="team.is_public ? 'green' : 'red'"
-            />
+            <ui-badge :variant="team.is_public ? 'green' : 'red'">{{
+              team.is_public ? 'Public' : 'Private'
+            }}</ui-badge>
             -
 
             {{
@@ -121,7 +120,7 @@ const emit = defineEmits<{
   justify-content: space-between;
   align-items: center;
   gap: 0.9rem;
-  padding: 1rem 0;
+  padding: 0 0 1rem 0;
 }
 
 .manage-row + .manage-row {

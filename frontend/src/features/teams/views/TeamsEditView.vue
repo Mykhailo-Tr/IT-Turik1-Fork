@@ -98,7 +98,7 @@
               </div>
 
               <div class="member-actions">
-                <ui-badge v-if="member.id === team.captain_id" variant="green" value="Captain" />
+                <ui-badge v-if="member.id === team.captain_id" variant="green">Captain</ui-badge>
                 <ui-button
                   v-else-if="isCaptain"
                   variant="danger"

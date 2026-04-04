@@ -606,4 +606,3 @@ const goBackToProfile = () => {
   }
 }
 </style>
-<style scoped src="../../teams/styles/status-tags.css"></style>

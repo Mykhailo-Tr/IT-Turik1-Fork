@@ -2,7 +2,7 @@
   <ui-card class="panel info-panel">
     <header class="panel-head">
       <h2>Team profile</h2>
-      <ui-badge v-if="props.isCaptain" variant="green" value="You are team captain" />
+      <ui-badge v-if="props.isCaptain" variant="green">You are team captain</ui-badge>
     </header>
 
     <div class="info-grid">

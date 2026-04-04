@@ -15,7 +15,8 @@
     :show-close="!visibilityLoading"
   >
     <p class="modal-text">
-      Select the new visibility for <ui-badge :value="team.name" variant="green" /><br />
+      Select the new visibility for <ui-badge variant="green">{{ team.name }}</ui-badge
+      ><br />
       This affects who can discover and join your team.
     </p>
 

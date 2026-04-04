@@ -18,7 +18,7 @@
           <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
             >Admin</router-link
           >
-          <ui-button @click="logout" size="sm" variant="danger" class="logout-btn"
+          <ui-button @click="auth.logout()" size="sm" variant="danger" class="logout-btn"
             >Logout</ui-button
           >
         </template>
@@ -30,10 +30,8 @@
 <script setup lang="ts">
 import { useAuth } from '@/composables/useAuth'
 import { computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import UiButton from '../UiButton.vue'
-
-const router = useRouter()
 const route = useRoute()
 const auth = useAuth()
 
@@ -57,11 +55,6 @@ const isSectionActive = (section: Section) => {
   if (section === 'admin') return path === '/admin/role-codes'
 
   return false
-}
-
-const logout = () => {
-  auth.logout()
-  router.push('/login')
 }
 </script>
 

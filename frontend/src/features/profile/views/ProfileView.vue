@@ -20,7 +20,7 @@
           <strong class="item-value value-wrap">{{ auth.user.value?.email || '-' }}</strong>
         </ui-card>
         <ui-card class="item-role" title="Role">
-          <ui-badge variant="green" :value="auth.user.value?.role ?? '-'" />
+          <ui-badge variant="green">{{ auth.user.value?.role ?? '-' }}</ui-badge>
         </ui-card>
         <ui-card class="item-text" title="Full name">
           <strong class="item-value value-wrap">{{ auth.user.value?.full_name || '-' }}</strong>
@@ -54,7 +54,7 @@
         <ui-button
           variant="outline"
           :disabled="auth.isLoading.value || isDeleting"
-          @click="logoutToLogin"
+          @click="auth.logout()"
         >
           Log Out
         </ui-button>
@@ -62,135 +62,28 @@
 
       <div class="danger-zone">
         <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
-        <ui-button
-          variant="danger"
-          :disabled="auth.isLoading.value || isDeleting"
-          @click="openDeleteModal"
-          type="button"
-        >
-          Delete account
-        </ui-button>
+
+        <delete-profile-modal />
       </div>
     </ui-card>
-
-    <div v-if="isDeleteModalOpen" class="modal-backdrop" @click.self="closeDeleteModal">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-        <h3 id="delete-title">Delete account</h3>
-        <p class="modal-text">
-          This action cannot be undone. Enter
-          <code>{{ expectedDeleteText }}</code>
-          to confirm.
-        </p>
-
-        <ui-input
-          v-model="deleteConfirmInput"
-          :placeholder="expectedDeleteText"
-          :disabled="isDeleting"
-        />
-
-        <p v-if="deleteError" class="text-error modal-error">{{ deleteError }}</p>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="isDeleting" @click="closeDeleteModal">
-            Cancel
-          </button>
-          <button
-            class="btn-danger"
-            type="button"
-            :disabled="!canConfirmDelete"
-            @click="handleDeleteAccount"
-          >
-            {{ isDeleting ? 'Deleting...' : 'Delete permanently' }}
-          </button>
-        </div>
-      </div>
-    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
-import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiBadge from '@/components/UiBadge.vue'
 import { useAuth } from '@/composables/useAuth'
+import DeleteProfileModal from '../components/modals/DeleteProfileModal.vue'
 
 const auth = useAuth()
-
 const router = useRouter()
-const { showNotification, hideNotification } = useGlobalNotification()
-const isDeleteModalOpen = ref(false)
-const deleteConfirmInput = ref('')
-const deleteError = ref('')
 const isDeleting = ref(false)
-
-const expectedDeleteText = computed(() => auth.user.value?.username || '')
-const canConfirmDelete = computed(
-  () =>
-    Boolean(expectedDeleteText.value) &&
-    deleteConfirmInput.value === expectedDeleteText.value &&
-    !isDeleting.value,
-)
-
-const logoutToLogin = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
 
 const goToEditProfile = () => {
   router.push('/profile/edit')
-}
-
-const openDeleteModal = () => {
-  deleteConfirmInput.value = ''
-  deleteError.value = ''
-  isDeleteModalOpen.value = true
-}
-
-const closeDeleteModal = () => {
-  if (isDeleting.value) {
-    return
-  }
-  isDeleteModalOpen.value = false
-}
-
-const handleDeleteAccount = async () => {
-  if (deleteConfirmInput.value !== expectedDeleteText.value) {
-    deleteError.value = `Please enter "${expectedDeleteText.value}" exactly.`
-    return
-  }
-
-  isDeleting.value = true
-  deleteError.value = ''
-  hideNotification()
-
-  try {
-    const response = await $api.accounts.deleteAccount()
-
-    if (response.status === 204 || response.status === 200) {
-      auth.logout()
-      router.push('/login')
-      return
-    }
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
-        showNotification('Unable to delete account.', 'error')
-      } else {
-        showNotification('Server connection error.', 'error')
-      }
-    }
-  } finally {
-    isDeleting.value = false
-  }
 }
 
 const formatDate = (date: Date) => {
@@ -223,14 +116,6 @@ const formatDate = (date: Date) => {
   font-size: 0.86rem;
 }
 
-.state-box {
-  margin-top: 1rem;
-  border-radius: 14px;
-  border: 1px solid var(--line-soft);
-  padding: 0.9rem 1rem;
-  background: rgba(255, 255, 255, 0.85);
-}
-
 .details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -257,33 +142,6 @@ const formatDate = (date: Date) => {
   line-height: 1.2;
 }
 
-.item-value {
-  color: var(--ink-900);
-  line-height: 1.35;
-}
-
-.value-wrap {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.value-fixed {
-  white-space: nowrap;
-}
-
-.item-role {
-  align-content: start;
-  padding-left: 0.85rem;
-}
-
-.item-role .badge {
-  display: inline-flex;
-  justify-self: start;
-  width: fit-content;
-  max-width: 100%;
-}
-
 .item-role,
 .item-phone,
 .item-text {
@@ -307,10 +165,6 @@ const formatDate = (date: Date) => {
   min-width: 0;
 }
 
-.team-list p {
-  margin: 0;
-}
-
 .team-link {
   color: var(--brand-700);
   text-decoration: none;
@@ -320,13 +174,8 @@ const formatDate = (date: Date) => {
 }
 
 .badge {
-  display: inline-block;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.2);
-  color: var(--brand-700);
-  padding: 0.15rem 0.5rem;
+  width: max-content;
   text-transform: uppercase;
-  font-size: 0.74rem;
 }
 
 .actions {
@@ -334,22 +183,6 @@ const formatDate = (date: Date) => {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-}
-
-.btn-secondary {
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  background: #fff;
-  color: var(--ink-800);
-  cursor: pointer;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 .danger-zone {
@@ -364,22 +197,6 @@ const formatDate = (date: Date) => {
   font-weight: 600;
 }
 
-.btn-danger {
-  border: 1px solid #dc2626;
-  background: #fee2e2;
-  color: #991b1b;
-  border-radius: 12px;
-  padding: 0.7rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-danger:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -388,43 +205,6 @@ const formatDate = (date: Date) => {
   place-items: center;
   z-index: 50;
   padding: 1rem;
-}
-
-.modal-card {
-  width: min(100%, 520px);
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-lg);
-  padding: 1.2rem;
-}
-
-.modal-card h3 {
-  margin: 0;
-  font-family: var(--font-display);
-}
-
-.modal-text {
-  margin: 0.7rem 0;
-  color: var(--ink-700);
-}
-
-.modal-text code {
-  background: #f1f5f9;
-  border: 1px solid var(--line-soft);
-  border-radius: 6px;
-  padding: 0.1rem 0.35rem;
-}
-
-.modal-error {
-  margin: 0.5rem 0 0;
-}
-
-.modal-actions {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
 }
 
 .btn-cancel {
@@ -444,7 +224,8 @@ const formatDate = (date: Date) => {
 
 @media (max-width: 760px) {
   .profile-card {
-    padding: 1rem;
+    max-width: 100%;
+    margin: 0;
   }
 
   .head {
@@ -461,4 +242,3 @@ const formatDate = (date: Date) => {
   }
 }
 </style>
-<style scoped src="../../teams/styles/status-tags.css"></style>

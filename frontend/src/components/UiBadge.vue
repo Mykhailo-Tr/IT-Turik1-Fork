@@ -1,5 +1,5 @@
 <template>
-  <div :class="['badge', `badge--${props.variant}`]">{{ props.value }}</div>
+  <div :class="['badge', `badge--${props.variant}`]"><slot /></div>
 </template>
 
 <script setup lang="ts">
@@ -7,7 +7,6 @@ type Variants = 'green' | 'blue' | 'gray' | 'red' | 'orange'
 
 const props = withDefaults(
   defineProps<{
-    value: string
     variant?: Variants
   }>(),
   { variant: 'gray' },

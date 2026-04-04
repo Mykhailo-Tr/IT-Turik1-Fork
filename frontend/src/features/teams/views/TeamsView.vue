@@ -70,7 +70,7 @@
           <ui-card v-for="team in myTeamsPageItems" :key="`my-${team.id}`" class="team-item">
             <div class="team-meta">
               <h3>{{ team.name }}</h3>
-              <ui-badge v-if="isCaptain(team)" variant="blue" value="Captain" />
+              <ui-badge v-if="isCaptain(team)" variant="blue">Captain</ui-badge>
             </div>
             <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
             <p class="text-muted">Captain: {{ captainName(team) }}</p>

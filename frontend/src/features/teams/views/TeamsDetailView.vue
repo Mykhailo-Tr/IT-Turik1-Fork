@@ -15,8 +15,8 @@
             :href="telegramLink(team.contact_telegram)"
             class="contact-pill"
           >
-            <telegram-icon class="contact-icon" /> -
-            <ui-badge :value="`@${team?.contact_telegram}`" />
+            <telegram-icon class="contact-icon" />
+            <ui-badge>@{{ team?.contact_telegram }}</ui-badge>
           </a>
 
           <span v-else class="contact-pill muted">No Telegram</span>
@@ -26,8 +26,8 @@
             class="contact-pill"
             :href="discordLink(team.contact_discord)"
           >
-            <discord-icon class="contact-icon" /> -
-            <ui-badge :value="team.contact_discord" />
+            <discord-icon class="contact-icon" />
+            <ui-badge>{{ team.contact_discord }}</ui-badge>
           </a>
 
           <span v-else class="contact-pill muted">No Discord</span>

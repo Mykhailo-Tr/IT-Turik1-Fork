@@ -28,13 +28,13 @@
               <p class="text-muted member-email">{{ member.email }}</p>
             </div>
             <div class="member-side">
-              <ui-badge
-                v-if="member.id === props.team.captain_id"
-                variant="green"
-                value="Captain"
-              />
+              <ui-badge v-if="member.id === props.team.captain_id" variant="green"
+                >Captain</ui-badge
+              >
               <template v-else>
-                <ui-badge :value="statusByUserId[member.id]?.source || 'Member'" variant="gray" />
+                <ui-badge variant="gray">{{
+                  statusByUserId[member.id]?.source || 'Member'
+                }}</ui-badge>
               </template>
             </div>
           </ui-card>
@@ -66,11 +66,9 @@
               <p class="text-muted member-email">{{ joinRequest.user.email }}</p>
             </div>
             <div class="member-side">
-              <ui-badge
-                v-if="joinRequest.user.id === props.team.captain_id"
-                variant="green"
-                value="Captain"
-              />
+              <ui-badge v-if="joinRequest.user.id === props.team.captain_id" variant="green"
+                >Captain</ui-badge
+              >
               <template v-else>
                 <div class="row-actions">
                   <ui-button
@@ -124,11 +122,9 @@
               <p class="text-muted member-email">{{ invitation.user.email }}</p>
             </div>
             <div class="member-side">
-              <ui-badge
-                v-if="invitation.user.id === props.team.captain_id"
-                variant="green"
-                value="Captain"
-              />
+              <ui-badge v-if="invitation.user.id === props.team.captain_id" variant="green"
+                >Captain</ui-badge
+              >
               <template v-else>
                 <div class="status-tags">
                   <span class="status status--invited">invited</span>
@@ -147,15 +143,13 @@
               <p class="text-muted member-email">{{ invitation.user.email }}</p>
             </div>
             <div class="member-side">
-              <ui-badge
-                v-if="invitation.user.id === props.team.captain_id"
-                variant="green"
-                value="Captain"
-              />
+              <ui-badge v-if="invitation.user.id === props.team.captain_id" variant="green"
+                >Captain</ui-badge
+              >
               <template v-else>
                 <div class="status-tags">
-                  <ui-badge variant="red" value="Declined" />
-                  <ui-badge value="Invatation" />
+                  <ui-badge variant="red">Declined</ui-badge>
+                  <ui-badge>Invatation</ui-badge>
                 </div>
                 <div class="row-actions">
                   <ui-button
