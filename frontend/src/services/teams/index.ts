@@ -1,16 +1,24 @@
 import apiClient from '../apiClient'
-import type { JoinRequestId, TeamId } from '../dbTypes'
+import type { JoinRequestId, TeamId, UserId } from '../dbTypes'
 import type {
+  AddMemberBody,
   ChangeTeamVisibilityBody,
+  CreateTeamBody,
+  CreateTeamResponse,
   GetTeamInfoResponse,
   ManageJoinRequestAction,
   ResendInvatationBody,
+  UpdateTeamInfoBody,
 } from './types'
 
 // TODO: change to /api/teams
 const prefix = '/api/accounts/teams'
 
 export const teamsService = {
+  async createTeam(data: CreateTeamBody) {
+    return apiClient.post<CreateTeamResponse>(`${prefix}/teams/`, data, {})
+  },
+
   getTeamInfo(id: TeamId) {
     return apiClient.get<GetTeamInfoResponse>(`${prefix}/${id}`)
   },
@@ -20,7 +28,6 @@ export const teamsService = {
   },
 
   deleteTeam(id: TeamId) {
-    // TODO: asd
     return apiClient.delete(`${prefix}/${id}/`)
   },
 
@@ -38,5 +45,17 @@ export const teamsService = {
 
   changeTeamVisibility(teamId: TeamId, body: ChangeTeamVisibilityBody) {
     return apiClient.patch<GetTeamInfoResponse>(`${prefix}/${teamId}/`, body)
+  },
+
+  updateInfo(teamId: TeamId, body: UpdateTeamInfoBody) {
+    return apiClient.patch(`${prefix}/${teamId}/`, body)
+  },
+
+  removeMember(teamId: TeamId, memberId: UserId) {
+    return apiClient.delete(`${prefix}/${teamId}/members/${memberId}/`)
+  },
+
+  addMember(teamId: TeamId, body: AddMemberBody) {
+    return apiClient.post(`${prefix}/${teamId}/members/`)
   },
 }

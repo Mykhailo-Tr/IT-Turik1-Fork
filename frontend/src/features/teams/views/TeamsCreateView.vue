@@ -204,7 +204,7 @@ const createTeam = async () => {
   hideNotification()
 
   try {
-    const response = await $api.accounts.createTeam(form.value)
+    const response = await $api.teams.createTeam(form.value)
 
     showNotification('Team created successfully.', 'success')
     resetForm()
@@ -230,4 +230,3 @@ onMounted(() => {
 </script>
 
 <style scoped src="../styles/teams-create-view.css"></style>
-<style scoped src="../styles/status-tags.css"></style>

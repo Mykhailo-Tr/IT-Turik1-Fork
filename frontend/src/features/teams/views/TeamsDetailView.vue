@@ -58,7 +58,7 @@
         />
       </div>
 
-      <team-edit
+      <team-manage-zone
         :team="team"
         :is-captain="isCaptain"
         @update-team="(newTeamValue) => (team = newTeamValue)"
@@ -81,8 +81,8 @@ import type { GetTeamInfoResponse } from '@/services/teams/types'
 import TeamMembers from '../components/TeamMembers.vue'
 import { discordLink, telegramLink } from '../lib/team-links'
 import { useAuth } from '@/composables/useAuth'
-import TeamEdit from '../components/TeamEdit.vue'
 import UiBadge from '@/components/UiBadge.vue'
+import TeamManageZone from '../components/TeamManageZone.vue'
 
 const router = useRouter()
 const route = useRoute()

@@ -3,8 +3,7 @@ import type { User } from '../dbTypes'
 import type {
   ChangePasswordBody,
   CreateRoleCodesBody,
-  CreateTeamBody,
-  CreateTeamResponse,
+  ForgotPasswordBody,
   GenerateCodesResponse,
   GetProfileResponse,
   GetRoleCodesResponse,
@@ -15,6 +14,7 @@ import type {
   ResetPasswordBody,
   ResetPasswordResponse,
   UpdateProfileBody,
+  ValidatePasswordBody,
 } from './types'
 
 const prefix = '/api/accounts'
@@ -32,24 +32,23 @@ export const accountsService = {
     return apiClient.patch(`${prefix}/profile/`, data)
   },
 
-  // TODO: split into individual funcitons
+  async forgotPassword(data: ForgotPasswordBody) {
+    return apiClient.post<ResetPasswordResponse>(`${prefix}/password-reset/`, {
+      email: data.email,
+    })
+  },
+
   async resetPassword(data: ResetPasswordBody) {
-    if (data.type === 'forgot')
-      return apiClient.post<ResetPasswordResponse>(`${prefix}/password-reset/`, {
-        email: data.email,
-      })
+    return apiClient.post<ResetPasswordResponse>(
+      `${prefix}/password-reset/${data.info.uid}/${data.info.token}/`,
+      data.body,
+    )
+  },
 
-    if (data.type === 'reset')
-      return apiClient.post<ResetPasswordResponse>(
-        `${prefix}/password-reset/${data.info.uid}/${data.info.token}/`,
-        data.body,
-      )
-
-    if (data.type === 'validate') {
-      return apiClient.get<ResetPasswordResponse>(
-        `${prefix}/password-reset/${data.info.uid}/${data.info.token}/`,
-      )
-    }
+  async validatePassword(data: ValidatePasswordBody) {
+    return apiClient.get<ResetPasswordResponse>(
+      `${prefix}/password-reset/${data.info.uid}/${data.info.token}/`,
+    )
   },
 
   async changePassword(data: ChangePasswordBody) {
@@ -69,13 +68,6 @@ export const accountsService = {
 
   async getUsers() {
     return apiClient.get<GetUsersResponse>(`${prefix}/users`)
-  },
-
-  // TODO: SPLIT ACCOUNTS TEAMS API TO ANOTHER SERVICE
-  // shoud be base_url/teams not base_url/accounts/teams
-
-  async createTeam(data: CreateTeamBody) {
-    return apiClient.post<CreateTeamResponse>(`${prefix}/teams/`, data, {})
   },
 
   async getRoleCodes(filter?: { role?: User['role'] | 'all' }) {

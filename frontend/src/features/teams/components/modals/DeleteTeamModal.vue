@@ -4,7 +4,7 @@
   <ui-modal v-model="isDeleteModalOpen" title="Delete team" :close-on-backdrop="!deleteTeamLoading">
     <p class="modal-text">
       This action cannot be undone. Enter
-      <ui-badge variant="red">props.team.name</ui-badge>
+      <ui-badge variant="red">{{ props.team.name }}</ui-badge>
       to confirm.
     </p>
 

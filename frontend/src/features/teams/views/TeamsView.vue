@@ -192,4 +192,3 @@ const {
 </script>
 
 <style scoped src="../styles/teams-view.css"></style>
-<style scoped src="../styles/status-tags.css"></style>

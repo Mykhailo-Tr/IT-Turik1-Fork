@@ -39,48 +39,20 @@ export interface RegisterResponse {
   onboarding_required: boolean
 }
 
-type ResetPasswordBody =
-  | { type: 'forgot'; email: string }
-  | {
-      type: 'reset'
-      info: { uid: string; token: string }
-      body: { new_password: string; confirm_password: string }
-    }
-  | {
-      type: 'validate'
-      info: { uid: string; token: string }
-    }
+interface ForgotPasswordBody {
+  email: string
+}
+
+interface ResetPasswordBody {
+  info: { uid: string; token: string }
+  body: { new_password: string; confirm_password: string }
+}
+
+interface ValidatePasswordBody {
+  info: { uid: string; token: string }
+}
 
 export type GetUsersResponse = Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>[]
-
-interface CreateTeamBody {
-  name: string
-  email: string
-  organization: string
-  contact_telegram: string
-  contact_discord: string
-  is_public: boolean
-  member_ids: UserId[]
-}
-
-interface CreateTeamResponse {
-  id: number
-  name: string
-  email: string
-  captain_id: number
-  is_public: boolean
-  organization: string
-  contact_telegram: string
-  contact_discord: string
-  members: Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>[]
-  invitations: Invatation[]
-  join_requests: [] // TODO: add type annotation
-  my_invitation_status: boolean
-  my_join_request_status: boolean
-  is_member: boolean
-  is_captain: boolean
-  can_request_to_join: boolean
-}
 
 export type RoleCode =
   | {

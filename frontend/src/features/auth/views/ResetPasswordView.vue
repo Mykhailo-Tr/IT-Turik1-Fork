@@ -86,8 +86,7 @@ const form = ref({
 
 const validateResetLink = async () => {
   try {
-    await $api.accounts.resetPassword({
-      type: 'validate',
+    await $api.accounts.validatePassword({
       info: { uid: String(route.params.uid), token: String(route.params.token) },
     })
 
@@ -111,7 +110,6 @@ const handleReset = async () => {
 
   try {
     const response = await $api.accounts.resetPassword({
-      type: 'reset',
       info: { uid: String(route.params.uid), token: String(route.params.token) },
       body: form.value,
     })

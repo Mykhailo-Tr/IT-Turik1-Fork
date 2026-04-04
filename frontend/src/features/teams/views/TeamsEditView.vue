@@ -10,188 +10,139 @@
       </div>
     </ui-card>
 
+    <!-- TODO replace this skeletons with skeleton ones -->
     <ui-card v-if="loading" class="state-card text-muted">Loading team editor...</ui-card>
     <ui-card v-else-if="loadError" class="state-card text-error">{{ loadError }}</ui-card>
 
     <template v-else-if="team">
       <div class="workspace-grid">
-        <ui-card class="panel form-panel">
-          <header class="panel-head">
-            <h2>Team profile settings</h2>
-            <span v-if="isCaptain" class="status-badge">Captain access</span>
-          </header>
+        <team-edit :team="team" :isCaptain="isCaptain" />
 
-          <p v-if="!isCaptain" class="notice error lock-note">
-            Only team captain can edit this team.
-          </p>
-
-          <form class="form-grid" @submit.prevent="saveTeam">
-            <label class="form-label">
-              Team name
-              <ui-input v-model="form.name" required :disabled="!isCaptain || saveLoading" />
-            </label>
-
-            <label class="form-label">
-              Team email
-              <ui-input
-                v-model="form.email"
-                type="email"
-                required
-                :disabled="!isCaptain || saveLoading"
-              />
-            </label>
-
-            <label class="form-label">
-              Organization
-              <ui-input v-model="form.organization" :disabled="!isCaptain || saveLoading" />
-            </label>
-
-            <label class="form-label">
-              Telegram
-              <ui-input
-                v-model="form.contact_telegram"
-                pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
-                title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
-                :disabled="!isCaptain || saveLoading"
-              />
-            </label>
-
-            <label class="form-label">
-              Discord
-              <ui-input
-                v-model="form.contact_discord"
-                pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
-                title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
-                :disabled="!isCaptain || saveLoading"
-              />
-            </label>
-
-            <div class="form-actions full-width">
-              <ui-button type="submit" :disabled="!isCaptain || saveLoading">
-                {{ saveLoading ? 'Saving...' : 'Save changes' }}
-              </ui-button>
-              <ui-button asLink variant="outline" :to="`/teams/${team.id}`">Cancel</ui-button>
-            </div>
-          </form>
-        </ui-card>
-
-        <ui-card class="panel members-panel">
-          <header class="panel-head">
-            <h2>Members management</h2>
-            <span class="text-muted">{{ team.members.length }} people</span>
-          </header>
-
-          <label class="form-label member-search">
-            Search members
-            <ui-input v-model="memberSearch" placeholder="Search by username or email" />
-          </label>
-
-          <div class="member-list">
-            <article
-              v-for="member in filteredMembers"
-              :key="`member-${member.id}`"
-              class="member-row"
-            >
-              <div>
-                <p class="member-name">{{ member.username }}</p>
-                <p class="text-muted member-email">{{ member.email }}</p>
-              </div>
-
-              <div class="member-actions">
-                <ui-badge v-if="member.id === team.captain_id" variant="green">Captain</ui-badge>
-                <ui-button
-                  v-else-if="isCaptain"
-                  variant="danger"
-                  size="sm"
-                  :disabled="kickLoadingByUser[member.id]"
-                  @click="removeMember(member)"
-                >
-                  {{ kickLoadingByUser[member.id] ? 'Removing...' : 'Remove' }}
-                </ui-button>
-              </div>
-            </article>
-          </div>
-          <div v-if="isCaptain" class="add-member-box">
-            <h3>Invitations status</h3>
-            <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
-            <div v-else class="member-list">
-              <article
-                v-for="invitation in team.invitations"
-                :key="`inv-${invitation.id}`"
-                class="member-row"
-              >
-                <div>
-                  <p class="member-name">{{ invitation.user.username }}</p>
-                  <p class="text-muted member-email">{{ invitation.user.email }}</p>
-                </div>
-                <!-- if declined red -->
-                <span v-if="invitation.status === 'declined'" class="status status--declined">
-                  {{ invitation.status }}
-                </span>
-                <span v-else class="status status--source">{{ invitation.status }}</span>
-              </article>
-            </div>
-          </div>
-
-          <p v-if="filteredMembers.length === 0" class="text-muted member-note">
-            No members match your search.
-          </p>
-
-          <div v-if="isCaptain" class="add-member-box">
-            <h3>Invite user</h3>
-
-            <label class="form-label">
-              Select user
-              <ui-select :options="userOptions" v-model="addMemberSelection" />
-            </label>
-
-            <p v-if="availableUsers.length === 0" class="text-muted">No available users to add.</p>
-
-            <ui-button @click="addMember" :disabled="addMemberLoading">
-              {{ addMemberLoading ? 'Sending...' : 'Send invitation' }}
-            </ui-button>
-          </div>
-        </ui-card>
+        <team-manage-members
+          :team="team"
+          :isCaptain="isCaptain"
+          :users="users"
+          @memberDeleted="refetchStates()"
+          @invitedMember="refetchStates()"
+        />
       </div>
     </template>
   </section>
 </template>
 
 <script setup lang="ts">
-import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import UiInput from '@/components/UiInput.vue'
-import UiSelect from '@/components/UiSelect.vue'
-import { useTeamsEditPage } from '@/features/teams/composables/useTeamsEditPage'
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import TeamEdit from '../components/TeamEdit.vue'
+import type { GetTeamInfoResponse } from '@/services/teams/types'
+import { isApiError } from '@/services/apiClient'
+import { useRoute, useRouter } from 'vue-router'
+import $api from '@/services'
+import { useAuth } from '@/composables/useAuth'
+import TeamManageMembers, { type Member } from '../components/TeamManageMembers.vue'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
-const userOptions = computed(() => [
-  { value: '', label: 'Select user' },
-  ...availableUsers.value.map((user) => ({
-    value: String(user.id),
-    label: `${user.username} (${user.email})`,
-  })),
-])
+const router = useRouter()
+const route = useRoute()
+const auth = useAuth()
+const { showNotification } = useGlobalNotification()
 
-const {
-  addMember,
-  addMemberLoading,
-  addMemberSelection,
-  availableUsers,
-  filteredMembers,
-  form,
-  isCaptain,
-  kickLoadingByUser,
-  loadError,
-  loading,
-  memberSearch,
-  removeMember,
-  saveLoading,
-  saveTeam,
-  team,
-} = useTeamsEditPage()
+const team = ref<GetTeamInfoResponse | null>(null)
+const users = ref<Member[]>([])
+const teamId = computed(() => Number(route.params.id))
+
+const loading = ref(false)
+const loadError = ref<string | null>(null)
+
+const isCaptain = computed(() => team.value?.captain_id === auth.user.value?.id)
+
+const refetchStates = async () => {
+  await Promise.all([fetchTeamInfo(), fetchUsers()])
+}
+
+const fetchTeamInfo = async () => {
+  if (!teamId.value) {
+    loadError.value = 'Invalid team id.'
+    return false
+  }
+
+  loading.value = true
+
+  try {
+    const response = await $api.teams.getTeamInfo(teamId.value)
+
+    team.value = response.data
+    return true
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 401) return router.push('/login')
+        if (err.response.status === 404) {
+          loadError.value = 'Team not found.'
+          team.value = null
+          return
+        }
+
+        loadError.value = 'Unable to load team information.'
+      } else {
+        loadError.value = 'Unable to connect to server.'
+      }
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+const fetchUsers = async () => {
+  try {
+    const response = await $api.accounts.getUsers()
+
+    users.value = response.data
+    return true
+  } catch (err) {
+    if (isApiError(err)) {
+      showNotification(
+        err.response ? 'Unable to load users list.' : 'Unable to connect to server.',
+        'error',
+      )
+    }
+  }
+}
+
+onMounted(() => {
+  fetchTeamInfo()
+  fetchUsers()
+})
 </script>
 
-<style scoped src="../styles/teams-edit-view.css"></style>
-<style scoped src="../styles/status-tags.css"></style>
+<style scoped>
+.teams-edit-page {
+  gap: 1.2rem;
+}
+
+.hero-card,
+.state-card,
+.panel {
+  padding: 1.2rem;
+}
+
+.hero-card {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.14), rgba(15, 23, 42, 0.03)), #fff;
+  border: 1px solid rgba(13, 148, 136, 0.22);
+}
+
+.hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+</style>

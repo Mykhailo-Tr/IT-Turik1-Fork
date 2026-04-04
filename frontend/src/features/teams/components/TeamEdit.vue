@@ -1,64 +1,74 @@
 <template>
-  <ui-card v-if="isCaptain" class="manage-zone">
-    <div class="manage-row">
-      <div>
-        <h3>Edit team</h3>
-        <p class="text-muted">Update team profile and manage members in edit workspace.</p>
-      </div>
-      <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}/edit`"
-        >Edit team</ui-button
-      >
-    </div>
+  <ui-card class="panel form-panel">
+    <header class="panel-head">
+      <h2>Team profile settings</h2>
+      <span v-if="isCaptain" class="status-badge">Captain access</span>
+    </header>
 
-    <div class="danger-zone-header">
-      <danger-icon />
-      <span>Danger Zone</span>
-    </div>
+    <p v-if="!isCaptain" class="notice error lock-note">Only team captain can edit this team.</p>
 
-    <div class="danger-zone-box">
-      <div class="manage-row danger">
-        <div>
-          <h3>Change visibility</h3>
-          <p class="text-muted">
-            <ui-badge :variant="team.is_public ? 'green' : 'red'">{{
-              team.is_public ? 'Public' : 'Private'
-            }}</ui-badge>
-            -
+    <form class="form-grid" @submit.prevent="saveTeam">
+      <label class="form-label">
+        Team name
+        <ui-input v-model="form.name" required :disabled="!isCaptain || isSavingChanges" />
+      </label>
 
-            {{
-              team.is_public
-                ? 'Anyone can find and request to join this team.'
-                : 'Only invited members can see this team.'
-            }}
-          </p>
-        </div>
-
-        <TeamVisibilityModal
-          :team="props.team"
-          @changed-team-visibility="(newTeamValue) => emit('updateTeam', newTeamValue)"
+      <label class="form-label">
+        Team email
+        <ui-input
+          v-model="form.email"
+          type="email"
+          required
+          :disabled="!isCaptain || isSavingChanges"
         />
-      </div>
+      </label>
 
-      <div class="manage-row danger">
-        <div>
-          <h3>Delete team</h3>
-          <p class="text-muted">This action permanently deletes the team and cannot be undone.</p>
-        </div>
+      <label class="form-label">
+        Organization
+        <ui-input v-model="form.organization" :disabled="!isCaptain || isSavingChanges" />
+      </label>
 
-        <DeleteTeamModal :team="props.team" @deleted="router.push('/teams')" />
+      <label class="form-label">
+        Telegram
+        <ui-input
+          v-model="form.contact_telegram"
+          pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
+          title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
+          :disabled="!isCaptain || isSavingChanges"
+        />
+      </label>
+
+      <label class="form-label">
+        Discord
+        <ui-input
+          v-model="form.contact_discord"
+          pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
+          title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
+          :disabled="!isCaptain || isSavingChanges"
+        />
+      </label>
+
+      <div class="form-actions full-width">
+        <ui-button type="submit" :disabled="!isCaptain || isSavingChanges">
+          <loading-icon v-if="isSavingChanges" />
+          Save changes
+        </ui-button>
+        <ui-button asLink variant="outline" :to="`/teams/${team.id}`">Cancel</ui-button>
       </div>
-    </div>
+    </form>
   </ui-card>
 </template>
 
 <script setup lang="ts">
-import type { GetTeamInfoResponse } from '@/services/teams/types'
-import DeleteTeamModal from './modals/DeleteTeamModal.vue'
-import TeamVisibilityModal from './modals/TeamVisibilityModal.vue'
-import UiCard from '@/components/UiCard.vue'
-import DangerIcon from '@/icons/DangerIcon.vue'
 import UiButton from '@/components/UiButton.vue'
-import UiBadge from '@/components/UiBadge.vue'
+import UiCard from '@/components/UiCard.vue'
+import UiInput from '@/components/UiInput.vue'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import type { GetTeamInfoResponse } from '@/services/teams/types'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 interface Props {
@@ -68,75 +78,96 @@ interface Props {
 
 const props = defineProps<Props>()
 const router = useRouter()
+const { hideNotification, showNotification } = useGlobalNotification()
 
-const emit = defineEmits<{
-  (e: 'updateTeam', newTeamValue: GetTeamInfoResponse): void
-}>()
+const form = ref({
+  name: props.team.name,
+  email: props.team.email,
+  organization: props.team.organization,
+  contact_telegram: props.team.contact_telegram,
+  contact_discord: props.team.contact_discord,
+})
+
+const isSavingChanges = ref(false)
+
+const saveTeam = async () => {
+  isSavingChanges.value = true
+  hideNotification()
+
+  try {
+    await $api.teams.updateInfo(props.team.id, form.value)
+
+    router.push(`/teams/${props.team.id}`)
+  } catch (err) {
+    if (isApiError(err)) {
+      showNotification(
+        err.response ? 'Unable to update team.' : 'Server connection error.',
+        'error',
+      )
+    }
+  } finally {
+    isSavingChanges.value = false
+  }
+}
 </script>
 
 <style scoped>
-.manage-zone {
+.panel {
   border: 1px solid var(--line-soft);
-  overflow: hidden;
 }
 
-.danger-zone-header {
+.panel-head {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 0.8rem;
-  margin: 0.2rem 0 0;
-  background: rgba(220, 38, 38, 0.06);
-  border: 1px solid rgba(220, 38, 38, 0.2);
-  border-radius: 8px;
-  color: #991b1b;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.danger-zone-icon {
-  width: 0.95rem;
-  height: 0.95rem;
-  flex-shrink: 0;
-}
-
-.danger-zone-box {
-  margin-top: 0.6rem;
-  border: 1px solid rgba(220, 38, 38, 0.22);
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(254, 226, 226, 0.18);
-}
-
-.danger-zone-box .manage-row {
-  padding: 1rem;
-  border-top: 1px solid rgba(220, 38, 38, 0.14);
-}
-
-.manage-row {
-  display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 0.9rem;
-  padding: 0 0 1rem 0;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
 }
 
-.manage-row + .manage-row {
-  border-top: 1px solid var(--line-soft);
-}
-
-.manage-row h3 {
+.panel-head h2 {
   margin: 0;
-  font-size: 1rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
 }
 
-.manage-row p {
-  margin: 0.3rem 0 0;
+.status-badge {
+  border-radius: 999px;
+  border: 1px solid rgba(20, 184, 166, 0.45);
+  background: rgba(20, 184, 166, 0.15);
+  color: var(--brand-700);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
 }
 
-.manage-row.danger h3 {
-  color: #991b1b;
+.lock-note {
+  margin-top: 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 </style>

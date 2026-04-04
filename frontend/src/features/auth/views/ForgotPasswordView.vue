@@ -56,7 +56,7 @@ const handleSubmit = async () => {
   statusMessage.value = ''
 
   try {
-    const response = await $api.accounts.resetPassword({ type: 'forgot', email: email.value })
+    const response = await $api.accounts.forgotPassword({ email: email.value })
 
     statusType.value = 'success'
     statusMessage.value = response?.data.message || 'Password reset email sent successfully.'
