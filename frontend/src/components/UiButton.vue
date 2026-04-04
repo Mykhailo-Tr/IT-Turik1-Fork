@@ -24,6 +24,7 @@ const variants = {
 } as const
 
 const sizes = {
+  xs: 'btn-xs',
   sm: 'btn-sm',
   md: 'btn-md',
   lg: 'btn-lg',
@@ -53,22 +54,24 @@ const sizeClass = computed(() => sizes[props.size])
 <style scoped>
 .btn-sm {
   padding: 0.45rem 0.7rem;
-  font-size: 0.85rem;
+  font-size: 0.85rem !important;
 }
 
 .btn-md {
   padding: 0.7rem 1rem;
-  font-size: 1rem;
+  font-size: 1rem !important;
 }
 
 .btn-lg {
   padding: 0.9rem 1.35rem;
-  font-size: 1.1rem;
+  font-size: 1.1rem !important;
 }
 
 .btn {
   text-align: center;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.4rem;
   font: inherit;
   font-weight: 700;
@@ -87,7 +90,6 @@ const sizeClass = computed(() => sizes[props.size])
 }
 
 .btn:focus {
-  border-color: var(--brand-500);
   box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
 }
 
@@ -96,7 +98,7 @@ const sizeClass = computed(() => sizes[props.size])
 }
 
 .btn:disabled {
-  opacity: 0.8;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -119,7 +121,6 @@ const sizeClass = computed(() => sizes[props.size])
 
 .outline-accent-btn:active,
 .outline-accent-btn:hover {
-  border-color: var(--brand-500);
   color: var(--brand-700);
   background: rgba(20, 184, 165, 0.058);
 }
@@ -131,6 +132,10 @@ const sizeClass = computed(() => sizes[props.size])
   border-radius: 12px;
 }
 
+.danger-btn:focus {
+  box-shadow: 0 0 0 3px rgb(148 13 13 / 18%);
+}
+
 .danger-btn:hover {
   background: #f5cdcd;
 }
@@ -139,6 +144,10 @@ const sizeClass = computed(() => sizes[props.size])
   border: 1px solid #d97706;
   background: #fef3c7;
   color: #92400e;
+}
+
+.warning-btn:focus {
+  box-shadow: 0 0 0 3px rgb(148 118 13 / 18%);
 }
 
 .warning-btn:hover {

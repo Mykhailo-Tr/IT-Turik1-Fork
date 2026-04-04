@@ -10,9 +10,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-
 import { renderGoogleButton, type GoogleCredentialResponse } from '@/features/shared/lib/googleAuth'
-
 import { API_BASE } from '@/features/shared/config/api'
 
 const props = defineProps({

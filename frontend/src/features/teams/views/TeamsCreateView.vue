@@ -8,7 +8,7 @@
         >Back to teams list</ui-button
       >
 
-      <form class="form-grid" @submit.prevent="handleCreateTeam">
+      <form class="form-grid" @submit.prevent="createTeam">
         <label class="form-label">
           Team name
           <ui-input v-model="form.name" required />
@@ -72,16 +72,17 @@
             />
           </label>
 
-          <div class="member-picker">
+          <div class="member-picker" v-if="memberSearchInput.length > 0">
             <label
               v-for="user in createCandidateUsers"
               :key="`create-${user.id}`"
               class="picker-item"
+              @click.prevent="toggleMember(user.id)"
             >
-              <ui-input v-model="form.member_ids" type="checkbox" :value="user.id" />
+              <input type="checkbox" :checked="form.member_ids.includes(user.id)" readonly />
               <span>{{ user.username }} ({{ user.email }})</span>
             </label>
-            <p v-if="createCandidateUsers.length === 0" class="text-muted empty-note">
+            <p v-if="createCandidateUsers?.length === 0" class="text-muted empty-note">
               No users found.
             </p>
           </div>
@@ -99,17 +100,21 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
+import { useAuth } from '@/composables/useAuth'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import $api from '@/services'
-import type { GetUsersResponse } from '@/services/accounts'
+import type { CreateTeamBody, GetUsersResponse } from '@/services/accounts/types'
 import { isApiError } from '@/services/apiClient'
-import { computed, ref } from 'vue'
+import type { UserId } from '@/services/dbTypes'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const { showNotification, hideNotification } = useGlobalNotification()
 
-const form = ref({
+type Form = CreateTeamBody
+
+const form = ref<Form>({
   name: '',
   email: '',
   organization: '',
@@ -131,10 +136,29 @@ const resetForm = () => {
   }
 }
 
+const auth = useAuth()
+
 const loading = ref(false)
 const memberSearchInput = ref('')
-const users = ref<GetUsersResponse>([])
-const currentUserId = ref<number | null>(null)
+const users = ref<GetUsersResponse | null>(null)
+
+const toggleMember = (id: UserId) => {
+  const idx = form.value.member_ids.indexOf(id)
+  if (idx === -1) form.value.member_ids.push(id)
+  else form.value.member_ids.splice(idx, 1)
+}
+
+const createCandidateUsers = computed(() => {
+  const search = memberSearchInput.value.trim().toLowerCase()
+  return users.value?.filter((user) => {
+    if (user.id === auth.user.value?.id) return false
+    if (!search) return true
+    return [user.username, user.email, user.full_name || '']
+      .join(' ')
+      .toLowerCase()
+      .includes(search)
+  })
+})
 
 const toggleVisibility = () => {
   form.value.is_public = !form.value.is_public
@@ -159,30 +183,32 @@ const onVisibilityKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const createCandidateUsers = computed(() => {
-  const search = memberSearchInput.value.trim().toLowerCase()
-  return users.value.filter((user) => {
-    if (user.id === currentUserId.value) return false
-    if (!search) return true
-    return [user.username, user.email, user.full_name || '']
-      .join(' ')
-      .toLowerCase()
-      .includes(search)
-  })
-})
+const fetchUsers = async () => {
+  try {
+    const response = await $api.accounts.getUsers()
 
-const handleCreateTeam = async () => {
+    users.value = response.data
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        showNotification('Unable to load users list.', 'error')
+      } else {
+        showNotification('Unable to connect to server', 'error')
+      }
+    }
+  }
+}
+
+const createTeam = async () => {
   loading.value = true
   hideNotification()
 
-  const token = localStorage.getItem('access')
-  if (!token) return router.push('/login')
-
   try {
-    const response = await $api.accounts.createTeam(token, form.value)
+    const response = await $api.accounts.createTeam(form.value)
 
     showNotification('Team created successfully.', 'success')
     resetForm()
+
     router.push(`/teams/${response.data.id}`)
   } catch (err) {
     if (isApiError(err)) {
@@ -197,6 +223,10 @@ const handleCreateTeam = async () => {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  fetchUsers()
+})
 </script>
 
 <style scoped src="../styles/teams-create-view.css"></style>

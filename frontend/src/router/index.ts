@@ -14,6 +14,7 @@ import TeamsCreate from '@/features/teams/views/TeamsCreateView.vue'
 import TeamsDetail from '@/features/teams/views/TeamsDetailView.vue'
 import TeamsEdit from '@/features/teams/views/TeamsEditView.vue'
 import Teams from '@/features/teams/views/TeamsView.vue'
+import { useUserStore } from '@/stores/user'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -91,9 +92,15 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, _from, next) => {
-  const isAuthenticated = !!localStorage.getItem('access')
-  const needsOnboarding = localStorage.getItem('needs_onboarding') === '1'
+router.beforeEach(async (to, _from, next) => {
+  const store = useUserStore()
+
+  if (!store.isInitialized) {
+    await store.loadUser()
+  }
+
+  const isAuthenticated: boolean = store.isLoggedIn
+  const needsOnboarding: boolean = localStorage.getItem('needs_onboarding') === '1'
 
   if (isAuthenticated && needsOnboarding && to.path !== '/complete-profile') {
     next('/complete-profile')

@@ -3,12 +3,15 @@
 </template>
 
 <script setup lang="ts">
-type Variants = 'green' | 'blue'
+type Variants = 'green' | 'blue' | 'gray' | 'red' | 'orange'
 
-const props = defineProps<{
-  value: string
-  variant: Variants
-}>()
+const props = withDefaults(
+  defineProps<{
+    value: string
+    variant?: Variants
+  }>(),
+  { variant: 'gray' },
+)
 </script>
 
 <style scoped>
@@ -17,19 +20,37 @@ const props = defineProps<{
   border-radius: 999px;
   font-size: 0.74rem;
   font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line-soft);
 }
 
 .badge--blue {
-  border: 1px solid rgba(14, 116, 144, 0.35);
+  border-color: rgba(14, 116, 144, 0.35);
   background: rgba(14, 116, 144, 0.14);
   color: #0e7490;
-  padding: 0.2rem 0.5rem;
 }
 
 .badge--green {
-  border: 1px solid rgba(20, 184, 166, 0.45);
+  border-color: rgba(20, 184, 166, 0.45);
   background: rgba(20, 184, 166, 0.15);
   color: var(--brand-700);
-  padding: 0.2rem 0.55rem;
+}
+
+.badge--gray {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.03);
+  color: var(--ink-700);
+}
+
+.badge--red {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+}
+
+.badge--orange {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
 }
 </style>

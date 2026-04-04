@@ -10,10 +10,9 @@
 
       <p class="section-subtitle">Update your account details below and save your changes.</p>
 
-      <div v-if="loadingProfile" class="state-box">Loading profile...</div>
-      <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
+      <div v-if="auth.isLoading.value" class="state-box">Loading profile...</div>
 
-      <form v-else @submit.prevent="handleUpdate" class="profile-form">
+      <form v-else @submit.prevent="handleSubmit" class="profile-form">
         <div class="form-grid">
           <label class="form-label">
             Full name
@@ -71,12 +70,15 @@
 
         <div class="actions">
           <ui-button type="submit" :disabled="loading">
-            {{ loading ? 'Saving...' : 'Save changes' }}
+            <LoadingIcon v-if="loading" />
+            Save changes
           </ui-button>
           <ui-button variant="outline" :disabled="loading" @click="openPasswordModal">
+            <LoadingIcon v-if="loading" />
             Change Password
           </ui-button>
           <ui-button variant="outline" :disabled="loading" @click="goBackToProfile">
+            <LoadingIcon v-if="loading" />
             Cancel
           </ui-button>
         </div>
@@ -170,7 +172,8 @@
             passwordErrors.non_field_errors[0]
           }}</small>
           <ui-button type="submit" :disabled="passwordLoading">
-            {{ passwordLoading ? 'Updating...' : 'Update password' }}
+            <LoadingIcon v-if="passwordLoading" />
+            Update password
           </ui-button>
         </form>
 
@@ -191,7 +194,8 @@
           </label>
 
           <ui-button type="submit" :disabled="passwordLoading">
-            {{ passwordLoading ? 'Sending...' : 'Send reset link' }}
+            <LoadingIcon v-if="passwordLoading" />
+            Send reset link
           </ui-button>
         </form>
       </article>
@@ -200,7 +204,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
@@ -210,6 +214,8 @@ import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useAuth } from '@/composables/useAuth'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
 
 interface PasswordErrors {
   current_password?: string[]
@@ -245,15 +251,20 @@ interface PasswordForm {
   confirm_password: string
 }
 
-const form = ref<ProfileForm>({ username: '', full_name: '', phone: '', city: '' })
+const auth = useAuth()
+
+const form = computed<ProfileForm>(() => ({
+  username: auth.user.value?.username ?? '',
+  full_name: auth.user.value?.full_name ?? '',
+  phone: auth.user.value?.phone ?? '',
+  city: auth.user.value?.city ?? '',
+}))
 const loading = ref(false)
-const loadingProfile = ref(true)
-const profileError = ref('')
 const errors = ref<Record<FormField, string[]> | null>(null)
 const touched = ref<TouchedFields>({ full_name: false, username: false, phone: false, city: false })
 const isPasswordModalOpen = ref(false)
 const passwordMode = ref<PasswordMode>('manual')
-const recoveryEmail = ref('')
+const recoveryEmail = computed(() => auth.user.value?.email ?? '')
 const passwordLoading = ref(false)
 const passwordErrors = ref<PasswordErrors | null>(null)
 const passwordMessage = ref('')
@@ -264,7 +275,7 @@ const passwordForm = ref<PasswordForm>({
   confirm_password: '',
 })
 const router = useRouter()
-const { showNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const validateFullName = (value: string): string => {
   if (!value?.trim()) return 'Full name is required.'
@@ -274,7 +285,7 @@ const validateFullName = (value: string): string => {
 
 const validateUsername = (value: string): string => {
   if (!value?.trim()) return 'Username is required.'
-  if (value.trim().length < 3) return 'Username must be at least 3 characters.'
+  if (value.trim().length <= 3) return 'Username must be at least 3 characters.'
   if (!/^[A-Za-z0-9@.+_-]+$/.test(value)) {
     return 'Use letters, numbers, and @ . + - _ only.'
   }
@@ -320,52 +331,6 @@ const getFieldError = (field: FormField): string => {
 
 const hasClientErrors = (): boolean => Object.values(clientErrors.value).some(Boolean)
 
-// TODO: Remove
-// const logoutToLogin = () => {
-//   localStorage.removeItem('access')
-//   localStorage.removeItem('refresh')
-//   localStorage.removeItem('needs_onboarding')
-//   router.push('/login')
-// }
-
-const fetchProfile = async () => {
-  loadingProfile.value = true
-  profileError.value = ''
-
-  const token = localStorage.getItem('access')
-  if (!token) return router.push('/login')
-
-  try {
-    const response = await $api.accounts.getProfile(token)
-
-    if (response.data.needs_onboarding) {
-      localStorage.setItem('needs_onboarding', '1')
-      router.push('/complete-profile')
-      return
-    }
-
-    form.value = {
-      username: response.data.username || '',
-      full_name: response.data.full_name || '',
-      phone: response.data.phone || '',
-      city: response.data.city || '',
-    }
-    recoveryEmail.value = response.data.email || ''
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
-
-        profileError.value = 'Could not load profile information.'
-      } else {
-      }
-      profileError.value = 'Server connection error.'
-    }
-  } finally {
-    loadingProfile.value = false
-  }
-}
-
 const resetPasswordState = () => {
   passwordErrors.value = {}
   passwordMessage.value = ''
@@ -393,10 +358,11 @@ const setPasswordMode = (mode: PasswordMode) => {
   passwordMessage.value = ''
 }
 
-const handleUpdate = async () => {
+const handleSubmit = async () => {
   loading.value = true
   errors.value = null
   touchAllFields()
+  hideNotification()
 
   if (hasClientErrors()) {
     showNotification('Please fix highlighted fields before saving.', 'error')
@@ -404,11 +370,8 @@ const handleUpdate = async () => {
     return
   }
 
-  const token = localStorage.getItem('access')
-  if (!token) return router.push('/login')
-
   try {
-    await $api.accounts.updateProfile(token, form.value)
+    await auth.update(form.value)
 
     showNotification('Profile updated successfully.', 'success')
     setTimeout(() => {
@@ -435,11 +398,8 @@ const handlePasswordChange = async () => {
   passwordErrors.value = {}
   passwordMessage.value = ''
 
-  const token = localStorage.getItem('access')
-  if (!token) return router.push('/login')
-
   try {
-    const response = await $api.accounts.changePassword(token, passwordForm.value)
+    const response = await $api.accounts.changePassword(passwordForm.value)
 
     resetPasswordState()
     passwordMessageType.value = 'success'
@@ -494,8 +454,6 @@ const handleRecoveryRequest = async () => {
 const goBackToProfile = () => {
   router.push('/profile')
 }
-
-onMounted(fetchProfile)
 </script>
 
 <style scoped>

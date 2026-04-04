@@ -132,40 +132,15 @@ watch(selectedRoleFilter, async () => {
   await fetchCodes()
 })
 
-const logoutToLogin = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
-
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('access')}`,
-  'Content-Type': 'application/json',
-})
-
 const fetchCodes = async () => {
   loading.value = true
   statusMessage.value = ''
   errors.value = null
 
   try {
-    const token = localStorage.getItem('access')
-    if (!token) return router.push('/login')
-
-    const response = await $api.accounts.getRoleCodes(token, {
+    const response = await $api.accounts.getRoleCodes({
       role: selectedRoleFilter.value,
     })
-
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (response.status === 403) {
-      forbidden.value = true
-      return
-    }
 
     forbidden.value = false
     codes.value = response.data.codes || []
@@ -197,10 +172,7 @@ const handleGenerate = async () => {
   statusMessage.value = ''
 
   try {
-    const token = localStorage.getItem('access')
-    if (!token) return router.push('/login')
-
-    const response = await $api.accounts.generateCodes(token, generateForm.value)
+    const response = await $api.accounts.generateCodes(generateForm.value)
 
     statusType.value = 'success'
     statusMessage.value = `Generated ${response.data.created?.length || 0} code(s) successfully.`

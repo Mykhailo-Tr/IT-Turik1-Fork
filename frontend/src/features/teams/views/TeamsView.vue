@@ -39,22 +39,21 @@
               Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}
             </p>
             <div class="row-actions">
-              <button
-                type="button"
-                class="btn-soft"
+              <ui-button
+                size="sm"
                 :disabled="invitationActionLoading[invitation.id]"
                 @click="respondToInvitation(invitation.id, 'accept')"
               >
                 Accept
-              </button>
-              <button
-                type="button"
-                class="btn-soft"
+              </ui-button>
+              <ui-button
+                size="sm"
+                variant="outline"
                 :disabled="invitationActionLoading[invitation.id]"
                 @click="respondToInvitation(invitation.id, 'decline')"
               >
                 Decline
-              </button>
+              </ui-button>
             </div>
           </article>
         </div>

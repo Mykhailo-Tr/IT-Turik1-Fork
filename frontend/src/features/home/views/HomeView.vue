@@ -3,8 +3,7 @@
     <ui-card class="hero">
       <div>
         <p class="eyebrow">Dashboard</p>
-        <h1 v-if="userProfile">Welcome back, {{ displayName }}</h1>
-        <h1 v-else>Welcome to TournamentOS</h1>
+        <h1>Welcome back, {{ displayName }}</h1>
         <p class="sub">Manage your profile and stay ready for upcoming competitions.</p>
       </div>
 
@@ -13,15 +12,14 @@
       >
     </ui-card>
 
-    <div v-if="isLoading" class="state-box">Loading profile...</div>
-    <div v-else-if="error" class="state-box error">{{ error }}</div>
+    <div v-if="error" class="state-box error">{{ error }}</div>
 
-    <div v-else-if="userProfile" class="grid">
+    <div v-else-if="auth.user.value" class="grid">
       <ui-card class="info-card">
         <h2>Account details</h2>
-        <p><strong>Username:</strong> {{ userProfile.username }}</p>
-        <p><strong>Email:</strong> {{ userProfile.email }}</p>
-        <p><strong>Role:</strong> {{ userProfile.role }}</p>
+        <p><strong>Username:</strong> {{ auth.user.value!.username }}</p>
+        <p><strong>Email:</strong> {{ auth.user.value!.email }}</p>
+        <p><strong>Role:</strong> {{ auth.user.value!.role }}</p>
         <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
       </ui-card>
 
@@ -32,10 +30,10 @@
             Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span>
           </li>
           <li>
-            City set: <span>{{ userProfile.city ? 'Yes' : 'No' }}</span>
+            City set: <span>{{ auth.user.value!.city ? 'Yes' : 'No' }}</span>
           </li>
           <li>
-            Phone set: <span>{{ userProfile.phone ? 'Yes' : 'No' }}</span>
+            Phone set: <span>{{ auth.user.value!.phone ? 'Yes' : 'No' }}</span>
           </li>
         </ul>
       </ui-card>
@@ -44,66 +42,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import $api from '@/services'
-import type { Profile } from '@/services/accounts'
-import { isApiError } from '@/services/apiClient'
+import { computed, ref } from 'vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useAuth } from '@/composables/useAuth'
 
-const userProfile = ref<Profile | null>(null)
-const isLoading = ref(true)
+const auth = useAuth()
+
 const error = ref('')
-const router = useRouter()
-
-watch(userProfile, (val) => {
-  console.log(val)
-})
 
 const displayName = computed(
-  () => userProfile.value?.full_name || userProfile.value?.username || 'User',
+  () => auth.user.value?.full_name || auth.user.value?.username || 'User',
 )
-const profileReady = computed(() =>
-  Boolean(userProfile.value?.full_name && userProfile.value?.city),
-)
-const teamNames = computed(() =>
-  (userProfile.value?.teams || []).map((team) => team.name).join(', '),
-)
-
-onMounted(async () => {
-  const token = localStorage.getItem('access') as string
-
-  try {
-    const response = await $api.accounts.getProfile(token)
-
-    userProfile.value = response.data
-
-    if (userProfile.value.needs_onboarding) {
-      localStorage.setItem('needs_onboarding', '1')
-      router.push('/complete-profile')
-      return
-    }
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
-        error.value = 'Could not load profile data.'
-      } else {
-        error.value = 'Server is unavailable. Please try again later.'
-      }
-    }
-  } finally {
-    isLoading.value = false
-  }
-})
-
-const handleLogout = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
+const profileReady = computed(() => Boolean(auth.user.value?.full_name && auth.user.value?.city))
+const teamNames = computed(() => (auth.user.value?.teams || []).map((team) => team.name).join(', '))
 </script>
 
 <style scoped>

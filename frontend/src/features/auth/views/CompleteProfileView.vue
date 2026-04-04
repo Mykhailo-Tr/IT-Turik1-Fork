@@ -84,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
@@ -95,6 +95,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useAuth } from '@/composables/useAuth'
 
 interface Errors {
   username?: string[]
@@ -105,6 +106,8 @@ interface Errors {
   form?: string[]
 }
 
+const auth = useAuth()
+
 const router = useRouter()
 const loading = ref(false)
 const bootLoading = ref(true)
@@ -112,15 +115,15 @@ const message = ref('')
 const messageType = ref('success')
 const errors = ref<Errors | null>(null)
 
-const form = ref({
-  username: '',
-  role: '',
+const form = computed(() => ({
+  username: auth.user.value?.username ?? '',
+  role: auth.user.value?.role ?? 'team',
   redeem_code: '',
   password: '',
-  full_name: '',
-  phone: '',
-  city: '',
-})
+  full_name: auth.user.value?.full_name ?? '',
+  phone: auth.user.value?.phone ?? '',
+  city: auth.user.value?.city ?? '',
+}))
 
 const restrictedRoles = ['jury', 'organizer', 'admin']
 const isRestrictedRole = computed(() => restrictedRoles.includes(form.value.role))
@@ -144,14 +147,6 @@ const getPasswordError = (password: string) => {
   return null
 }
 
-// TODO: Remove
-// const logoutToLogin = () => {
-//   localStorage.removeItem('access')
-//   localStorage.removeItem('refresh')
-//   localStorage.removeItem('needs_onboarding')
-//   router.push('/login')
-// }
-
 const handleSubmit = async () => {
   loading.value = true
   errors.value = {}
@@ -166,15 +161,8 @@ const handleSubmit = async () => {
     return
   }
 
-  const token = localStorage.getItem('access')
-
-  if (!token) {
-    router.push('/login')
-    return
-  }
-
   try {
-    await $api.accounts.updateProfile(token, form.value)
+    await $api.accounts.updateProfile(form.value)
 
     localStorage.removeItem('needs_onboarding')
     messageType.value = 'success'
@@ -197,47 +185,6 @@ const handleSubmit = async () => {
     loading.value = false
   }
 }
-
-onMounted(async () => {
-  const token = localStorage.getItem('access')
-  if (!token) {
-    router.push('/login')
-    return
-  }
-
-  try {
-    const response = await $api.accounts.getProfile(token)
-
-    if (!response.data.needs_onboarding) {
-      localStorage.removeItem('needs_onboarding')
-      router.push('/')
-      return
-    }
-
-    form.value = {
-      username: response.data.username || '',
-      role: '',
-      redeem_code: '',
-      password: '',
-      full_name: response.data.full_name || '',
-      phone: response.data.phone || '',
-      city: response.data.city || '',
-    }
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
-        messageType.value = 'error'
-        message.value = 'Could not load your profile.'
-      } else {
-        messageType.value = 'error'
-        message.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    bootLoading.value = false
-  }
-})
 </script>
 
 <style scoped>

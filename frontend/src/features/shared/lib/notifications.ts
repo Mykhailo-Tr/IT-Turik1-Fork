@@ -1,8 +1,6 @@
 import { computed, reactive, readonly } from 'vue'
 
 const DEFAULT_DURATION_MS = 4200
-const MIN_DURATION_MS = 3000
-const MAX_DURATION_MS = 5000
 
 type NotificationType = 'success' | 'error'
 
@@ -36,11 +34,6 @@ const state = reactive<GlobalNotificationState>({
 
 let notificationId = 0
 let notificationTimerId: ReturnType<typeof setTimeout> | null = null
-
-const normalizeDuration = (duration: number): number => {
-  if (!Number.isFinite(duration)) return DEFAULT_DURATION_MS
-  return Math.min(MAX_DURATION_MS, Math.max(MIN_DURATION_MS, Math.round(duration)))
-}
 
 const clearNotificationTimer = (): void => {
   if (notificationTimerId) {
@@ -102,7 +95,7 @@ const showNotification = (
   const payload: NotificationPayload = {
     message: text,
     type,
-    duration: normalizeDuration(options.duration ?? DEFAULT_DURATION_MS),
+    duration: options.duration ?? DEFAULT_DURATION_MS,
   }
 
   if (options.mode === 'queue' && state.current) {

@@ -3,31 +3,7 @@
     <div class="bg-orb orb-a"></div>
     <div class="bg-orb orb-b"></div>
 
-    <nav class="main-nav">
-      <div class="nav-container">
-        <router-link to="/" class="brand">TournamentOS</router-link>
-
-        <div class="nav-links">
-          <router-link to="/" :class="navItemClass('home')">Home</router-link>
-
-          <template v-if="!isLoggedIn">
-            <router-link to="/login" :class="navItemClass('login')">Sign in</router-link>
-            <router-link to="/register">
-              <ui-button :class="navItemClass('register', true)">Register</ui-button>
-            </router-link>
-          </template>
-
-          <template v-else>
-            <router-link to="/teams" :class="navItemClass('teams')">Teams</router-link>
-            <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
-            <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
-              >Admin</router-link
-            >
-            <ui-button @click="logout" variant="danger" class="logout-btn">Logout</ui-button>
-          </template>
-        </div>
-      </div>
-    </nav>
+    <app-navbar />
 
     <Transition name="global-notice" mode="out-in">
       <div
@@ -38,102 +14,29 @@
         aria-live="polite"
       >
         <span>{{ notification.message }}</span>
-        <button type="button" class="app-notice-close" @click="hideNotification()">Dismiss</button>
+        <ui-button
+          variant="outline-accent"
+          size="sm"
+          type="button"
+          class="app-notice-close"
+          @click="hideNotification()"
+          >Dismiss</ui-button
+        >
       </div>
     </Transition>
 
     <main class="page-content">
-      <router-view @auth-change="checkAuth" />
+      <router-view />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import { API_BASE } from '@/features/shared/config/api'
+import AppNavbar from './components/shared/AppNavbar.vue'
 import UiButton from './components/UiButton.vue'
 
-const isLoggedIn = ref(false)
-const isAdmin = ref(false)
-const router = useRouter()
-const route = useRoute()
 const { notification, hideNotification } = useGlobalNotification()
-
-const checkAuth = async () => {
-  const token = localStorage.getItem('access')
-  isLoggedIn.value = !!token
-  if (!token) {
-    isAdmin.value = false
-    return
-  }
-
-  try {
-    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-    if (!response.ok) {
-      isAdmin.value = false
-      return
-    }
-
-    const data = await response.json()
-    isAdmin.value = data.role === 'admin'
-  } catch {
-    isAdmin.value = false
-  }
-}
-
-type Section = 'home' | 'teams' | 'profile' | 'admin' | 'login' | 'register'
-
-const isSectionActive = (section: Section) => {
-  const path = route.path
-
-  if (section === 'home') {
-    return path === '/'
-  }
-
-  if (section === 'teams') {
-    return path === '/teams' || path.startsWith('/teams/')
-  }
-
-  if (section === 'profile') {
-    return path === '/profile' || path.startsWith('/profile/') || path === '/complete-profile'
-  }
-
-  if (section === 'admin') {
-    return path === '/admin/role-codes'
-  }
-
-  return false
-}
-
-const navItemClass = (section: Section, cta = false) => ({
-  'nav-item': true,
-  'nav-cta': cta,
-  active: isSectionActive(section),
-})
-
-watch(
-  () => route.path,
-  () => {
-    checkAuth()
-  },
-)
-
-onMounted(() => {
-  checkAuth()
-})
-
-const logout = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  isAdmin.value = false
-  checkAuth()
-  router.push('/login')
-}
 </script>
 
 <style scoped>
@@ -169,82 +72,6 @@ const logout = () => {
   background: rgba(249, 115, 22, 0.18);
 }
 
-.main-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  backdrop-filter: blur(10px);
-  background: rgba(248, 250, 252, 0.8);
-  border-bottom: 1px solid var(--line-soft);
-}
-
-.nav-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0.9rem 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-}
-
-.brand {
-  font-family: var(--font-display);
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-decoration: none;
-  color: var(--ink-900);
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.nav-item {
-  border: 100%;
-  color: var(--ink-700);
-  text-decoration: none;
-  font-weight: 700;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.logout-btn {
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-}
-
-.nav-item:hover {
-  background: rgba(15, 23, 42, 0.06);
-}
-
-.nav-item.active {
-  background: rgba(15, 23, 42, 0.1);
-  color: var(--ink-900);
-}
-
-.nav-cta {
-  color: white;
-  background: linear-gradient(120deg, var(--brand-700), var(--brand-500));
-}
-
-.nav-cta:hover {
-  background: linear-gradient(120deg, var(--brand-600), var(--brand-500));
-}
-
-.nav-cta.active {
-  color: white;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
-}
-
 .page-content {
   width: min(1100px, 100% - 2rem);
   margin: 1.6rem auto 2.4rem;
@@ -257,25 +84,11 @@ const logout = () => {
   margin: 0;
   width: min(92vw, 420px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
   z-index: 2000;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
-}
-
-.app-notice-close {
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font-weight: 700;
-  font-size: 0.78rem;
-  cursor: pointer;
-  opacity: 0.75;
-}
-
-.app-notice-close:hover {
-  opacity: 1;
 }
 
 .type-info {

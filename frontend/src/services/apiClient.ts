@@ -9,16 +9,13 @@ const apiClient = axios.create({
   },
 })
 
-// TODO: catch 401 responses?
-apiClient.interceptors.response.use(
-  function (response) {
-    return response
-  },
-  function (error) {
-    console.error('Looks like there was a problem')
-    return Promise.reject(error)
-  },
-)
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('access')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 export function isApiError(err: unknown) {
   return axios.isAxiosError(err)

@@ -28,11 +28,7 @@
 
       <p v-if="error" class="text-error feedback">{{ error }}</p>
 
-      <GoogleAuthButton
-        :api-base="API_BASE"
-        divider-label="or continue with"
-        @success="saveTokensAndRedirect"
-      />
+      <GoogleAuthButton :api-base="API_BASE" divider-label="or continue with" @success="redirect" />
 
       <p class="auth-link">
         No account yet?
@@ -43,34 +39,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
 import { API_BASE } from '@/features/shared/config/api.ts'
-import $api from '@/services'
-import type { LoginResponse } from '@/services/accounts'
 import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
 import UiCard from '@/components/UiCard.vue'
 
+import { useAuth } from '@/composables/useAuth'
+import type { LoginResponse } from '@/services/accounts/types'
+
 const form = ref({ username: '', password: '' })
 const error = ref('')
 const isLoading = ref(false)
 const router = useRouter()
 
-const saveTokensAndRedirect = (data: LoginResponse) => {
-  localStorage.setItem('access', data.access)
-  localStorage.setItem('refresh', data.refresh)
+const auth = useAuth()
+
+const redirect = (data: LoginResponse) => {
   if (data.onboarding_required) {
-    localStorage.setItem('needs_onboarding', '1')
     router.push('/complete-profile')
     return
   }
 
-  localStorage.removeItem('needs_onboarding')
   router.push('/')
 }
 
@@ -79,10 +74,9 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    const response = await $api.accounts.login(form.value.username, form.value.password)
+    const data = await auth.login(form.value)
 
-    console.log('here')
-    saveTokensAndRedirect(response.data)
+    redirect(data)
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
@@ -95,6 +89,8 @@ const handleLogin = async () => {
     isLoading.value = false
   }
 }
+
+onMounted(() => auth.isLoggedIn && router.push('/'))
 </script>
 
 <style scoped>

@@ -19,6 +19,13 @@ function handleInput(event: Event) {
   padding: 0.75rem 0.85rem;
   font: inherit;
   background: #fff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.input[type='radio']:focus {
+  box-shadow: none;
 }
 
 .input:focus {
