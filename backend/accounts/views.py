@@ -2,6 +2,7 @@ import re
 
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 from django.utils.http import urlsafe_base64_decode
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
@@ -19,6 +20,7 @@ from .serializers import (
     RoleActivationCodeGenerateSerializer,
     RoleActivationCodeSerializer,
     RegisterSerializer,
+    TeamUserListSerializer,
     UserSerializer,
     UserUpdateSerializer,
 )
@@ -143,6 +145,22 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TeamUserListSerializer
+
+    def get_queryset(self):
+        queryset = User.objects.filter(role='team', is_superuser=False).order_by('id')
+        search = self.request.query_params.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(
+                Q(username__icontains=search)
+                | Q(email__icontains=search)
+                | Q(full_name__icontains=search)
+            )
+        return queryset
 
 
 class PasswordResetRequestView(APIView):

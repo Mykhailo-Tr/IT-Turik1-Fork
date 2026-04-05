@@ -8,7 +8,7 @@ class Team(models.Model):
 
     name = models.CharField(max_length=255)
     email = models.EmailField()
-    captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='captained_teams')
+    captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='captained_teams')
     is_public = models.BooleanField(default=False)
     organization = models.CharField(max_length=255, blank=True)
     contact_telegram = models.CharField(max_length=100, blank=True)
@@ -52,7 +52,7 @@ class TeamInvitation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='team_invitations')
     invited_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name='team_invitations_sent',
     )
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_INVITED)

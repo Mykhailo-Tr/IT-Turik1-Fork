@@ -324,18 +324,3 @@ class TeamJoinRequestAcceptView(TeamJoinRequestReviewView):
 class TeamJoinRequestDeclineView(TeamJoinRequestReviewView):
     new_status = TeamJoinRequest.STATUS_DECLINED
 
-
-class UserListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated]
-    serializer_class = TeamMemberSerializer
-
-    def get_queryset(self):
-        queryset = User.objects.all().order_by('id')
-        search = self.request.query_params.get('search', '').strip()
-        if search:
-            queryset = queryset.filter(
-                Q(username__icontains=search)
-                | Q(email__icontains=search)
-                | Q(full_name__icontains=search)
-            )
-        return queryset

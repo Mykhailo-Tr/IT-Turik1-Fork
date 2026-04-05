@@ -5,7 +5,7 @@
 ## 1. Що потрібно встановити
 
 - Python 3.11+
-- Node.js 20+
+- Node.js 20.19+ або 22.12+
 - npm
 
 ## 2. Налаштування `.env`
@@ -94,6 +94,7 @@ Backend буде доступний на `http://localhost:8000`.
 
 ```powershell
 cd frontend
+nvm use
 npm install
 npm run dev
 ```

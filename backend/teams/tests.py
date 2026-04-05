@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import User
-from teams.models import TeamInvitation, TeamJoinRequest, TeamMember
+from teams.models import Team, TeamInvitation, TeamJoinRequest, TeamMember
 
 
 class TeamApiTests(APITestCase):
@@ -281,6 +281,38 @@ class TeamApiTests(APITestCase):
         member_ids = {member['id'] for member in accept_response.data['members']}
         self.assertIn(self.member.id, member_ids)
 
+    def test_member_does_not_see_join_request_status_after_becoming_member(self):
+        team = self._create_team(
+            {
+                'name': 'Join Status Cleanup Team',
+                'email': 'join-status-cleanup@example.com',
+                'is_public': True,
+            }
+        )
+
+        self.client.force_authenticate(user=self.member)
+        join_response = self.client.post(
+            reverse('team_join_request_create', kwargs={'pk': team['id']}),
+            {},
+            format='json',
+        )
+        self.assertEqual(join_response.status_code, status.HTTP_201_CREATED)
+
+        self.client.force_authenticate(user=self.captain)
+        join_request = TeamJoinRequest.objects.get(team_id=team['id'], user=self.member)
+        accept_response = self.client.post(
+            reverse('team_join_request_accept', kwargs={'pk': team['id'], 'request_id': join_request.id}),
+            {},
+            format='json',
+        )
+        self.assertEqual(accept_response.status_code, status.HTTP_200_OK)
+
+        self.client.force_authenticate(user=self.member)
+        detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(detail_response.data['is_member'])
+        self.assertIsNone(detail_response.data['my_join_request_status'])
+
     def test_declined_invitation_is_removed_when_join_request_accepted(self):
         team = self._create_team(
             {
@@ -520,3 +552,46 @@ class TeamApiTests(APITestCase):
         self.assertIn(self.captain.username, usernames)
         self.assertIn(self.member.username, usernames)
         self.assertIn(self.other_user.username, usernames)
+
+    def test_deleting_captain_cascades_to_team(self):
+        team = Team.objects.create(
+            name='Cascade Team',
+            email='cascade-team@example.com',
+            captain=self.captain,
+        )
+        TeamMember.objects.create(team=team, user=self.member)
+        TeamInvitation.objects.create(
+            team=team,
+            user=self.other_user,
+            invited_by=self.captain,
+            status=TeamInvitation.STATUS_INVITED,
+        )
+
+        self.captain.delete()
+
+        self.assertFalse(Team.objects.filter(id=team.id).exists())
+        self.assertFalse(TeamMember.objects.filter(team_id=team.id).exists())
+        self.assertFalse(TeamInvitation.objects.filter(team_id=team.id).exists())
+
+    def test_deleting_inviter_cascades_to_invitation(self):
+        inviter = User.objects.create_user(
+            username='inviter',
+            email='inviter@example.com',
+            password='StrongPass123!',
+        )
+        team = Team.objects.create(
+            name='Invitation Cascade Team',
+            email='invitation-cascade@example.com',
+            captain=self.captain,
+        )
+        invitation = TeamInvitation.objects.create(
+            team=team,
+            user=self.member,
+            invited_by=inviter,
+            status=TeamInvitation.STATUS_INVITED,
+        )
+
+        inviter.delete()
+
+        self.assertTrue(Team.objects.filter(id=team.id).exists())
+        self.assertFalse(TeamInvitation.objects.filter(id=invitation.id).exists())
