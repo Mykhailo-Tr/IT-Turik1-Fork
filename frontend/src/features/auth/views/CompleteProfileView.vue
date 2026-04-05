@@ -75,7 +75,7 @@
           <ui-input v-model="form.city" />
         </label>
 
-        <ui-button class="submit-btn" :disabled="loading || bootLoading" type="submit">
+        <ui-button class="submit-btn" :disabled="loading" type="submit">
           {{ loading ? 'Saving...' : 'Complete registration' }}
         </ui-button>
       </form>
@@ -110,7 +110,6 @@ const auth = useAuth()
 
 const router = useRouter()
 const loading = ref(false)
-const bootLoading = ref(true)
 const message = ref('')
 const messageType = ref('success')
 const errors = ref<Errors | null>(null)
