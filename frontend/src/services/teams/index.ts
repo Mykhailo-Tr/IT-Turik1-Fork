@@ -13,7 +13,7 @@ import type {
 } from './types'
 
 // TODO: change to /api/teams
-const prefix = '/api/accounts/teams'
+const prefix = '/api/teams'
 
 export const teamsService = {
   async createTeam(data: CreateTeamBody) {

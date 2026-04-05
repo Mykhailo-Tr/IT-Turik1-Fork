@@ -9,7 +9,7 @@ export function useAuth() {
 
   const logout = () => {
     store.logout()
-    router.push('/')
+    router.push('/login')
   }
 
   return {
