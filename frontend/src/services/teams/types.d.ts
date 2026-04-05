@@ -2,8 +2,8 @@ import type { Invatation, JoinRequest, Team, User, UserId } from '../dbTypes'
 
 export type GetTeamInfoResponse = Team & {
   members: Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>[]
-  invitations: Invatation[] // TODO: maybe use Pick?
-  join_requests: JoinRequest[] // TODO: add types
+  invitations: Invatation[]
+  join_requests: JoinRequest[]
   my_invitation_status: boolean
   my_join_request_status: boolean
   is_member: boolean
@@ -32,7 +32,7 @@ interface CreateTeamResponse {
   contact_discord: string
   members: Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>[]
   invitations: Invatation[]
-  join_requests: [] // TODO: add type annotation
+  join_requests: JoinRequest[]
   my_invitation_status: boolean
   my_join_request_status: boolean
   is_member: boolean
