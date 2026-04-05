@@ -22,7 +22,11 @@ export interface LoginResponse {
   onboarding_required: boolean
 }
 
-interface RegisterBody {
+export interface GoogleLoginBody {
+  credential: string
+}
+
+export interface RegisterBody {
   username: string
   email: string
   password: string

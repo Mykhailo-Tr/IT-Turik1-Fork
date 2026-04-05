@@ -61,11 +61,17 @@ const router = useRouter()
 const auth = useAuth()
 
 const redirect = (data: LoginResponse) => {
+  // Remove when we will add cookies support
+  localStorage.setItem('access', data.access)
+  localStorage.setItem('refresh', data.refresh)
+
   if (data.onboarding_required) {
+    localStorage.setItem('needs_onboarding', '1')
     router.push('/complete-profile')
     return
   }
 
+  localStorage.removeItem('needs_onboarding')
   router.push('/')
 }
 

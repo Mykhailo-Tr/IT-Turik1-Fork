@@ -8,6 +8,7 @@ import type {
   GetProfileResponse,
   GetRoleCodesResponse,
   GetUsersResponse,
+  GoogleLoginBody,
   LoginResponse,
   RegisterBody,
   RegisterResponse,
@@ -60,6 +61,10 @@ export const accountsService = {
       username: data.username,
       password: data.password,
     })
+  },
+
+  async googleLogin(body: GoogleLoginBody) {
+    return apiClient.post(`${prefix}/google-login/`, body)
   },
 
   async register(data: RegisterBody) {

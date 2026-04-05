@@ -12,6 +12,8 @@
 import { onMounted, ref } from 'vue'
 import { renderGoogleButton, type GoogleCredentialResponse } from '@/features/shared/lib/googleAuth'
 import { API_BASE } from '@/features/shared/config/api'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
 
 const props = defineProps({
   apiBase: {
@@ -43,22 +45,17 @@ const handleGoogleCredential = async (response: GoogleCredentialResponse) => {
   errorMessage.value = ''
 
   try {
-    const backendResponse = await fetch(`${props.apiBase}/api/accounts/google-login/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ credential: response.credential }),
-    })
+    const backendResponse = await $api.accounts.googleLogin({ credential: response.credential })
 
-    const data = await backendResponse.json()
-
-    if (backendResponse.ok) {
-      emit('success', data)
-      return
+    emit('success', backendResponse.data)
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        errorMessage.value = err.response.data.detail || 'Google authentication failed.'
+      } else {
+        errorMessage.value = 'Network error during Google authentication.'
+      }
     }
-
-    errorMessage.value = data.detail || 'Google authentication failed.'
-  } catch {
-    errorMessage.value = 'Network error during Google authentication.'
   }
 }
 
