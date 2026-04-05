@@ -23,7 +23,6 @@ apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      console.log('faaaa')
       const { logout } = useUserStore()
 
       logout()
