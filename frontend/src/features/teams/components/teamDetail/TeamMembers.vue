@@ -183,7 +183,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
-import type { Invatation, JoinRequestId, UserId } from '@/services/dbTypes'
+import type { Invitation, JoinRequestId, UserId } from '@/services/dbTypes'
 import type { GetTeamInfoResponse, ManageJoinRequestAction } from '@/services/teams/types'
 import { computed, ref } from 'vue'
 
@@ -316,7 +316,7 @@ const reviewJoinRequest = async (id: JoinRequestId, action: ManageJoinRequestAct
 const resendInvitationsLoading = ref<Record<UserId, boolean>>({})
 
 const uniqueInvitations = computed(() => {
-  const byUserId = new Map<UserId, Invatation>()
+  const byUserId = new Map<UserId, Invitation>()
   for (const inv of props.team.invitations) {
     const uid = inv.user.id
 

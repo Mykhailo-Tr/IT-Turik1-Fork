@@ -1,11 +1,12 @@
 import apiClient from '../apiClient'
-import type { JoinRequestId, TeamId, UserId } from '../dbTypes'
+import type { Invitation, InvitationId, JoinRequestId, Team, TeamId, UserId } from '../dbTypes'
 import type {
   AddMemberBody,
   ChangeTeamVisibilityBody,
   CreateTeamBody,
   CreateTeamResponse,
   GetTeamInfoResponse,
+  GetTeamsResponse,
   ManageJoinRequestAction,
   ResendInvatationBody,
   UpdateTeamInfoBody,
@@ -21,6 +22,18 @@ export const teamsService = {
 
   getTeamInfo(id: TeamId) {
     return apiClient.get<GetTeamInfoResponse>(`${prefix}/${id}`)
+  },
+
+  getTeams() {
+    return apiClient.get<GetTeamsResponse[]>(`${prefix}/`)
+  },
+
+  getInvatations() {
+    return apiClient.get<Invitation[]>(`${prefix}/invitations/`)
+  },
+
+  respondToInvitation(invitationId: InvitationId, action: 'accept' | 'decline') {
+    return apiClient.post(`${prefix}/invitations/${invitationId}/${action}/`)
   },
 
   sendJoinRequest(id: TeamId) {

@@ -61,3 +61,11 @@ export interface UpdateTeamInfoBody {
 export interface AddMemberBody {
   user_id: UserId
 }
+
+type GetTeamsResponse = Team & {
+  is_captain: boolean
+  is_member: boolean
+  my_invitation_status: boolean
+  my_join_request_status: boolean
+  can_request_to_join: boolean
+}

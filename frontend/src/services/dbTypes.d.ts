@@ -20,6 +20,7 @@ export interface Team {
   id: TeamId
   name: string
   email: string
+  members: Pick<User, 'id' | 'email' | 'username' | 'full_name' | 'role'>[]
   is_public: boolean
   captain_id: UserId
   organization: string
@@ -28,16 +29,17 @@ export interface Team {
 }
 
 // ── Invatation ────────────────────────────────────────────────────
-type InvatationId = number
-type InvatationStatus = 'invited' | 'accepted' | 'declined'
+type InvitationId = number
+type InvatitionStatus = 'invited' | 'accepted' | 'declined'
 
-interface Invatation {
+interface Invitation {
   id: InvatationId
+  team: Team
   user: Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>
   status: InvatationStatus
   created_at: Date
   responded_at: Date | null
-  invited_by_id: UserId
+  invited_by: User
 }
 
 // ── Join Request ────────────────────────────────────────────────────

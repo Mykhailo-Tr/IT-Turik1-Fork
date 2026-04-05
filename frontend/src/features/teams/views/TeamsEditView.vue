@@ -16,7 +16,7 @@
 
     <template v-else-if="team">
       <div class="workspace-grid">
-        <team-edit :team="team" :isCaptain="isCaptain" />
+        <team-edit-form :team="team" :isCaptain="isCaptain" />
 
         <team-manage-members
           :team="team"
@@ -34,13 +34,13 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import { computed, onMounted, ref } from 'vue'
-import TeamEdit from '../components/TeamEdit.vue'
+import TeamEditForm from '../components/teamEdit/TeamEditForm.vue'
 import type { GetTeamInfoResponse } from '@/services/teams/types'
 import { isApiError } from '@/services/apiClient'
 import { useRoute, useRouter } from 'vue-router'
 import $api from '@/services'
 import { useAuth } from '@/composables/useAuth'
-import TeamManageMembers, { type Member } from '../components/TeamManageMembers.vue'
+import TeamManageMembers, { type Member } from '../components/teamEdit/TeamManageMembers.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 const router = useRouter()

@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell teams-page">
-    <ui-card class="create-card">
+    <ui-card>
       <p class="section-eyebrow">Teams</p>
       <h1 class="section-title">Create new team</h1>
       <p class="section-subtitle">Create a team and optionally add initial members.</p>
@@ -103,9 +103,10 @@ import UiInput from '@/components/UiInput.vue'
 import { useAuth } from '@/composables/useAuth'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import $api from '@/services'
-import type { CreateTeamBody, GetUsersResponse } from '@/services/accounts/types'
+import type { GetUsersResponse } from '@/services/accounts/types'
 import { isApiError } from '@/services/apiClient'
 import type { UserId } from '@/services/dbTypes'
+import type { CreateTeamBody } from '@/services/teams/types'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -229,4 +230,101 @@ onMounted(() => {
 })
 </script>
 
-<style scoped src="../styles/teams-create-view.css"></style>
+<style scoped>
+.teams-page {
+  gap: 1.2rem;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.member-picker {
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: #fff;
+  padding: 0.6rem;
+  max-height: 180px;
+  overflow: auto;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.toggle-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.visibility-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.visibility-label {
+  color: var(--ink-800);
+  font-size: 0.86rem;
+  user-select: none;
+}
+
+.visibility-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 3rem;
+  height: 1.7rem;
+  padding: 0.17rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.visibility-switch:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: 2px;
+}
+
+.switch-knob {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  transform: translateX(0);
+  transition: transform 180ms ease;
+}
+
+.switch-knob.is-public {
+  transform: translateX(1.3rem);
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink-800);
+}
+
+.empty-note {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
