@@ -380,8 +380,6 @@ const handleSubmit = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) router.push('/login')
-
         errors.value = err.response.data
         showNotification('Validation error. Please check your data.', 'error')
       } else {
@@ -427,8 +425,7 @@ const handleRecoveryRequest = async () => {
   passwordMessage.value = ''
 
   try {
-    const response = await $api.accounts.resetPassword({
-      type: 'forgot',
+    const response = await $api.accounts.forgotPassword({
       email: recoveryEmail.value,
     })
 

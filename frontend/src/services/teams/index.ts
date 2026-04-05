@@ -17,7 +17,7 @@ const prefix = '/api/teams'
 
 export const teamsService = {
   async createTeam(data: CreateTeamBody) {
-    return apiClient.post<CreateTeamResponse>(`${prefix}/teams/`, data, {})
+    return apiClient.post<CreateTeamResponse>(`${prefix}/`, data, {})
   },
 
   getTeamInfo(id: TeamId) {
@@ -69,6 +69,6 @@ export const teamsService = {
   },
 
   addMember(teamId: TeamId, body: AddMemberBody) {
-    return apiClient.post(`${prefix}/${teamId}/members/`)
+    return apiClient.post(`${prefix}/${teamId}/members/`, body)
   },
 }

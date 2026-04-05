@@ -37,13 +37,12 @@ import { computed, onMounted, ref } from 'vue'
 import TeamEditForm from '../components/teamEdit/TeamEditForm.vue'
 import type { GetTeamInfoResponse } from '@/services/teams/types'
 import { isApiError } from '@/services/apiClient'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import $api from '@/services'
 import { useAuth } from '@/composables/useAuth'
 import TeamManageMembers, { type Member } from '../components/teamEdit/TeamManageMembers.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
-const router = useRouter()
 const route = useRoute()
 const auth = useAuth()
 const { showNotification } = useGlobalNotification()
@@ -77,7 +76,6 @@ const fetchTeamInfo = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
         if (err.response.status === 404) {
           loadError.value = 'Team not found.'
           team.value = null

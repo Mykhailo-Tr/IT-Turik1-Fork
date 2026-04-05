@@ -102,8 +102,6 @@ router.beforeEach(async (to, _from, next) => {
   const isAuthenticated: boolean = store.isLoggedIn
   const needsOnboarding: boolean = localStorage.getItem('needs_onboarding') === '1'
 
-  console.log(isAuthenticated, needsOnboarding, to.path)
-
   if (isAuthenticated && needsOnboarding && to.path !== '/complete-profile') {
     next('/complete-profile')
     return

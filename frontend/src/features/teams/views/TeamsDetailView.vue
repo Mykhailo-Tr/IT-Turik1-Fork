@@ -109,7 +109,6 @@ const fetchTeamInfo = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
         if (err.response.status === 404) {
           loadError.value = 'Team not found.'
           team.value = null

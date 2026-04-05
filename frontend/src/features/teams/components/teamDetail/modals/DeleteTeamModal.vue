@@ -43,14 +43,12 @@ import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
 import type { GetTeamInfoResponse } from '@/services/teams/types'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 interface Props {
   team: GetTeamInfoResponse
 }
 
 const props = defineProps<Props>()
-const router = useRouter()
 const { hideNotification } = useGlobalNotification()
 
 const emit = defineEmits<{
@@ -87,7 +85,6 @@ const deleteTeam = async () => {
     emit('deleted')
   } catch (err) {
     if (isApiError(err)) {
-      if (err.response?.status === 401) return router.push('/login')
       deleteError.value = err.response ? 'Unable to delete team.' : 'Server connection error.'
     }
   } finally {

@@ -68,7 +68,6 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import type { GetTeamInfoResponse } from '@/services/teams/types'
 
 interface Props {
@@ -85,7 +84,6 @@ const emit = defineEmits<{
   (e: 'leave'): void
 }>()
 
-const router = useRouter()
 const { showNotification, hideNotification } = useGlobalNotification()
 
 const captainName = computed(() => {
@@ -106,7 +104,6 @@ const sendJoinRequest = async () => {
     showNotification('Join request sent.', 'success')
   } catch (err) {
     if (isApiError(err)) {
-      if (err.response?.status === 401) return router.push('/login')
       showNotification(
         err.response ? 'Unable to send join request.' : 'Server connection error.',
         'error',

@@ -170,8 +170,6 @@ const handleSubmit = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
-
         errors.value = err.response.data
         messageType.value = 'error'
         message.value = 'Please fix form errors and try again.'

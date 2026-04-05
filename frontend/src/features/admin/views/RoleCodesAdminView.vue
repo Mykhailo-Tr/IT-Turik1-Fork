@@ -99,17 +99,15 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
-import type { RoleCode, RoleCodesUserRole } from '@/services/accounts'
+import type { RoleCode, RoleCodesUserRole } from '@/services/accounts/types'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
 
-const router = useRouter()
 const loading = ref(true)
 const submitting = ref(false)
 const forbidden = ref(false)
@@ -148,7 +146,6 @@ const fetchCodes = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
         if (err.response.status === 403) {
           forbidden.value = true
           return
@@ -181,7 +178,6 @@ const handleGenerate = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
         if (err.response.status === 403) {
           forbidden.value = true
           return

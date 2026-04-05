@@ -51,9 +51,7 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import $api from '@/services'
 import { isApiError } from '@/services/apiClient'
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 const auth = useAuth()
 const { showNotification, hideNotification } = useGlobalNotification()
 
@@ -90,7 +88,6 @@ const handleDeleteAccount = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
         showNotification('Unable to delete account.', 'error')
       } else {
         showNotification('Server connection error.', 'error')

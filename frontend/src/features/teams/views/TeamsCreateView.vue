@@ -214,8 +214,7 @@ const createTeam = async () => {
   } catch (err) {
     if (isApiError(err)) {
       if (err.response) {
-        if (err.response.status === 401) return router.push('/login')
-        showNotification(err.response.data, 'error')
+        showNotification('Unable to create team.', 'error')
       } else {
         showNotification('Server connection error.', 'error')
       }
