@@ -7,6 +7,7 @@ from django.utils.http import urlsafe_base64_decode
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from rest_framework import generics, status
+from rest_framework.exceptions import APIException, PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -47,10 +48,7 @@ class ActivationView(APIView):
             user.save(update_fields=['is_active'])
             return Response({'status': 'success', 'message': 'Account activated!'}, status=status.HTTP_200_OK)
 
-        return Response(
-            {'status': 'error', 'message': 'Activation link is invalid or expired.'},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        raise ValidationError({'non_field_errors': ['Activation link is invalid or expired.']})
 
 
 class GoogleAuthView(APIView):
@@ -73,10 +71,10 @@ class GoogleAuthView(APIView):
     def post(self, request):
         raw_id_token = request.data.get('id_token') or request.data.get('credential')
         if not raw_id_token:
-            return Response({'detail': 'id_token is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id_token': ['id_token is required.']})
 
         if not settings.GOOGLE_OAUTH_CLIENT_ID:
-            return Response({'detail': 'Google auth is not configured.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            raise APIException('Google auth is not configured.')
 
         try:
             payload = id_token.verify_oauth2_token(
@@ -85,18 +83,18 @@ class GoogleAuthView(APIView):
                 settings.GOOGLE_OAUTH_CLIENT_ID,
             )
         except ValueError:
-            return Response({'detail': 'Invalid Google token.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id_token': ['Invalid Google token.']}) from None
 
         issuer = payload.get('iss')
         if issuer not in {'accounts.google.com', 'https://accounts.google.com'}:
-            return Response({'detail': 'Invalid token issuer.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id_token': ['Invalid token issuer.']})
 
         if not payload.get('email_verified'):
-            return Response({'detail': 'Google email is not verified.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id_token': ['Google email is not verified.']})
 
         email = payload.get('email')
         if not email:
-            return Response({'detail': 'Google account email is missing.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'id_token': ['Google account email is missing.']})
 
         full_name = payload.get('name', '')
 
@@ -190,19 +188,13 @@ class PasswordResetConfirmView(APIView):
     def get(self, request, uidb64, token):
         user = self._get_user(uidb64)
         if user is None or not default_token_generator.check_token(user, token):
-            return Response(
-                {'message': 'Password reset link is invalid or expired.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise ValidationError({'non_field_errors': ['Password reset link is invalid or expired.']})
         return Response({'message': 'Password reset link is valid.'}, status=status.HTTP_200_OK)
 
     def post(self, request, uidb64, token):
         user = self._get_user(uidb64)
         if user is None or not default_token_generator.check_token(user, token):
-            return Response(
-                {'message': 'Password reset link is invalid or expired.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise ValidationError({'non_field_errors': ['Password reset link is invalid or expired.']})
 
         serializer = PasswordResetConfirmSerializer(data=request.data, context={'user': user})
         serializer.is_valid(raise_exception=True)
@@ -232,7 +224,7 @@ class RoleActivationCodeAdminView(APIView):
 
     def _deny_if_not_admin(self, request):
         if not self._is_platform_admin(request.user):
-            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied('Admin access required.')
         return None
 
     @staticmethod

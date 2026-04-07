@@ -2,7 +2,7 @@ from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -86,7 +86,7 @@ class TeamDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def _assert_captain(self, team):
         if team.captain_id != self.request.user.id:
-            return Response({'detail': 'Only captain can modify this team.'}, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied('Only captain can modify this team.')
         return None
 
     def update(self, request, *args, **kwargs):
@@ -121,22 +121,22 @@ class TeamMemberManageView(APIView):
     def post(self, request, pk):
         team = self._get_team(pk)
         if team.captain_id != request.user.id:
-            return Response({'detail': 'Only captain can manage members.'}, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied('Only captain can manage members.')
 
         user_id = request.data.get('user_id')
         if not user_id:
-            return Response({'detail': 'user_id is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'user_id': ['user_id is required.']})
 
         user = get_object_or_404(User, id=user_id)
         if user.id == team.captain_id:
-            return Response({'detail': 'Captain is already on the team.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['Captain is already on the team.']})
 
         if TeamMember.objects.filter(team=team, user=user).exists():
-            return Response({'detail': 'User is already a team member.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['User is already a team member.']})
 
         invitation, created = invite_user_to_team(team=team, user=user, invited_by=request.user)
         if not invitation:
-            return Response({'detail': 'Unable to invite this user.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['Unable to invite this user.']})
 
         team.refresh_from_db()
         serializer = TeamSerializer(team, context={'request': request})
@@ -145,14 +145,14 @@ class TeamMemberManageView(APIView):
     def delete(self, request, pk, user_id):
         team = self._get_team(pk)
         if team.captain_id != request.user.id:
-            return Response({'detail': 'Only captain can manage members.'}, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied('Only captain can manage members.')
 
         if team.captain_id == user_id:
-            return Response({'detail': 'Captain cannot be removed from team.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['Captain cannot be removed from team.']})
 
         deleted_count, _ = TeamMember.objects.filter(team=team, user_id=user_id).delete()
         if deleted_count == 0:
-            return Response({'detail': 'User is not a team member.'}, status=status.HTTP_404_NOT_FOUND)
+            raise NotFound('User is not a team member.')
 
         clear_invitation_states_for_member(team=team, user_id=user_id)
         clear_join_request_states_for_member(team=team, user_id=user_id)
@@ -170,14 +170,13 @@ class TeamLeaveView(APIView):
         team = self._get_team(pk)
 
         if team.captain_id == request.user.id:
-            return Response(
-                {'detail': 'Captain cannot leave the team. Transfer captain role or delete the team.'},
-                status=status.HTTP_400_BAD_REQUEST,
+            raise ValidationError(
+                {'non_field_errors': ['Captain cannot leave the team. Transfer captain role or delete the team.']}
             )
 
         deleted_count, _ = TeamMember.objects.filter(team=team, user=request.user).delete()
         if deleted_count == 0:
-            return Response({'detail': 'You are not a team member of this team.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['You are not a team member of this team.']})
 
         clear_invitation_states_for_member(team=team, user=request.user)
         clear_join_request_states_for_member(team=team, user=request.user)
@@ -209,10 +208,7 @@ class TeamInvitationRespondView(APIView):
         )
 
         if invitation.status != TeamInvitation.STATUS_INVITED:
-            return Response(
-                {'detail': 'This invitation is already processed.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise ValidationError({'non_field_errors': ['This invitation is already processed.']})
 
         now = timezone.now()
 
@@ -256,17 +252,17 @@ class TeamJoinRequestCreateView(APIView):
     def post(self, request, pk):
         team = self._get_team(pk)
         if not team.is_public:
-            return Response({'detail': 'Join requests are available only for public teams.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['Join requests are available only for public teams.']})
 
         if is_team_member(team, request.user):
-            return Response({'detail': 'You are already in this team.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['You are already in this team.']})
 
         if TeamInvitation.objects.filter(
             team=team,
             user=request.user,
             status=TeamInvitation.STATUS_INVITED,
         ).exists():
-            return Response({'detail': 'You already have an invitation to this team.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['You already have an invitation to this team.']})
 
         join_request, created = TeamJoinRequest.objects.get_or_create(
             team=team,
@@ -296,11 +292,11 @@ class TeamJoinRequestReviewView(APIView):
     def post(self, request, pk, request_id):
         team = self._get_team(pk)
         if team.captain_id != request.user.id:
-            return Response({'detail': 'Only captain can review join requests.'}, status=status.HTTP_403_FORBIDDEN)
+            raise PermissionDenied('Only captain can review join requests.')
 
         join_request = get_object_or_404(TeamJoinRequest, id=request_id, team=team)
         if join_request.status != TeamJoinRequest.STATUS_PENDING:
-            return Response({'detail': 'This join request is already processed.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError({'non_field_errors': ['This join request is already processed.']})
 
         now = timezone.now()
         join_request.status = self.new_status

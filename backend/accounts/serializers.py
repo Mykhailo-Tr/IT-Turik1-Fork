@@ -19,7 +19,7 @@ RESTRICTED_ROLES = {'jury', 'organizer', 'admin'}
 MAX_ACTIVE_CODES_PER_ROLE = 10
 
 
-def validate_strong_password(password, user=None):
+def validate_strong_password(password, user=None, field_name='password'):
     errors = []
     if not re.search(r'[A-Z]', password):
         errors.append('Password must include at least one uppercase letter.')
@@ -30,7 +30,7 @@ def validate_strong_password(password, user=None):
     if not re.search(r'[^A-Za-z0-9]', password):
         errors.append('Password must include at least one special character.')
     if errors:
-        raise serializers.ValidationError(errors)
+        raise serializers.ValidationError({field_name: errors})
 
     validate_password(password, user=user)
 
@@ -41,7 +41,7 @@ def generate_unique_role_code(length=12):
         code = ''.join(secrets.choice(alphabet) for _ in range(length))
         if not RoleActivationCode.objects.filter(code=code).exists():
             return code
-    raise serializers.ValidationError('Unable to generate a unique activation code. Please retry.')
+    raise serializers.ValidationError({'non_field_errors': ['Unable to generate a unique activation code. Please retry.']})
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -318,14 +318,14 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context.get('user')
         if user is None:
-            raise serializers.ValidationError({'detail': 'Invalid password reset request.'})
+            raise serializers.ValidationError({'non_field_errors': ['Invalid password reset request.']})
 
         new_password = attrs.get('new_password')
         confirm_password = attrs.get('confirm_password')
         if new_password != confirm_password:
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
 
-        validate_strong_password(new_password, user=user)
+        validate_strong_password(new_password, user=user, field_name='new_password')
         return attrs
 
     def save(self):
@@ -343,7 +343,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context.get('user')
         if user is None:
-            raise serializers.ValidationError({'detail': 'Invalid request context.'})
+            raise serializers.ValidationError({'non_field_errors': ['Invalid request context.']})
 
         current_password = attrs.get('current_password')
         if not user.check_password(current_password):
@@ -354,7 +354,7 @@ class ChangePasswordSerializer(serializers.Serializer):
         if new_password != confirm_password:
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
 
-        validate_strong_password(new_password, user=user)
+        validate_strong_password(new_password, user=user, field_name='new_password')
         return attrs
 
     def save(self):

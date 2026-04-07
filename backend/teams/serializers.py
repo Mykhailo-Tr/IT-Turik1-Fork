@@ -233,7 +233,9 @@ class TeamSerializer(serializers.ModelSerializer):
         existing_ids = set(User.objects.filter(id__in=unique_ids).values_list('id', flat=True))
         missing_ids = [user_id for user_id in unique_ids if user_id not in existing_ids]
         if missing_ids:
-            raise serializers.ValidationError(f'Users not found: {missing_ids}')
+            raise serializers.ValidationError(
+                {'member_ids': [f'Users not found: {missing_ids}']}
+            )
         return unique_ids
 
     def create(self, validated_data):
