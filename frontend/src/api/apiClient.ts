@@ -24,9 +24,13 @@ apiClient.interceptors.response.use(
   async (err) => {
     if (err.response?.status === 401) {
       const store = useUserStore()
+      if (store.getTokens().access) {
+        store.removeTokens()
+      }
 
-      store.removeTokens()
-      router.push('/login')
+      if (router.currentRoute.value.meta.requiresAuth) {
+        router.push('/login')
+      }
     }
     return Promise.reject(err)
   },
