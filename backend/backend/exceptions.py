@@ -35,7 +35,6 @@ def custom_exception_handler(exc, context):
         message = _default_message_for_status(response.status_code)
 
     error_payload = {
-        'code': _map_status_to_code(response.status_code),
         'message': message,
         'status': response.status_code,
         'fields': fields,
@@ -86,15 +85,3 @@ def _default_message_for_status(status_code):
         status.HTTP_500_INTERNAL_SERVER_ERROR: 'Internal server error.',
     }
     return defaults.get(status_code, 'Request failed.')
-
-
-def _map_status_to_code(status_code):
-    mapping = {
-        status.HTTP_400_BAD_REQUEST: 'bad_request',
-        status.HTTP_401_UNAUTHORIZED: 'unauthorized',
-        status.HTTP_403_FORBIDDEN: 'forbidden',
-        status.HTTP_404_NOT_FOUND: 'not_found',
-        status.HTTP_429_TOO_MANY_REQUESTS: 'rate_limited',
-        status.HTTP_500_INTERNAL_SERVER_ERROR: 'internal_error',
-    }
-    return mapping.get(status_code, 'error')
