@@ -24,6 +24,10 @@ function handleInput(event: Event) {
     box-shadow 0.2s ease;
 }
 
+.input:disabled:hover {
+  cursor: not-allowed;
+}
+
 .input[type='radio']:focus {
   box-shadow: none;
 }

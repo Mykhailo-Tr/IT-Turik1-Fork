@@ -1,29 +1,37 @@
 <template>
   <section class="page-shell">
-    <ui-card class="admin-card">
-      <p class="section-eyebrow">Admin</p>
-      <h1 class="section-title">Activation Codes</h1>
-      <p class="section-subtitle">
-        Generate and monitor one-time registration codes for restricted roles.
-      </p>
+    <ui-card>
+      <template #header>
+        <p class="section-eyebrow">Admin</p>
+        <h1 class="section-title">Activation Codes</h1>
+        <p class="section-subtitle">
+          Generate and monitor one-time registration codes for restricted roles.
+        </p>
+      </template>
 
       <p v-if="statusMessage" :class="['notice', statusType]">{{ statusMessage }}</p>
-
-      <div v-if="loading" class="state-box">Loading...</div>
-
-      <div v-else-if="forbidden" class="state-box error">You do not have access to this page.</div>
+      <div v-if="forbidden" class="state-box error">You do not have access to this page.</div>
 
       <template v-else>
         <div class="counts">
-          <div class="count-item" v-for="role in restrictedRoles" :key="role">
-            <span>{{ role }}</span>
-            <strong>{{ activeCounts[role] || 0 }}/10 active</strong>
-          </div>
+          <ui-card v-for="role in restrictedRoles" :key="role">
+            <template #header>
+              <span class="card-text-title">{{ role }}</span>
+            </template>
+
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="100%" />
+              </template>
+
+              <strong>{{ activeCounts?.[role] || 0 }}/10 active</strong>
+            </ui-skeleton-loader>
+          </ui-card>
         </div>
 
         <form class="generator" @submit.prevent="handleGenerate">
-          <label class="form-label">
-            Role
+          <div class="form-item">
+            <label class="form-label"> Role </label>
             <ui-select
               v-model="generateForm.role"
               :options="[
@@ -38,19 +46,13 @@
               <option value="admin">Admin</option>
             </ui-select>
             <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
-          </label>
+          </div>
 
-          <label class="form-label">
-            Quantity
-            <ui-input
-              v-model.number="generateForm.quantity"
-              type="number"
-              min="1"
-              max="10"
-              required
-            />
+          <div class="form-item">
+            <label class="form-label"> Quantity </label>
+            <ui-input v-model="generateForm.quantity" type="number" min="1" max="10" required />
             <small v-if="errors?.quantity" class="text-error">{{ errors.quantity[0] }}</small>
-          </label>
+          </div>
 
           <ui-button type="submit" class="generate-btn" :disabled="submitting">
             {{ submitting ? 'Generating...' : 'Generate Codes' }}
@@ -58,10 +60,8 @@
         </form>
 
         <div class="filters">
-          <!-- TODO: select component wrapped around label??????? -->
-          <!-- Fix later cuz it depends on some class styles -->
-          <label class="form-label">
-            Filter by role
+          <div class="form-item">
+            <label class="form-label"> Filter by role </label>
 
             <ui-select
               v-model="selectedRoleFilter"
@@ -73,158 +73,163 @@
               ]"
             >
             </ui-select>
-          </label>
+          </div>
         </div>
 
-        <div class="codes-list">
-          <article class="code-item" v-for="code in codes" :key="code.id">
-            <div class="code-head">
-              <strong class="mono">{{ code.code }}</strong>
-              <span :class="['status-pill', code.is_used ? 'used' : 'active']">
-                {{ code.is_used ? 'Used' : 'Active' }}
-              </span>
+        <ui-skeleton-loader :loading="isLoading">
+          <template #skeleton>
+            <div class="codes-list">
+              <ui-card
+                v-for="i in 3"
+                :key="i"
+                style="display: flex; flex-direction: column; gap: 8px"
+              >
+                <template #header>
+                  <div class="code-head">
+                    <ui-skeleton variant="rect" width="100%" />
+                    <ui-skeleton variant="rect" width="100px" />
+                  </div>
+                </template>
+
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <ui-skeleton variant="rect" width="100%" />
+                  <ui-skeleton variant="rect" width="100%" />
+                  <ui-skeleton variant="rect" width="100%" />
+                  <ui-skeleton variant="rect" width="100%" />
+                  <ui-skeleton variant="rect" width="100%" />
+                  <ui-skeleton variant="rect" width="100%" />
+                </div>
+              </ui-card>
             </div>
-            <p><strong>Role:</strong> {{ code.role }}</p>
-            <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
-            <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
-            <p><strong>Used by:</strong> {{ code.is_used ? code.used_by : '-' }}</p>
-            <p><strong>Used at:</strong> {{ code.used_at ? formatDateTime(code.used_at) : '-' }}</p>
-          </article>
-          <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
-        </div>
+          </template>
+
+          <div class="codes-list">
+            <ui-card v-for="code in codes" :key="code.id">
+              <template #header>
+                <div class="code-head">
+                  <strong class="mono">{{ code.code }}</strong>
+                  <span :class="['status-pill', code.is_used ? 'used' : 'active']">
+                    {{ code.is_used ? 'Used' : 'Active' }}
+                  </span>
+                </div>
+              </template>
+
+              <p><strong>Role:</strong> {{ code.role }}</p>
+              <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
+              <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
+              <template v-if="code.is_used">
+                <p><strong>Used by:</strong> {{ code.used_by }}</p>
+                <p>
+                  <strong>Used at:</strong>
+                  {{ code.used_at ? formatDateTime(code.used_at) : '-' }}
+                </p>
+              </template>
+            </ui-card>
+
+            <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
+          </div>
+        </ui-skeleton-loader>
       </template>
     </ui-card>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue'
-
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { RoleCode, RoleCodesUserRole } from '@/services/accounts/types'
+import { computed, ref, watch } from 'vue'
+import type { RoleCodesUserRole } from '@/api/accounts/types'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useGenerateCodes, useRoleCodes } from '@/queries/accounts'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
-const loading = ref(true)
-const submitting = ref(false)
+interface Errors {
+  role: string[]
+  quantity: string[]
+}
+
 const forbidden = ref(false)
 const statusMessage = ref('')
 const statusType = ref('success')
-const errors = ref<{
-  role: string[]
-  quantity: string[]
-} | null>(null)
-const codes = ref<RoleCode[]>([])
-const activeCounts = ref({ jury: 0, organizer: 0, admin: 0 })
+const errors = ref<Errors | null>(null)
 const restrictedRoles = ['jury', 'organizer', 'admin'] as const
 const selectedRoleFilter = ref<RoleCodesUserRole | 'all'>('all')
 const generateForm = ref({
   role: 'jury',
-  quantity: 1,
+  quantity: '1',
 })
 
-watch(selectedRoleFilter, async () => {
-  await fetchCodes()
+const { data, isLoading, error } = useRoleCodes({
+  filter: computed(() => ({ role: selectedRoleFilter.value })),
 })
 
-const fetchCodes = async () => {
-  loading.value = true
-  statusMessage.value = ''
+const codes = computed(() => data.value?.codes || [])
+const activeCounts = computed(() => data.value?.active_counts)
+
+watch(error, (err) => {
+  if (err) {
+    if (err.response?.status === 403) {
+      forbidden.value = true
+      return
+    }
+
+    statusType.value = 'error'
+    statusMessage.value = err.response
+      ? 'Unable to load activation codes.'
+      : 'Server connection error.'
+  }
+})
+
+const { mutate: generateCodes, isPending: submitting } = useGenerateCodes()
+
+const handleGenerate = () => {
   errors.value = null
+  statusMessage.value = ''
 
-  try {
-    const response = await $api.accounts.getRoleCodes({
-      role: selectedRoleFilter.value,
-    })
-
-    forbidden.value = false
-    codes.value = response.data.codes || []
-    activeCounts.value = response.data.active_counts || activeCounts.value
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 403) {
+  generateCodes(
+    {
+      body: {
+        ...generateForm.value,
+        quantity: parseInt(generateForm.value.quantity, 10),
+      },
+    },
+    {
+      onSuccess: (data) => {
+        statusType.value = 'success'
+        statusMessage.value = `Generated ${data.created?.length || 0} code(s) successfully.`
+      },
+      onError: (err) => {
+        if (err.response?.status === 403) {
           forbidden.value = true
           return
         }
 
         statusType.value = 'error'
-        statusMessage.value = err.response.data.detail || 'Unable to load activation codes.'
-      } else {
-        statusType.value = 'error'
-        statusMessage.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-const handleGenerate = async () => {
-  submitting.value = true
-  errors.value = null
-  statusMessage.value = ''
-
-  try {
-    const response = await $api.accounts.generateCodes(generateForm.value)
-
-    statusType.value = 'success'
-    statusMessage.value = `Generated ${response.data.created?.length || 0} code(s) successfully.`
-    activeCounts.value = response.data.active_counts || activeCounts.value
-    await fetchCodes()
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 403) {
-          forbidden.value = true
-          return
+        if (err.response) {
+          errors.value = err.response.data as Errors
+          statusMessage.value = 'Unable to generate codes.'
+        } else {
+          statusMessage.value = 'Server connection error.'
         }
-
-        errors.value = err.response.data
-        statusType.value = 'error'
-        statusMessage.value = err.response.data.detail || 'Unable to generate codes.'
-      } else {
-        statusType.value = 'error'
-        statusMessage.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    submitting.value = false
-  }
+      },
+    },
+  )
 }
 
 const formatDateTime = (value: string | number | Date) => {
   if (!value) return '-'
   return new Date(value).toLocaleString()
 }
-
-onMounted(fetchCodes)
 </script>
 
 <style scoped>
-.admin-card {
-  width: min(100%, 980px);
-  margin: 0 auto;
-  padding: 1.6rem;
-}
-
 .counts {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   margin: 0.8rem 0 1rem;
-}
-
-.count-item {
-  border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  padding: 0.8rem;
-  background: rgba(255, 255, 255, 0.86);
-  display: grid;
-  gap: 0.3rem;
 }
 
 .generator {
@@ -235,6 +240,11 @@ onMounted(fetchCodes)
   margin-bottom: 1rem;
 }
 
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
 .generate-btn {
   height: fit-content;
 }
@@ -248,20 +258,6 @@ onMounted(fetchCodes)
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 0.75rem;
-}
-
-.code-item {
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.86);
-  padding: 0.9rem;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.code-item p {
-  margin: 0;
-  color: var(--ink-700);
 }
 
 .code-head {

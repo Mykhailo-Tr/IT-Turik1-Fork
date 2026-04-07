@@ -2,58 +2,90 @@
   <ui-card class="panel form-panel">
     <header class="panel-head">
       <h2>Team profile settings</h2>
-      <span v-if="isCaptain" class="status-badge">Captain access</span>
+      <span class="status-badge">Captain access</span>
     </header>
 
-    <p v-if="!isCaptain" class="notice error lock-note">Only team captain can edit this team.</p>
-
-    <form class="form-grid" @submit.prevent="saveTeam">
+    <form class="form-grid" @submit.prevent="handleSubmit">
       <label class="form-label">
         Team name
-        <ui-input v-model="form.name" required :disabled="!isCaptain || isSavingChanges" />
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input v-model="form.name" required :disabled="isSavingChanges" style="width: 100%" />
+        </ui-skeleton-loader>
       </label>
 
       <label class="form-label">
         Team email
-        <ui-input
-          v-model="form.email"
-          type="email"
-          required
-          :disabled="!isCaptain || isSavingChanges"
-        />
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input
+            v-model="form.email"
+            type="email"
+            required
+            :disabled="isSavingChanges"
+            style="width: 100%"
+        /></ui-skeleton-loader>
       </label>
 
       <label class="form-label">
         Organization
-        <ui-input v-model="form.organization" :disabled="!isCaptain || isSavingChanges" />
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input v-model="form.organization" :disabled="isSavingChanges" style="width: 100%" />
+        </ui-skeleton-loader>
       </label>
 
       <label class="form-label">
         Telegram
-        <ui-input
-          v-model="form.contact_telegram"
-          pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
-          title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
-          :disabled="!isCaptain || isSavingChanges"
-        />
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input
+            v-model="form.contact_telegram"
+            pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
+            title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
+            :disabled="isSavingChanges"
+            style="width: 100%"
+          />
+        </ui-skeleton-loader>
       </label>
 
       <label class="form-label">
         Discord
-        <ui-input
-          v-model="form.contact_discord"
-          pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
-          title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
-          :disabled="!isCaptain || isSavingChanges"
-        />
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input
+            v-model="form.contact_discord"
+            pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
+            title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
+            :disabled="isSavingChanges"
+            style="width: 100%"
+          />
+        </ui-skeleton-loader>
       </label>
 
       <div class="form-actions full-width">
-        <ui-button type="submit" :disabled="!isCaptain || isSavingChanges">
+        <ui-button type="submit" :disabled="isSavingChanges || props.loading">
           <loading-icon v-if="isSavingChanges" />
           Save changes
         </ui-button>
-        <ui-button asLink variant="outline" :to="`/teams/${team.id}`">Cancel</ui-button>
+        <ui-button asLink variant="outline" :to="`/teams/${team?.id}`" :disabled="props.loading"
+          >Cancel</ui-button
+        >
       </div>
     </form>
   </ui-card>
@@ -65,15 +97,16 @@ import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { GetTeamInfoResponse } from '@/services/teams/types'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUpdateTeamInfo } from '@/queries/teams'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
 interface Props {
-  isCaptain: boolean
-  team: GetTeamInfoResponse
+  team?: GetTeamInfoResponse
+  loading: boolean
 }
 
 const props = defineProps<Props>()
@@ -81,33 +114,35 @@ const router = useRouter()
 const { hideNotification, showNotification } = useGlobalNotification()
 
 const form = ref({
-  name: props.team.name,
-  email: props.team.email,
-  organization: props.team.organization,
-  contact_telegram: props.team.contact_telegram,
-  contact_discord: props.team.contact_discord,
+  name: props.team?.name ?? '',
+  email: props.team?.email ?? '',
+  organization: props.team?.organization ?? '',
+  contact_telegram: props.team?.contact_telegram ?? '',
+  contact_discord: props.team?.contact_discord ?? '',
 })
 
 const isSavingChanges = ref(false)
 
-const saveTeam = async () => {
-  isSavingChanges.value = true
+const { mutate: updateTeam } = useUpdateTeamInfo()
+
+const handleSubmit = () => {
+  if (!props.team) return
   hideNotification()
 
-  try {
-    await $api.teams.updateInfo(props.team.id, form.value)
-
-    router.push(`/teams/${props.team.id}`)
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to update team.' : 'Server connection error.',
-        'error',
-      )
-    }
-  } finally {
-    isSavingChanges.value = false
-  }
+  updateTeam(
+    { teamId: props.team.id, body: form.value },
+    {
+      onSuccess: () => {
+        router.push(`/teams/${props.team?.id}`)
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to update team.' : 'Server connection error.',
+          'error',
+        )
+      },
+    },
+  )
 }
 </script>
 

@@ -49,8 +49,9 @@
         }}</small>
         <small v-if="errors?.message" class="text-error">{{ errors.message[0] }}</small>
 
-        <ui-button :disabled="isLoading" type="submit">
-          {{ isLoading ? 'Saving...' : 'Set new password' }}
+        <ui-button :disabled="isResetingPassword" type="submit">
+          <loading-icon v-if="isResetingPassword" />
+          Set new password
         </ui-button>
       </form>
     </ui-card>
@@ -58,14 +59,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-
 import UiPasswordField from '@/components/UiPasswordField.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useResetPassword, useValidatePassword } from '@/queries/accounts'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
 
 interface Errors {
   new_password?: string[]
@@ -77,56 +77,60 @@ interface Errors {
 const route = useRoute()
 const status = ref('loading')
 const message = ref('')
-const isLoading = ref(false)
 const errors = ref<Errors | null>(null)
 const form = ref({
   new_password: '',
   confirm_password: '',
 })
 
-const validateResetLink = async () => {
-  try {
-    await $api.accounts.validatePassword({
-      info: { uid: String(route.params.uid), token: String(route.params.token) },
-    })
+const uid = computed(() => String(route.params.uid))
+const token = computed(() => String(route.params.token))
 
-    status.value = 'ready'
-    message.value = ''
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        errors.value = err.response.data.message || 'Password reset link is invalid or expired.'
+const validateResetLink = async () => {
+  const { isError, error } = useValidatePassword({ uid: uid.value, token: token.value })
+
+  watch(isError, (invalid) => {
+    if (invalid) {
+      status.value = 'invalid'
+      if (error.value?.response) {
+        errors.value = {
+          message: [
+            error.value.response.data.message ?? 'Password reset link is invalid or expired.',
+          ],
+        }
       } else {
         message.value = 'Server connection error.'
       }
+    } else {
+      status.value = 'ready'
     }
-    status.value = 'invalid'
-  }
+  })
 }
 
-const handleReset = async () => {
-  isLoading.value = true
+const { mutate: resetPassword, isPending: isResetingPassword } = useResetPassword()
+
+const handleReset = () => {
   errors.value = null
-
-  try {
-    const response = await $api.accounts.resetPassword({
-      info: { uid: String(route.params.uid), token: String(route.params.token) },
+  resetPassword(
+    {
+      uid: uid.value,
+      token: token.value,
       body: form.value,
-    })
-
-    status.value = 'success'
-    message.value = response?.data.message || 'Password has been reset successfully.'
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        errors.value = err.response.data || 'Something went wrong.'
-      } else {
-        errors.value = { message: ['Server connection error.'] }
-      }
-    }
-  } finally {
-    isLoading.value = false
-  }
+    },
+    {
+      onSuccess: (data) => {
+        status.value = 'success'
+        message.value = data?.message || 'Password has been reset successfully.'
+      },
+      onError: (err) => {
+        if (err.response) {
+          errors.value = (err.response.data as Errors) || 'Something went wrong.'
+        } else {
+          errors.value = { message: ['Server connection error.'] }
+        }
+      },
+    },
+  )
 }
 
 onMounted(() => {

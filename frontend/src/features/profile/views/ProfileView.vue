@@ -1,61 +1,127 @@
 <template>
   <section class="page-shell">
-    <ui-card class="profile-card">
-      <div class="head">
-        <div>
-          <p class="section-eyebrow">User Center</p>
-          <h1 class="section-title profile-title">My profile</h1>
+    <ui-card>
+      <template #header>
+        <div class="head">
+          <div>
+            <p class="section-eyebrow">User Center</p>
+            <h1 class="section-title profile-title">My profile</h1>
+          </div>
+          <p class="meta">Joined: {{ user?.created_at ? formatDate(user?.created_at) : 'N/A' }}</p>
         </div>
-        <p class="meta">
-          Joined: {{ auth.user.value?.created_at ? formatDate(auth.user.value.created_at) : 'N/A' }}
-        </p>
-      </div>
+      </template>
 
-      <div v-if="auth.isLoading.value" class="state-box">Loading profile...</div>
-      <div v-else class="details">
-        <ui-card class="item-text" title="Username">
-          <strong class="item-value value-wrap">{{ auth.user.value?.username || '-' }}</strong>
+      <div class="details">
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Username</span>
+          </template>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
+            </template>
+
+            <strong class="item-value value-wrap">{{ user?.username || '-' }}</strong>
+          </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-text" title="Email">
-          <strong class="item-value value-wrap">{{ auth.user.value?.email || '-' }}</strong>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Email</span>
+          </template>
+
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
+            </template>
+
+            <strong class="item-value value-wrap">{{ user?.email || '-' }}</strong>
+          </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-role" title="Role">
-          <ui-badge variant="green">{{ auth.user.value?.role ?? '-' }}</ui-badge>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Role</span>
+          </template>
+
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
+            </template>
+
+            <ui-badge variant="green">{{ user?.role ?? '-' }}</ui-badge>
+          </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-text" title="Full name">
-          <strong class="item-value value-wrap">{{ auth.user.value?.full_name || '-' }}</strong>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Full name</span>
+          </template>
+
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
+            </template>
+
+            <strong class="item-value value-wrap">{{ user?.full_name || '-' }}</strong>
+          </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-text" title="City">
-          <strong class="item-value value-wrap">{{ auth.user.value?.city || '-' }}</strong>
+        <ui-card class="item-text">
+          <template #header>
+            <span class="card-text-title">City</span>
+          </template>
+
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
+            </template>
+
+            <strong class="item-value value-wrap">{{ user?.city || '-' }}</strong>
+          </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-phone" title="phone">
-          <strong class="item-value value-fixed">{{ auth.user.value?.phone || '-' }}</strong>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Phone</span>
+          </template>
+
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
+            </template>
+
+            <strong class="item-value value-fixed">{{ user?.phone || '-' }}</strong>
+          </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-wide">
-          <span class="item-label">Teams</span>
-          <div class="team-list">
-            <router-link
-              v-for="team in auth.user.value?.teams || []"
-              :key="team.id"
-              :to="`/teams/${team.id}`"
-              class="team-link"
-            >
-              {{ team.name }}
-            </router-link>
-            <p v-if="!(auth.user.value?.teams || []).length" class="text-muted">No teams yet.</p>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Teams</span>
+          </template>
+
+          <div>
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <ui-skeleton v-for="i in 2" :key="i" variant="rect" width="150px" />
+                </div>
+              </template>
+
+              <div class="team-list">
+                <router-link
+                  v-for="team in user?.teams || []"
+                  :key="team.id"
+                  :to="`/teams/${team.id}`"
+                  class="team-link"
+                >
+                  {{ team.name }}
+                </router-link>
+              </div>
+
+              <p v-if="!(user?.teams || []).length" class="text-muted">No teams yet.</p>
+            </ui-skeleton-loader>
           </div>
         </ui-card>
       </div>
 
       <div class="actions">
-        <ui-button :disabled="auth.isLoading.value" @click="goToEditProfile">
-          Edit Profile
-        </ui-button>
-        <ui-button
-          variant="outline"
-          :disabled="auth.isLoading.value || isDeleting"
-          @click="auth.logout()"
-        >
+        <ui-button :disabled="isLoading" @click="goToEditProfile"> Edit Profile </ui-button>
+        <ui-button variant="outline" :disabled="isLoading || isDeleting" @click="logout">
           Log Out
         </ui-button>
       </div>
@@ -75,12 +141,22 @@ import { useRouter } from 'vue-router'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiBadge from '@/components/UiBadge.vue'
-import { useAuth } from '@/composables/useAuth'
 import DeleteProfileModal from '../components/modals/DeleteProfileModal.vue'
+import { useProfile } from '@/queries/accounts'
+import { useUserStore } from '@/stores/user'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
-const auth = useAuth()
+const store = useUserStore()
+const { data: user, isLoading } = useProfile()
+
 const router = useRouter()
 const isDeleting = ref(false)
+
+const logout = () => {
+  store.logout()
+  router.push('/login')
+}
 
 const goToEditProfile = () => {
   router.push('/profile/edit')
@@ -93,12 +169,6 @@ const formatDate = (date: Date) => {
 </script>
 
 <style scoped>
-.profile-card {
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 1.4rem;
-}
-
 .head {
   display: flex;
   justify-content: space-between;
@@ -142,12 +212,8 @@ const formatDate = (date: Date) => {
   line-height: 1.2;
 }
 
-.item-role,
-.item-phone,
-.item-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
+.field-card {
+  gap: 0;
 }
 
 .item-phone {
@@ -159,9 +225,8 @@ const formatDate = (date: Date) => {
 }
 
 .team-list {
-  margin-top: 0.4rem;
-  display: grid;
-  gap: 0.35rem;
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
@@ -205,21 +270,6 @@ const formatDate = (date: Date) => {
   place-items: center;
   z-index: 50;
   padding: 1rem;
-}
-
-.btn-cancel {
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0.7rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-  background: #fff;
-}
-
-.btn-cancel:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 @media (max-width: 760px) {

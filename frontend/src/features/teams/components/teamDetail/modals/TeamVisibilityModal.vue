@@ -15,7 +15,7 @@
     :show-close="!visibilityLoading"
   >
     <p class="modal-text">
-      Select the new visibility for <ui-badge variant="green">{{ team.name }}</ui-badge
+      Select the new visibility for <ui-badge variant="green">{{ team?.name }}</ui-badge
       ><br />
       This affects who can discover and join your team.
     </p>
@@ -105,13 +105,12 @@ import DangerIcon from '@/icons/DangerIcon.vue'
 import EyeInCircle from '@/icons/EyeInCircle.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import LockIcon from '@/icons/LockIcon.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { GetTeamInfoResponse } from '@/services/teams/types'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { ref } from 'vue'
+import { useChangeTeamVisibility } from '@/queries/teams'
 
 interface Props {
-  team: GetTeamInfoResponse
+  team?: GetTeamInfoResponse
 }
 
 const emit = defineEmits<{
@@ -121,7 +120,7 @@ const emit = defineEmits<{
 const props = defineProps<Props>()
 const { showNotification, hideNotification } = useGlobalNotification()
 
-const selectedVisibility = ref(props.team.is_public)
+const selectedVisibility = ref(props.team?.is_public)
 const visibilityLoading = ref(false)
 const visibilityError = ref<string | null>(null)
 const isVisibilityModalOpen = ref(false)
@@ -130,32 +129,34 @@ const toggleVisibilityModal = () => {
   isVisibilityModalOpen.value = !isVisibilityModalOpen.value
 }
 
+const { mutate: changeTeamVisibility } = useChangeTeamVisibility()
+
 const confirmChangeVisibility = async () => {
+  if (!props.team || !selectedVisibility.value) return
+
   visibilityLoading.value = true
-
   hideNotification()
-  try {
-    const response = await $api.teams.changeTeamVisibility(props.team.id, {
-      is_public: selectedVisibility.value,
-    })
 
-    showNotification(
-      `Team visibility changed to ${props.team.is_public ? 'Public' : 'Private'}.`,
-      'success',
-    )
-    emit('changedTeamVisibility', response.data)
+  changeTeamVisibility(
+    { teamId: props.team.id, body: { is_public: selectedVisibility.value } },
+    {
+      onSuccess: (data) => {
+        showNotification(
+          `Team visibility changed to ${props.team?.is_public ? 'Public' : 'Private'}.`,
+          'success',
+        )
+        emit('changedTeamVisibility', data)
 
-    toggleVisibilityModal()
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to change team visibility.' : 'Unable to change team visibility.',
-        'error',
-      )
-    }
-  } finally {
-    visibilityLoading.value = false
-  }
+        toggleVisibilityModal()
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to change team visibility.' : 'Unable to change team visibility.',
+          'error',
+        )
+      },
+    },
+  )
 }
 </script>
 

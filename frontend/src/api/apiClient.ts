@@ -1,7 +1,7 @@
 import { API_BASE } from '@/features/shared/config/api'
+import router from '@/router'
 import { useUserStore } from '@/stores/user'
 import axios from 'axios'
-import router from '@/router'
 
 const apiClient = axios.create({
   baseURL: API_BASE,
@@ -21,11 +21,11 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     if (err.response?.status === 401) {
-      const { logout } = useUserStore()
+      const store = useUserStore()
 
-      logout()
+      store.removeTokens()
       router.push('/login')
     }
     return Promise.reject(err)

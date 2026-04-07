@@ -38,41 +38,34 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useForgotPassword } from '@/queries/accounts'
 
 const email = ref('')
-const isLoading = ref(false)
 const errors = ref<{ email?: string }>({})
 const statusMessage = ref('')
 const statusType = ref('success')
 
-const handleSubmit = async () => {
-  isLoading.value = true
-  errors.value = {}
-  statusMessage.value = ''
+const { mutate: forgotPassword, isPending: isLoading } = useForgotPassword()
 
-  try {
-    const response = await $api.accounts.forgotPassword({ email: email.value })
-
-    statusType.value = 'success'
-    statusMessage.value = response?.data.message || 'Password reset email sent successfully.'
-  } catch (err) {
-    if (isApiError(err)) {
-      statusType.value = 'error'
-
-      if (err.response) {
-        statusMessage.value = err.response?.data || 'Please check your email and try again.'
-      } else {
-        statusMessage.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    isLoading.value = false
-  }
+const handleSubmit = () => {
+  forgotPassword(
+    { body: { email: email.value } },
+    {
+      onSuccess: (data) => {
+        statusType.value = 'success'
+        statusMessage.value = data?.message || 'Password reset email sent successfully.'
+      },
+      onError: (err) => {
+        statusType.value = 'error'
+        statusMessage.value = err.response
+          ? ((err.response.data as string) ?? 'Please check your email and try again.')
+          : 'Server connection error.'
+      },
+    },
+  )
 }
 </script>
 

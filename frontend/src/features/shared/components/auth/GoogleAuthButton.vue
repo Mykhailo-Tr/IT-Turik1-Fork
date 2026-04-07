@@ -12,22 +12,18 @@
 import { onMounted, ref } from 'vue'
 import { renderGoogleButton, type GoogleCredentialResponse } from '@/features/shared/lib/googleAuth'
 import { API_BASE } from '@/features/shared/config/api'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
+import { useGoogleLogin } from '@/queries/accounts'
 
-const props = defineProps({
-  apiBase: {
-    type: String,
-    default: API_BASE,
-  },
-  dividerLabel: {
-    type: String,
-    default: 'or continue with',
-  },
-  buttonWidth: {
-    type: Number,
-    default: 340,
-  },
+interface Props {
+  apiBase?: string
+  dividerLabel?: string
+  buttonWidth?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  apiBase: API_BASE,
+  dividerLabel: 'or continue with',
+  buttonWidth: 340,
 })
 
 const emit = defineEmits(['success'])
@@ -36,7 +32,9 @@ const googleButtonRef = ref<HTMLDivElement | null>(null)
 const errorMessage = ref('')
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
 
-const handleGoogleCredential = async (response: GoogleCredentialResponse) => {
+const { mutate: googleLogin } = useGoogleLogin()
+
+const handleGoogleCredential = (response: GoogleCredentialResponse) => {
   if (!response?.credential) {
     errorMessage.value = 'Google did not return a credential token.'
     return
@@ -44,19 +42,19 @@ const handleGoogleCredential = async (response: GoogleCredentialResponse) => {
 
   errorMessage.value = ''
 
-  try {
-    const backendResponse = await $api.accounts.googleLogin({ credential: response.credential })
-
-    emit('success', backendResponse.data)
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        errorMessage.value = err.response.data.detail || 'Google authentication failed.'
-      } else {
-        errorMessage.value = 'Network error during Google authentication.'
-      }
-    }
-  }
+  googleLogin(
+    { body: { credential: response.credential } },
+    {
+      onSuccess: (data) => {
+        emit('success', data)
+      },
+      onError: (err) => {
+        errorMessage.value = err.response
+          ? 'Google authentication failed.'
+          : 'Network error during Google authentication.'
+      },
+    },
+  )
 }
 
 onMounted(async () => {

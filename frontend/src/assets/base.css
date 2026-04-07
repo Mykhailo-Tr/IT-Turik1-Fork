@@ -73,16 +73,13 @@ a {
 }
 
 .section-subtitle {
-  margin: 0.5rem 0 1.2rem;
+  margin: 0 0 0.5rem;
   color: var(--ink-600);
 }
 
 .form-label {
-  display: grid;
-  gap: 0.35rem;
   color: var(--ink-800);
   font-weight: 600;
-  min-width: 0;
 }
 
 .divider-line {
@@ -153,6 +150,13 @@ a {
   color: var(--brand-700);
   font-weight: 700;
   text-decoration: none;
+}
+
+.card-text-title {
+  color: var(--ink-500);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 @media (max-width: 760px) {

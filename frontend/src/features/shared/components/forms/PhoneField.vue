@@ -65,6 +65,7 @@ watch(phoneUiValue, (newValue) => {
 }
 
 .phone-input {
+  border-radius: 10px;
   width: 100%;
 }
 

@@ -5,7 +5,7 @@
         <h3>Edit team</h3>
         <p class="text-muted">Update team profile and manage members in edit workspace.</p>
       </div>
-      <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}/edit`"
+      <ui-button asLink variant="outline" size="sm" :to="`/teams/${team?.id}/edit`"
         >Edit team</ui-button
       >
     </div>
@@ -20,13 +20,13 @@
         <div>
           <h3>Change visibility</h3>
           <p class="text-muted">
-            <ui-badge :variant="team.is_public ? 'green' : 'red'">{{
-              team.is_public ? 'Public' : 'Private'
+            <ui-badge :variant="team?.is_public ? 'green' : 'red'">{{
+              team?.is_public ? 'Public' : 'Private'
             }}</ui-badge>
             -
 
             {{
-              team.is_public
+              team?.is_public
                 ? 'Anyone can find and request to join this team.'
                 : 'Only invited members can see this team.'
             }}
@@ -45,14 +45,18 @@
           <p class="text-muted">This action permanently deletes the team and cannot be undone.</p>
         </div>
 
-        <DeleteTeamModal :team="props.team" @deleted="router.push('/teams')" />
+        <DeleteTeamModal
+          :disabled="props.loading"
+          :team="props.team"
+          @deleted="router.push('/teams')"
+        />
       </div>
     </div>
   </ui-card>
 </template>
 
 <script setup lang="ts">
-import type { GetTeamInfoResponse } from '@/services/teams/types'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 import DeleteTeamModal from './modals/DeleteTeamModal.vue'
 import TeamVisibilityModal from './modals/TeamVisibilityModal.vue'
 import UiCard from '@/components/UiCard.vue'
@@ -62,8 +66,9 @@ import UiBadge from '@/components/UiBadge.vue'
 import { useRouter } from 'vue-router'
 
 interface Props {
+  team?: GetTeamInfoResponse
+  loading: boolean
   isCaptain: boolean
-  team: GetTeamInfoResponse
 }
 
 const props = defineProps<Props>()

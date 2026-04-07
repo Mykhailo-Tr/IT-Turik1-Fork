@@ -1,116 +1,66 @@
 <template>
   <section class="page-shell teams-edit-page">
     <ui-card class="hero-card">
-      <p class="section-eyebrow">Team workspace</p>
-      <h1 class="section-title">Edit {{ team?.name || 'team' }}</h1>
-      <div class="hero-actions">
-        <ui-button asLink variant="outline" size="sm" :to="team ? `/teams/${team.id}` : '/teams'"
-          >Back to team</ui-button
-        >
-      </div>
+      <template #header>
+        <p class="section-eyebrow">Team workspace</p>
+
+        <h1 class="section-title">
+          Edit
+          <ui-skeleton-loader style="display: inline-block" :loading="isLoadingTeamInfo">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="150px" />
+            </template>
+
+            <span>{{ team?.name || 'team' }}</span>
+          </ui-skeleton-loader>
+        </h1>
+      </template>
+
+      <template #footer>
+        <div class="hero-actions">
+          <ui-button asLink variant="outline" size="sm" :to="team ? `/teams/${team.id}` : '/teams'"
+            >Back to team</ui-button
+          >
+        </div>
+      </template>
     </ui-card>
 
-    <!-- TODO replace this skeletons with skeleton ones -->
-    <ui-card v-if="loading" class="state-card text-muted">Loading team editor...</ui-card>
-    <ui-card v-else-if="loadError" class="state-card text-error">{{ loadError }}</ui-card>
+    <ui-card v-if="teamInfoError" class="state-card text-error">{{ teamInfoError }}</ui-card>
 
-    <template v-else-if="team">
-      <div class="workspace-grid">
-        <team-edit-form :team="team" :isCaptain="isCaptain" />
+    <div class="workspace-grid">
+      <team-edit-form :loading="isLoadingTeamInfo" :team="team" />
 
-        <team-manage-members
-          :team="team"
-          :isCaptain="isCaptain"
-          :users="users"
-          @memberDeleted="refetchStates()"
-          @invitedMember="refetchStates()"
-        />
-      </div>
-    </template>
+      <team-manage-members :loading="isLoadingTeamInfo" :team="team" />
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, watchEffect } from 'vue'
 import TeamEditForm from '../components/teamEdit/TeamEditForm.vue'
-import type { GetTeamInfoResponse } from '@/services/teams/types'
-import { isApiError } from '@/services/apiClient'
-import { useRoute } from 'vue-router'
-import $api from '@/services'
-import { useAuth } from '@/composables/useAuth'
-import TeamManageMembers, { type Member } from '../components/teamEdit/TeamManageMembers.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useRoute, useRouter } from 'vue-router'
+import TeamManageMembers from '../components/teamEdit/TeamManageMembers.vue'
+import { useTeamInfo } from '@/queries/teams'
+import { useProfile } from '@/queries/accounts'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
 const route = useRoute()
-const auth = useAuth()
-const { showNotification } = useGlobalNotification()
+const router = useRouter()
 
-const team = ref<GetTeamInfoResponse | null>(null)
-const users = ref<Member[]>([])
+const { data: user } = useProfile()
+
 const teamId = computed(() => Number(route.params.id))
+const { data: team, isLoading: isLoadingTeamInfo, error: teamInfoError } = useTeamInfo(teamId.value)
 
-const loading = ref(false)
-const loadError = ref<string | null>(null)
-
-const isCaptain = computed(() => team.value?.captain_id === auth.user.value?.id)
-
-const refetchStates = async () => {
-  await Promise.all([fetchTeamInfo(), fetchUsers()])
-}
-
-const fetchTeamInfo = async () => {
-  if (!teamId.value) {
-    loadError.value = 'Invalid team id.'
-    return false
-  }
-
-  loading.value = true
-
-  try {
-    const response = await $api.teams.getTeamInfo(teamId.value)
-
-    team.value = response.data
-    return true
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        if (err.response.status === 404) {
-          loadError.value = 'Team not found.'
-          team.value = null
-          return
-        }
-
-        loadError.value = 'Unable to load team information.'
-      } else {
-        loadError.value = 'Unable to connect to server.'
-      }
-    }
-  } finally {
-    loading.value = false
-  }
-}
-
-const fetchUsers = async () => {
-  try {
-    const response = await $api.accounts.getUsers()
-
-    users.value = response.data
-    return true
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to load users list.' : 'Unable to connect to server.',
-        'error',
-      )
+watchEffect(() => {
+  if (user.value && team.value) {
+    if (team.value.captain_id !== user.value.id) {
+      router.push('/')
     }
   }
-}
-
-onMounted(() => {
-  fetchTeamInfo()
-  fetchUsers()
 })
 </script>
 
@@ -134,7 +84,6 @@ onMounted(() => {
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-  margin-top: 0.8rem;
 }
 
 .workspace-grid {

@@ -1,74 +1,132 @@
 <template>
   <ui-card class="panel members-panel">
-    <header class="panel-head">
-      <h2>Members management</h2>
-      <span class="text-muted">{{ team.members.length }} people</span>
-    </header>
+    <template #header>
+      <header class="panel-head">
+        <h2>Members management</h2>
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100px" />
+          </template>
+
+          <span class="text-muted">{{ team?.members.length }} people</span>
+        </ui-skeleton-loader>
+      </header>
+    </template>
 
     <label class="form-label member-search">
       Search members
-      <ui-input v-model="memberSearch" placeholder="Search by username or email" />
+      <ui-input
+        v-model="memberSearch"
+        placeholder="Search by username or email"
+        :disabled="props.loading"
+      />
     </label>
 
-    <div class="member-list">
-      <article v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
-        <div>
-          <p class="member-name">{{ member.username }}</p>
+    <ui-skeleton-loader :loading="props.loading">
+      <template #skeleton>
+        <div class="member-list">
+          <ui-card v-for="i in 2" :key="i" class="member-row">
+            <template #header>
+              <div style="display: flex; justify-content: space-between; gap: 10px">
+                <ui-skeleton variant="rect" width="140px" />
+                <ui-skeleton variant="rect" width="120px" />
+              </div>
+            </template>
+
+            <ui-skeleton variant="rect" width="100px" />
+
+            <template #footer>
+              <ui-skeleton variant="rect" height="30px" width="70px" />
+            </template>
+          </ui-card>
+        </div>
+      </template>
+
+      <div class="member-list">
+        <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`">
+          <template #header>
+            <div style="display: flex; justify-content: space-between; gap: 10px">
+              <p class="member-name">{{ member.username }}</p>
+              <div style="display: flex; align-items: center; gap: 5px">
+                <ui-badge v-if="member.id === team?.captain_id" variant="green">Captain</ui-badge>
+              </div>
+            </div>
+          </template>
+
           <p class="text-muted member-email">{{ member.email }}</p>
-        </div>
 
-        <div class="member-actions">
-          <ui-badge v-if="member.id === team.captain_id" variant="green">Captain</ui-badge>
-          <ui-button
-            v-else-if="isCaptain"
-            variant="danger"
-            size="sm"
-            :disabled="kickLoadingByUser[member.id]"
-            @click="removeMember(member)"
-          >
-            <loading-icon v-if="kickLoadingByUser[member.id]" />
-            Remove
-          </ui-button>
-        </div>
-      </article>
-    </div>
-
-    <div v-if="isCaptain" class="add-member-box">
-      <h3>Invitations status</h3>
-      <p v-if="!team.invitations?.length" class="text-muted">No invitations yet.</p>
-      <div v-else class="member-list">
-        <article
-          v-for="invitation in team.invitations"
-          :key="`inv-${invitation.id}`"
-          class="member-row"
-        >
-          <div>
-            <p class="member-name">{{ invitation.user.username }}</p>
-            <p class="text-muted member-email">{{ invitation.user.email }}</p>
-          </div>
-          <ui-badge v-if="invitation.status === 'declined'" variant="red">
-            {{ invitation.status }}
-          </ui-badge>
-          <ui-badge v-else>{{ invitation.status }}</ui-badge>
-        </article>
+          <template #footer>
+            <ui-button
+              v-if="member.id !== team?.captain_id"
+              variant="danger"
+              size="sm"
+              :disabled="kickLoadingIds.has(member.id)"
+              @click="removeMember(member)"
+            >
+              <loading-icon v-if="kickLoadingIds.has(member.id)" />
+              Remove
+            </ui-button>
+          </template>
+        </ui-card>
       </div>
+    </ui-skeleton-loader>
+
+    <div class="add-member-box">
+      <h3>Invitations status</h3>
+
+      <ui-skeleton-loader :loading="props.loading">
+        <template #skeleton>
+          <div class="member-list">
+            <ui-card v-for="i in 2" :key="i" class="member-row">
+              <div style="display: flex; justify-content: space-between; gap: 10px">
+                <ui-skeleton variant="rect" width="80px" />
+                <ui-skeleton variant="rect" width="100px" />
+              </div>
+            </ui-card>
+          </div>
+        </template>
+
+        <div class="member-list">
+          <p v-if="!team?.invitations?.length" class="text-muted">No invitations yet.</p>
+          <ui-card
+            v-for="invitation in team?.invitations"
+            :key="`inv-${invitation.id}`"
+            class="member-row"
+          >
+            <div style="display: flex; justify-content: space-between; gap: 10px">
+              <p class="member-name">{{ invitation.user.username }}</p>
+
+              <ui-badge v-if="invitation.status === 'declined'" variant="red">
+                {{ invitation.status }}
+              </ui-badge>
+              <ui-badge v-else>{{ invitation.status }}</ui-badge>
+            </div>
+          </ui-card>
+        </div>
+      </ui-skeleton-loader>
     </div>
 
-    <p v-if="filteredMembers.length === 0" class="text-muted member-note">
+    <p v-if="filteredMembers?.length === 0" class="text-muted member-note">
       No members match your search.
     </p>
 
-    <div v-if="isCaptain" class="add-member-box">
+    <div class="add-member-box">
       <h3>Invite user</h3>
 
       <label class="form-label">
         Select user
-        <ui-select :options="userOptions" v-model="addMemberSelection" />
+        <ui-skeleton-loader :loading="isLoadingUsers">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45.6px" width="100%" />
+          </template>
+
+          <ui-select :options="userOptions" v-model="addMemberSelection" style="width: 100%" />
+        </ui-skeleton-loader>
       </label>
 
-      <p v-if="availableUsers.length === 0" class="text-muted">No available users to add.</p>
+      <p v-if="availableUsers?.length === 0" class="text-muted">No available users to add.</p>
 
-      <ui-button @click="addMember" :disabled="addMemberLoading">
+      <ui-button @click="addMember" :disabled="addMemberLoading || isLoadingUsers">
         {{ addMemberLoading ? 'Sending...' : 'Send invitation' }}
       </ui-button>
     </div>
@@ -83,108 +141,107 @@ import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { User, UserId } from '@/services/dbTypes'
-import type { GetTeamInfoResponse } from '@/services/teams/types'
+import type { User, UserId } from '@/api/dbTypes'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
+import { useAddMember, useRemoveMember } from '@/queries/teams'
+import { useUsers } from '@/queries/accounts'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
+
+export type Member = Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>
 
 interface Props {
-  isCaptain: boolean
-  team: GetTeamInfoResponse
-  users: Member[]
+  team?: GetTeamInfoResponse
+  loading: boolean
 }
 
 const props = defineProps<Props>()
-const { hideNotification, showNotification } = useGlobalNotification()
+const { showNotification } = useGlobalNotification()
 
-const emit = defineEmits<{
-  (e: 'memberDeleted'): void
-  (e: 'invitedMember'): void
-}>()
-
-export type Member = Pick<User, 'id' | 'full_name' | 'email' | 'username'>
+const { data: users, isLoading: isLoadingUsers } = useUsers()
 
 const memberSearch = ref('')
 const addMemberSelection = ref('')
-const addMemberLoading = ref(false)
-const kickLoadingByUser = ref<Record<UserId, boolean>>({})
+const kickLoadingIds = ref<Set<UserId>>(new Set())
 
 const availableUsers = computed(() => {
-  const currentIds = new Set(props.team.members.map((member) => member.id))
-  return props.users.filter((user) => !currentIds.has(user.id))
+  const currentIds = new Set(props.team?.members.map((member) => member.id))
+  return users.value?.filter((user) => !currentIds.has(user.id))
 })
 
 const filteredMembers = computed(() => {
   const search = memberSearch.value.trim().toLowerCase()
-  if (!search) return props.team.members
-
-  return props.team.members.filter((member) => {
-    return [member.username, member.email, member.full_name || '']
+  if (!search) return props.team?.members
+  return props.team?.members.filter((member) =>
+    [member.username, member.email, member.full_name || '']
       .join(' ')
       .toLowerCase()
-      .includes(search)
-  })
+      .includes(search),
+  )
 })
 
 const userOptions = computed(() => [
   { value: '', label: 'Select user' },
-  ...availableUsers.value.map((user) => ({
+  ...(availableUsers.value?.map((user) => ({
     value: String(user.id),
     label: `${user.username} (${user.email})`,
-  })),
+  })) || []),
 ])
 
-const removeMember = async (member: Member) => {
+// ── Remove member ─────────────────────────────────────────────
+const { mutate: removeMemberMutate } = useRemoveMember()
+
+const removeMember = (member: Member) => {
+  if (!props.team) return
   if (member.id === props.team.captain_id) return
-  kickLoadingByUser.value = {
-    ...kickLoadingByUser.value,
-    [member.id]: true,
-  }
-  hideNotification()
+  kickLoadingIds.value.add(member.id)
 
-  try {
-    await $api.teams.removeMember(props.team.id, member.id)
-
-    showNotification('Member removed.', 'success')
-    emit('memberDeleted')
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Uable to delete team member' : 'Server connection error.',
-        'error',
-      )
-    }
-  } finally {
-    kickLoadingByUser.value = {
-      ...kickLoadingByUser.value,
-      [member.id]: false,
-    }
-  }
+  removeMemberMutate(
+    { teamId: props.team.id, memberId: member.id },
+    {
+      onSuccess: () => {
+        showNotification('Member removed.', 'success')
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to delete team member.' : 'Server connection error.',
+          'error',
+        )
+      },
+      onSettled: () => {
+        kickLoadingIds.value.delete(member.id)
+      },
+    },
+  )
 }
 
-const addMember = async () => {
+// ── Add member ────────────────────────────────────────────────
+const { mutate: addMemberMutate, isPending: addMemberLoading } = useAddMember()
+
+const addMember = () => {
+  if (!props.team) return
+
   if (!addMemberSelection.value) {
     showNotification('Select a user to add.', 'error')
     return
   }
 
-  addMemberLoading.value = true
-  hideNotification()
-
-  try {
-    $api.teams.addMember(props.team.id, { user_id: Number(addMemberSelection.value) })
-
-    addMemberSelection.value = ''
-    showNotification('Invitation sent.', 'success')
-    emit('invitedMember')
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(err.response ? 'Unable to add member.' : 'Server connection error.', 'error')
-    }
-  } finally {
-    addMemberLoading.value = false
-  }
+  addMemberMutate(
+    { teamId: props.team.id, body: { user_id: Number(addMemberSelection.value) } },
+    {
+      onSuccess: () => {
+        addMemberSelection.value = ''
+        showNotification('Invitation sent.', 'success')
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to add member.' : 'Server connection error.',
+          'error',
+        )
+      },
+    },
+  )
 }
 </script>
 
@@ -216,17 +273,6 @@ const addMember = async () => {
   gap: 0.55rem;
 }
 
-.member-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.7rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0.65rem 0.75rem;
-}
-
 .member-name,
 .member-email {
   margin: 0;
@@ -240,13 +286,6 @@ const addMember = async () => {
 .member-email {
   font-size: 0.84rem;
 }
-
-.member-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
 .member-note {
   margin-top: 0.8rem;
 }

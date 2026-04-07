@@ -1,30 +1,29 @@
 <template>
   <div class="card">
-    <span v-if="props.title" class="card-title">{{ title }}</span>
-    <slot />
+    <header v-if="$slots.header">
+      <slot name="header" />
+    </header>
+
+    <div v-if="$slots.default">
+      <slot />
+    </div>
+
+    <footer v-if="$slots.footer">
+      <slot name="footer" />
+    </footer>
   </div>
 </template>
 
-<script setup lang="ts">
-interface Props {
-  title?: string
-}
-
-const props = defineProps<Props>()
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .card {
   border: 1px solid var(--line-soft);
   border-radius: 14px;
   padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
   background: rgba(255, 255, 255, 0.85);
-}
-
-.card-title {
-  color: var(--ink-500);
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.2;
 }
 </style>

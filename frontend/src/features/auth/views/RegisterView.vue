@@ -106,13 +106,12 @@ import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton
 import UiPasswordField from '@/components/UiPasswordField.vue'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import { API_BASE } from '@/features/shared/config/api.ts'
-import type { RegisterResponse } from '@/services/accounts'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
+import type { RegisterResponse } from '@/api/accounts/types'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
+import { useRegister } from '@/queries/accounts'
 
 const router = useRouter()
 
@@ -149,8 +148,6 @@ interface Errors {
 }
 
 const errors = ref<Errors | null>(null)
-const isLoading = ref(false)
-const isSuccess = ref(false)
 
 const saveTokensAndRedirect = (data: RegisterResponse) => {
   localStorage.setItem('access', data.access)
@@ -165,24 +162,21 @@ const saveTokensAndRedirect = (data: RegisterResponse) => {
   router.push('/')
 }
 
-const handleRegister = async () => {
-  isLoading.value = true
+const { mutate: register, isPending: isLoading, isSuccess } = useRegister()
+
+const handleRegister = () => {
   errors.value = null
 
-  try {
-    await $api.accounts.register(form.value)
-    isSuccess.value = true
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        errors.value = err.response.data || 'Something went wrong.'
-      } else {
-        errors.value = { form: ['Server connection error.'] }
-      }
-    }
-  } finally {
-    isLoading.value = false
-  }
+  register(
+    { body: form.value },
+    {
+      onError: (err) => {
+        errors.value = err.response
+          ? err.response.data || 'Something went wrong.'
+          : { form: ['Server connection error.'] }
+      },
+    },
+  )
 }
 </script>
 

@@ -89,7 +89,6 @@ function handleBackdropClick() {
   overflow: hidden;
 }
 
-/* ---- header ---- */
 .modal-header {
   display: flex;
   align-items: center;
@@ -127,12 +126,10 @@ function handleBackdropClick() {
   color: #475569;
 }
 
-/* ---- body ---- */
 .modal-body {
   padding: 1rem 1.5rem;
 }
 
-/* ---- footer ---- */
 .modal-footer {
   padding: 0 1.5rem 1.25rem;
   display: flex;
@@ -140,7 +137,6 @@ function handleBackdropClick() {
   gap: 0.6rem;
 }
 
-/* ---- transitions ---- */
 .modal-enter-active {
   transition: opacity 0.2s ease;
 }
@@ -153,8 +149,6 @@ function handleBackdropClick() {
 }
 .modal-enter-from .modal-card {
   transform: scale(0.98);
-}
-.modal-leave-to .modal-card {
-  transform: scale(0.99);
+  transition: transform 0.2s ease;
 }
 </style>

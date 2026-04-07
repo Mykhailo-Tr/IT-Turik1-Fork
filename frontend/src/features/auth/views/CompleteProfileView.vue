@@ -75,8 +75,9 @@
           <ui-input v-model="form.city" />
         </label>
 
-        <ui-button class="submit-btn" :disabled="loading" type="submit">
-          {{ loading ? 'Saving...' : 'Complete registration' }}
+        <ui-button class="submit-btn" :disabled="isUpdatingProfile" type="submit">
+          <loading-icon v-if="isUpdatingProfile" />
+          Complete registration
         </ui-button>
       </form>
     </ui-card>
@@ -89,13 +90,12 @@ import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useAuth } from '@/composables/useAuth'
+import { useProfile, useUpdateProfile } from '@/queries/accounts'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
 
 interface Errors {
   username?: string[]
@@ -106,22 +106,21 @@ interface Errors {
   form?: string[]
 }
 
-const auth = useAuth()
-
 const router = useRouter()
-const loading = ref(false)
 const message = ref('')
 const messageType = ref('success')
 const errors = ref<Errors | null>(null)
 
+const { data: user } = useProfile()
+
 const form = computed(() => ({
-  username: auth.user.value?.username ?? '',
-  role: auth.user.value?.role ?? 'team',
+  username: user.value?.username ?? '',
+  role: user.value?.role ?? 'team',
   redeem_code: '',
   password: '',
-  full_name: auth.user.value?.full_name ?? '',
-  phone: auth.user.value?.phone ?? '',
-  city: auth.user.value?.city ?? '',
+  full_name: user.value?.full_name ?? '',
+  phone: user.value?.phone ?? '',
+  city: user.value?.city ?? '',
 }))
 
 const restrictedRoles = ['jury', 'organizer', 'admin']
@@ -146,9 +145,9 @@ const getPasswordError = (password: string) => {
   return null
 }
 
+const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
+
 const handleSubmit = async () => {
-  loading.value = true
-  errors.value = {}
   message.value = ''
 
   const passwordError = getPasswordError(form.value.password)
@@ -156,31 +155,27 @@ const handleSubmit = async () => {
     errors.value = { password: [passwordError] }
     messageType.value = 'error'
     message.value = 'Please fix form errors and try again.'
-    loading.value = false
     return
   }
 
-  try {
-    await $api.accounts.updateProfile(form.value)
-
-    localStorage.removeItem('needs_onboarding')
-    messageType.value = 'success'
-    message.value = 'Profile completed successfully.'
-    router.push('/')
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        errors.value = err.response.data
+  updateProfile(
+    { body: form.value },
+    {
+      onSuccess: () => {
+        localStorage.removeItem('needs_onboarding')
+        messageType.value = 'success'
+        message.value = 'Profile completed successfully.'
+        router.push('/')
+      },
+      onError: (err) => {
+        errors.value = err.response?.data as Errors
         messageType.value = 'error'
-        message.value = 'Please fix form errors and try again.'
-      } else {
-        messageType.value = 'error'
-        message.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    loading.value = false
-  }
+        message.value = err.response
+          ? 'Please fix form errors and try again.'
+          : 'Server connection error.'
+      },
+    },
+  )
 }
 </script>
 

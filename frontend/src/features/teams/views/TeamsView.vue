@@ -1,28 +1,33 @@
 <template>
   <section class="page-shell teams-page">
     <ui-card>
-      <p class="section-eyebrow">Teams</p>
-      <h1 class="section-title">Team directory</h1>
-      <p class="section-subtitle">
-        Open a team workspace to view details, edit info, and manage members.
-      </p>
-      <div class="hero-actions">
-        <ui-button asLink to="/teams/create" class="manage-link">Create new team</ui-button>
-        <span class="meta-pill">Total teams: {{ teams?.length }}</span>
-      </div>
+      <template #header>
+        <p class="section-eyebrow">Teams</p>
+        <h1 class="section-title">Team directory</h1>
+        <p class="section-subtitle">
+          Open a team workspace to view details, edit info, and manage members.
+        </p>
+      </template>
+
+      <template #footer>
+        <div class="hero-actions">
+          <ui-button asLink to="/teams/create" class="manage-link">Create new team</ui-button>
+          <ui-skeleton-loader :loading="isLoadingTeams">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="108px" height="30px" />
+            </template>
+
+            <span class="meta-pill">Total teams: {{ teams?.length }}</span>
+          </ui-skeleton-loader>
+        </div>
+      </template>
     </ui-card>
 
-    <ui-card v-if="loading">Loading teams...</ui-card>
+    <team-invatations />
 
-    <template v-else>
-      <team-invatations @respondedToInvatation="fetchTeams()" />
+    <team-my-teams :teams="teams ?? []" />
 
-      <!-- TODO: add vue query, so i can fetch once and cache using key -->
-      <!-- Then invalidate key or refetch when making changes -->
-      <team-my-teams :teams="teams ?? []" />
-
-      <teams-other-teams :teams="teams ?? []" @sendedJoinRequest="fetchTeams()" />
-    </template>
+    <teams-other-teams :teams="teams ?? []" />
   </section>
 </template>
 
@@ -30,40 +35,25 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import { onMounted, ref } from 'vue'
+import { watch } from 'vue'
 import TeamInvatations from '../components/teamsView/TeamInvatations.vue'
 import TeamMyTeams from '../components/teamsView/TeamMyTeams.vue'
-import type { GetTeamsResponse } from '@/services/teams/types'
 import TeamsOtherTeams from '../components/teamsView/TeamsOtherTeams.vue'
+import { useTeams } from '@/queries/teams'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
 const { showNotification } = useGlobalNotification()
 
-const teams = ref<GetTeamsResponse[] | null>(null)
-const loading = ref(false)
+const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useTeams()
 
-const fetchTeams = async () => {
-  loading.value = true
-
-  try {
-    const response = await $api.teams.getTeams()
-
-    teams.value = response.data
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to load teams.' : 'Unable to connect to server.',
-        'error',
-      )
-    }
-  } finally {
-    loading.value = false
+watch(teamsError, (err) => {
+  if (err) {
+    showNotification(
+      err.response ? 'Unable to load teams.' : 'Unable to connect to server.',
+      'error',
+    )
   }
-}
-
-onMounted(() => {
-  fetchTeams()
 })
 </script>
 
