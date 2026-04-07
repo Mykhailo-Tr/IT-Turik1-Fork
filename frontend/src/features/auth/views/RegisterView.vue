@@ -11,20 +11,20 @@
 
       <form v-else @submit.prevent="handleRegister" class="register-form">
         <div class="form-grid">
-          <label class="form-label">
-            Username
+          <div class="form-item">
+            <label class="form-label"> Username </label>
             <ui-input v-model="form.username" placeholder="johndoe" required />
             <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
-          </label>
+          </div>
 
-          <label class="form-label">
-            Email
+          <div class="form-item">
+            <label class="form-label"> Email </label>
             <ui-input v-model="form.email" placeholder="name@mail.com" required />
             <small v-if="errors?.email" class="text-error">{{ errors.email[0] }}</small>
-          </label>
+          </div>
 
-          <label class="form-label">
-            Password
+          <div class="form-item">
+            <label class="form-label"> Password </label>
             <ui-password-field
               v-model="form.password"
               autocomplete="new-password"
@@ -32,10 +32,10 @@
               required
             />
             <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
-          </label>
+          </div>
 
-          <label class="form-label">
-            Role
+          <div class="form-item">
+            <label class="form-label"> Role </label>
             <ui-select
               :options="[
                 { value: 'team', label: 'Team Member' },
@@ -46,36 +46,40 @@
               v-model="form.role"
               class="select-control"
             />
-          </label>
+          </div>
+        </div>
 
-          <label v-if="isRestrictedRole" class="form-label full-width">
-            Redeem code
-            <ui-input
-              v-model="form.redeem_code"
-              placeholder="Enter one-time activation code"
-              required
-            />
-            <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
-          </label>
+        <div class="form-item" v-if="isRestrictedRole">
+          <label class="form-label full-width"> Redeem code </label>
+          <ui-input
+            v-model="form.redeem_code"
+            placeholder="Enter one-time activation code"
+            required
+          />
+          <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+        </div>
 
-          <label class="form-label full-width">
-            Full name
+        <div style="display: flex; flex-direction: column; gap: 0.9rem">
+          <div class="form-item">
+            <label class="form-label full-width"> Full name </label>
             <ui-input v-model="form.full_name" placeholder="John Doe" />
-          </label>
+          </div>
 
-          <label class="form-label">
-            Phone
-            <PhoneField
-              v-model="form.phone"
-              :error="errors?.phone?.[0]"
-              placeholder="Enter phone number"
-            />
-          </label>
+          <div class="form-grid">
+            <div class="form-item">
+              <label class="form-label"> Phone </label>
+              <PhoneField
+                v-model="form.phone"
+                :error="errors?.phone?.[0]"
+                placeholder="Enter phone number"
+              />
+            </div>
 
-          <label class="form-label">
-            City
-            <ui-input v-model="form.city" placeholder="Kyiv" />
-          </label>
+            <div class="form-item">
+              <label class="form-label"> City </label>
+              <ui-input v-model="form.city" placeholder="Kyiv" />
+            </div>
+          </div>
         </div>
 
         <ui-button type="submit" class="submit-btn" :disabled="isLoading">
@@ -190,6 +194,13 @@ const handleRegister = () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+  margin-bottom: 0.9rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .full-width {

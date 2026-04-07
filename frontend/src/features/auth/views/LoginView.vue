@@ -10,15 +10,16 @@
       </template>
 
       <form @submit.prevent="handleLogin" class="auth-form">
-        <label class="form-label">
-          Username
+        <div class="form-item">
+          <label class="form-label"> Username </label>
           <ui-input v-model="form.username" autocomplete="username" required />
-        </label>
+        </div>
 
-        <label class="form-label">
-          Password
+        <div class="form-item">
+          <label class="form-label"> Password </label>
           <ui-password-field v-model="form.password" autocomplete="current-password" />
-        </label>
+        </div>
+
         <p class="forgot-link">
           <router-link to="/forgot-password">Forgot password?</router-link>
         </p>
@@ -108,6 +109,12 @@ onMounted(() => queryClient.resetQueries({ queryKey: accountKeys.profile() }))
 .auth-form {
   display: grid;
   gap: 0.9rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .feedback {
