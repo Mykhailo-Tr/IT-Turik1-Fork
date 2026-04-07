@@ -79,6 +79,7 @@ watch(phoneUiValue, (newValue) => {
 :deep(.vti__input) {
   font: inherit;
   padding: 0.75rem 0.85rem;
+  border-radius: 10px;
 }
 
 :deep(.vti:focus-within) {
