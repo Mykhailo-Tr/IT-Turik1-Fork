@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <div class="card register-card">
+    <ui-card class="register-card">
       <p class="section-eyebrow">Join the Platform</p>
       <h1 class="section-title">Create your account</h1>
       <p class="section-subtitle">Get access to tournaments, team tools, and profile management.</p>
@@ -13,69 +13,75 @@
         <div class="form-grid">
           <label class="form-label">
             Username
-            <input v-model="form.username" class="input-control" type="text" placeholder="johndoe" required />
-            <small v-if="errors.username" class="text-error">{{ errors.username[0] }}</small>
+            <ui-input v-model="form.username" placeholder="johndoe" required />
+            <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
           </label>
 
           <label class="form-label">
             Email
-            <input v-model="form.email" class="input-control" type="email" placeholder="name@mail.com" required />
-            <small v-if="errors.email" class="text-error">{{ errors.email[0] }}</small>
+            <ui-input v-model="form.email" placeholder="name@mail.com" required />
+            <small v-if="errors?.email" class="text-error">{{ errors.email[0] }}</small>
           </label>
 
           <label class="form-label">
             Password
-            <PasswordField
+            <ui-password-field
               v-model="form.password"
               autocomplete="new-password"
               placeholder="********"
               required
             />
-            <small v-if="errors.password" class="text-error">{{ errors.password[0] }}</small>
+            <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
           </label>
 
           <label class="form-label">
             Role
-            <select v-model="form.role" class="select-control">
-              <option value="team">Team Member</option>
-              <option value="organizer">Organizer</option>
-              <option value="jury">Jury</option>
-              <option value="admin">Admin</option>
-            </select>
+            <ui-select
+              :options="[
+                { value: 'team', label: 'Team Member' },
+                { value: 'organizer', label: 'Organizer' },
+                { value: 'jury', label: 'Jury' },
+                { value: 'admin', label: 'Admin' },
+              ]"
+              v-model="form.role"
+              class="select-control"
+            />
           </label>
 
           <label v-if="isRestrictedRole" class="form-label full-width">
             Redeem code
-            <input
+            <ui-input
               v-model="form.redeem_code"
-              class="input-control"
-              type="text"
               placeholder="Enter one-time activation code"
               required
             />
-            <small v-if="errors.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+            <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
           </label>
 
           <label class="form-label full-width">
             Full name
-            <input v-model="form.full_name" class="input-control" type="text" placeholder="John Doe" />
+            <ui-input v-model="form.full_name" placeholder="John Doe" />
           </label>
 
           <label class="form-label">
             Phone
-            <PhoneField v-model="form.phone" :error="errors.phone?.[0]" placeholder="Enter phone number" />
+            <PhoneField
+              v-model="form.phone"
+              :error="errors?.phone?.[0]"
+              placeholder="Enter phone number"
+            />
           </label>
 
           <label class="form-label">
             City
-            <input v-model="form.city" class="input-control" type="text" placeholder="Kyiv" />
+            <ui-input v-model="form.city" placeholder="Kyiv" />
           </label>
         </div>
 
-        <button type="submit" class="btn-primary submit-btn" :disabled="isLoading">
+        <ui-button type="submit" class="submit-btn" :disabled="isLoading">
           {{ isLoading ? 'Creating account...' : 'Create account' }}
-        </button>
-        <p v-if="errors.form" class="text-error text-center">{{ errors.form[0] }}</p>
+        </ui-button>
+        <p v-if="errors?.form" class="text-error text-center">{{ errors.form[0] }}</p>
 
         <GoogleAuthButton
           :api-base="API_BASE"
@@ -88,18 +94,25 @@
           <router-link to="/login">Sign in</router-link>
         </p>
       </form>
-    </div>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
+import UiPasswordField from '@/components/UiPasswordField.vue'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
-import { API_BASE } from '@/features/shared/config/api'
+import { API_BASE } from '@/features/shared/config/api.ts'
+import type { RegisterResponse } from '@/services/accounts'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiSelect from '@/components/UiSelect.vue'
+import UiCard from '@/components/UiCard.vue'
 
 const router = useRouter()
 
@@ -126,11 +139,20 @@ watch(
   },
 )
 
-const errors = ref({})
+interface Errors {
+  username?: string[]
+  email?: string[]
+  password?: string[]
+  redeem_code?: string[]
+  phone?: string[]
+  form?: string[]
+}
+
+const errors = ref<Errors | null>(null)
 const isLoading = ref(false)
 const isSuccess = ref(false)
 
-const saveTokensAndRedirect = (data) => {
+const saveTokensAndRedirect = (data: RegisterResponse) => {
   localStorage.setItem('access', data.access)
   localStorage.setItem('refresh', data.refresh)
   if (data.onboarding_required) {
@@ -145,27 +167,19 @@ const saveTokensAndRedirect = (data) => {
 
 const handleRegister = async () => {
   isLoading.value = true
-  errors.value = {}
+  errors.value = null
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/register/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(form.value),
-    })
-
-    const data = await response.json()
-
-    if (response.ok) {
-      isSuccess.value = true
-      return
+    await $api.accounts.register(form.value)
+    isSuccess.value = true
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        errors.value = err.response.data || 'Something went wrong.'
+      } else {
+        errors.value = { form: ['Server connection error.'] }
+      }
     }
-
-    errors.value = data
-  } catch {
-    errors.value = { form: ['Unable to connect to server.'] }
   } finally {
     isLoading.value = false
   }
@@ -204,4 +218,3 @@ const handleRegister = async () => {
   }
 }
 </style>
-

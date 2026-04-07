@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell">
-    <article class="card admin-card">
+    <ui-card class="admin-card">
       <p class="section-eyebrow">Admin</p>
       <h1 class="section-title">Activation Codes</h1>
       <p class="section-subtitle">
@@ -11,9 +11,7 @@
 
       <div v-if="loading" class="state-box">Loading...</div>
 
-      <div v-else-if="forbidden" class="state-box error">
-        You do not have access to this page.
-      </div>
+      <div v-else-if="forbidden" class="state-box error">You do not have access to this page.</div>
 
       <template v-else>
         <div class="counts">
@@ -26,34 +24,55 @@
         <form class="generator" @submit.prevent="handleGenerate">
           <label class="form-label">
             Role
-            <select v-model="generateForm.role" class="select-control" required>
+            <ui-select
+              v-model="generateForm.role"
+              :options="[
+                { value: 'jury', label: 'Jury' },
+                { value: 'organizer', label: 'Organizer' },
+                { value: 'admin', label: 'Admin' },
+              ]"
+              required
+            >
               <option value="jury">Jury</option>
               <option value="organizer">Organizer</option>
               <option value="admin">Admin</option>
-            </select>
-            <small v-if="errors.role" class="text-error">{{ errors.role[0] }}</small>
+            </ui-select>
+            <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
           </label>
 
           <label class="form-label">
             Quantity
-            <input v-model.number="generateForm.quantity" class="input-control" type="number" min="1" max="10" required />
-            <small v-if="errors.quantity" class="text-error">{{ errors.quantity[0] }}</small>
+            <ui-input
+              v-model.number="generateForm.quantity"
+              type="number"
+              min="1"
+              max="10"
+              required
+            />
+            <small v-if="errors?.quantity" class="text-error">{{ errors.quantity[0] }}</small>
           </label>
 
-          <button class="btn-primary generate-btn" :disabled="submitting">
+          <ui-button type="submit" class="generate-btn" :disabled="submitting">
             {{ submitting ? 'Generating...' : 'Generate Codes' }}
-          </button>
+          </ui-button>
         </form>
 
         <div class="filters">
+          <!-- TODO: select component wrapped around label??????? -->
+          <!-- Fix later cuz it depends on some class styles -->
           <label class="form-label">
             Filter by role
-            <select v-model="selectedRoleFilter" class="select-control" @change="fetchCodes">
-              <option value="">All restricted roles</option>
-              <option value="jury">Jury</option>
-              <option value="organizer">Organizer</option>
-              <option value="admin">Admin</option>
-            </select>
+
+            <ui-select
+              v-model="selectedRoleFilter"
+              :options="[
+                { value: 'all', label: 'All restricted roles' },
+                { value: 'jury', label: 'Jury' },
+                { value: 'organizer', label: 'Organizer' },
+                { value: 'admin', label: 'Admin' },
+              ]"
+            >
+            </ui-select>
           </label>
         </div>
 
@@ -68,86 +87,77 @@
             <p><strong>Role:</strong> {{ code.role }}</p>
             <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
             <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
-            <p><strong>Used by:</strong> {{ code.used_by_username || '-' }}</p>
+            <p><strong>Used by:</strong> {{ code.is_used ? code.used_by : '-' }}</p>
             <p><strong>Used at:</strong> {{ code.used_at ? formatDateTime(code.used_at) : '-' }}</p>
           </article>
           <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
         </div>
       </template>
-    </article>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
 
-import { API_BASE } from '@/features/shared/config/api'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import type { RoleCode, RoleCodesUserRole } from '@/services/accounts/types'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiSelect from '@/components/UiSelect.vue'
+import UiCard from '@/components/UiCard.vue'
 
-const router = useRouter()
 const loading = ref(true)
 const submitting = ref(false)
 const forbidden = ref(false)
 const statusMessage = ref('')
 const statusType = ref('success')
-const errors = ref({})
-const codes = ref([])
+const errors = ref<{
+  role: string[]
+  quantity: string[]
+} | null>(null)
+const codes = ref<RoleCode[]>([])
 const activeCounts = ref({ jury: 0, organizer: 0, admin: 0 })
-const restrictedRoles = ['jury', 'organizer', 'admin']
-const selectedRoleFilter = ref('')
+const restrictedRoles = ['jury', 'organizer', 'admin'] as const
+const selectedRoleFilter = ref<RoleCodesUserRole | 'all'>('all')
 const generateForm = ref({
   role: 'jury',
   quantity: 1,
 })
 
-const logoutToLogin = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
-
-const authHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('access')}`,
-  'Content-Type': 'application/json',
+watch(selectedRoleFilter, async () => {
+  await fetchCodes()
 })
 
 const fetchCodes = async () => {
   loading.value = true
   statusMessage.value = ''
-  errors.value = {}
+  errors.value = null
 
-  const query = selectedRoleFilter.value ? `?role=${selectedRoleFilter.value}` : ''
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/role-codes/${query}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('access')}`,
-      },
+    const response = await $api.accounts.getRoleCodes({
+      role: selectedRoleFilter.value,
     })
 
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (response.status === 403) {
-      forbidden.value = true
-      return
-    }
-
-    const data = await response.json()
-    if (!response.ok) {
-      statusType.value = 'error'
-      statusMessage.value = data.detail || 'Unable to load activation codes.'
-      return
-    }
-
     forbidden.value = false
-    codes.value = data.codes || []
-    activeCounts.value = data.active_counts || activeCounts.value
-  } catch {
-    statusType.value = 'error'
-    statusMessage.value = 'Server connection error.'
+    codes.value = response.data.codes || []
+    activeCounts.value = response.data.active_counts || activeCounts.value
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 403) {
+          forbidden.value = true
+          return
+        }
+
+        statusType.value = 'error'
+        statusMessage.value = err.response.data.detail || 'Unable to load activation codes.'
+      } else {
+        statusType.value = 'error'
+        statusMessage.value = 'Server connection error.'
+      }
+    }
   } finally {
     loading.value = false
   }
@@ -155,47 +165,38 @@ const fetchCodes = async () => {
 
 const handleGenerate = async () => {
   submitting.value = true
-  errors.value = {}
+  errors.value = null
   statusMessage.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/role-codes/`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify(generateForm.value),
-    })
-
-    if (response.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (response.status === 403) {
-      forbidden.value = true
-      return
-    }
-
-    const data = await response.json()
-    if (!response.ok) {
-      errors.value = data
-      statusType.value = 'error'
-      statusMessage.value = data.detail || 'Unable to generate codes.'
-      return
-    }
+    const response = await $api.accounts.generateCodes(generateForm.value)
 
     statusType.value = 'success'
-    statusMessage.value = `Generated ${data.created?.length || 0} code(s) successfully.`
-    activeCounts.value = data.active_counts || activeCounts.value
+    statusMessage.value = `Generated ${response.data.created?.length || 0} code(s) successfully.`
+    activeCounts.value = response.data.active_counts || activeCounts.value
     await fetchCodes()
-  } catch {
-    statusType.value = 'error'
-    statusMessage.value = 'Server connection error.'
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        if (err.response.status === 403) {
+          forbidden.value = true
+          return
+        }
+
+        errors.value = err.response.data
+        statusType.value = 'error'
+        statusMessage.value = err.response.data.detail || 'Unable to generate codes.'
+      } else {
+        statusType.value = 'error'
+        statusMessage.value = 'Server connection error.'
+      }
+    }
   } finally {
     submitting.value = false
   }
 }
 
-const formatDateTime = (value) => {
+const formatDateTime = (value: string | number | Date) => {
   if (!value) return '-'
   return new Date(value).toLocaleString()
 }

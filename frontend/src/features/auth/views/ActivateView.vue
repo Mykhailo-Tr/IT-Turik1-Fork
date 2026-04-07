@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <article class="card activate-card">
+    <ui-card class="activate-card">
       <p class="section-eyebrow">Email Verification</p>
       <h1 class="section-title activate-title">Account activation</h1>
 
@@ -14,14 +14,15 @@
       <div v-if="status === 'error'" class="notice error">
         {{ message }}
       </div>
-    </article>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { API_BASE } from '@/features/shared/config/api'
+import UiCard from '@/components/UiCard.vue'
 
 const route = useRoute()
 const status = ref('loading')
@@ -75,4 +76,3 @@ onMounted(async () => {
   font-weight: 700;
 }
 </style>
-

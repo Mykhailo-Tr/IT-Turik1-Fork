@@ -1,98 +1,61 @@
 <template>
   <section class="page-shell home-page">
-    <article class="card hero">
+    <ui-card class="hero">
       <div>
         <p class="eyebrow">Dashboard</p>
-        <h1 v-if="userProfile">Welcome back, {{ displayName }}</h1>
-        <h1 v-else>Welcome to TournamentOS</h1>
+        <h1>Welcome back, {{ displayName }}</h1>
         <p class="sub">Manage your profile and stay ready for upcoming competitions.</p>
       </div>
 
-      <div class="hero-actions">
-        <router-link to="/profile" class="ghost-btn">Open profile</router-link>
-        <button @click="handleLogout" class="danger-btn">Logout</button>
-      </div>
-    </article>
+      <ui-button asLink to="/profile" variant="outline" class="open-profile-btn"
+        >Open profile</ui-button
+      >
+    </ui-card>
 
-    <div v-if="isLoading" class="state-box">Loading profile...</div>
-    <div v-else-if="error" class="state-box error">{{ error }}</div>
+    <div v-if="error" class="state-box error">{{ error }}</div>
 
-    <div v-else-if="userProfile" class="grid">
-      <article class="card info-card">
+    <div v-else-if="auth.user.value" class="grid">
+      <ui-card class="info-card">
         <h2>Account details</h2>
-        <p><strong>Username:</strong> {{ userProfile.username }}</p>
-        <p><strong>Email:</strong> {{ userProfile.email }}</p>
-        <p><strong>Role:</strong> {{ userProfile.role }}</p>
+        <p><strong>Username:</strong> {{ auth.user.value!.username }}</p>
+        <p><strong>Email:</strong> {{ auth.user.value!.email }}</p>
+        <p><strong>Role:</strong> {{ auth.user.value!.role }}</p>
         <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
-      </article>
+      </ui-card>
 
-      <article class="card info-card accent">
+      <ui-card class="info-card accent">
         <h2>Quick status</h2>
         <ul>
-          <li>Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span></li>
-          <li>City set: <span>{{ userProfile.city ? 'Yes' : 'No' }}</span></li>
-          <li>Phone set: <span>{{ userProfile.phone ? 'Yes' : 'No' }}</span></li>
+          <li>
+            Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span>
+          </li>
+          <li>
+            City set: <span>{{ auth.user.value!.city ? 'Yes' : 'No' }}</span>
+          </li>
+          <li>
+            Phone set: <span>{{ auth.user.value!.phone ? 'Yes' : 'No' }}</span>
+          </li>
         </ul>
-      </article>
+      </ui-card>
     </div>
   </section>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from 'vue'
-import { API_BASE } from '@/features/shared/config/api'
-import { useRouter } from 'vue-router'
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
+import { useAuth } from '@/composables/useAuth'
 
-const userProfile = ref(null)
-const isLoading = ref(true)
+const auth = useAuth()
+
 const error = ref('')
-const router = useRouter()
 
-const displayName = computed(() => userProfile.value?.full_name || userProfile.value?.username || 'User')
-const profileReady = computed(() => Boolean(userProfile.value?.full_name && userProfile.value?.city))
-const teamNames = computed(() => (userProfile.value?.teams || []).map((team) => team.name).join(', '))
-
-onMounted(async () => {
-  const token = localStorage.getItem('access')
-
-  try {
-    const response = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (response.ok) {
-      userProfile.value = await response.json()
-      if (userProfile.value.needs_onboarding) {
-        localStorage.setItem('needs_onboarding', '1')
-        router.push('/complete-profile')
-        return
-      }
-      return
-    }
-
-    if (response.status === 401) {
-      handleLogout()
-      return
-    }
-
-    error.value = 'Could not load profile data.'
-  } catch {
-    error.value = 'Server is unavailable. Please try again later.'
-  } finally {
-    isLoading.value = false
-  }
-})
-
-const handleLogout = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
+const displayName = computed(
+  () => auth.user.value?.full_name || auth.user.value?.username || 'User',
+)
+const profileReady = computed(() => Boolean(auth.user.value?.full_name && auth.user.value?.city))
+const teamNames = computed(() => (auth.user.value?.teams || []).map((team) => team.name).join(', '))
 </script>
 
 <style scoped>
@@ -140,22 +103,9 @@ h1 {
   justify-content: flex-end;
 }
 
-.ghost-btn,
-.danger-btn {
-  border-radius: 999px;
-  padding: 0.52rem 0.95rem;
-  font: inherit;
-  font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.12);
+.open-profile-btn {
   color: white;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.danger-btn {
-  border-color: rgba(254, 202, 202, 0.75);
-  background: rgba(220, 38, 38, 0.28);
+  border-color: white;
 }
 
 .state-box {
@@ -192,8 +142,7 @@ h1 {
 }
 
 .accent {
-  background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(237, 254, 255, 0.95));
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(237, 254, 255, 0.95));
 }
 
 ul {
@@ -230,4 +179,3 @@ li span {
   }
 }
 </style>
-

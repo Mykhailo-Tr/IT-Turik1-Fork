@@ -1,65 +1,70 @@
 <template>
   <section class="page-shell centered">
-    <div class="card auth-card">
+    <ui-card class="auth-card">
       <p class="section-eyebrow">Account Access</p>
       <h1 class="section-title">Sign in to TournamentOS</h1>
-      <p class="section-subtitle">Track your team, profile, and upcoming tournaments in one place.</p>
+      <p class="section-subtitle">
+        Track your team, profile, and upcoming tournaments in one place.
+      </p>
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <label class="form-label">
           Username
-          <input v-model="form.username" class="input-control" type="text" autocomplete="username" required />
+          <ui-input v-model="form.username" autocomplete="username" required />
         </label>
 
         <label class="form-label">
           Password
-          <PasswordField
-            v-model="form.password"
-            autocomplete="current-password"
-            required
-          />
+          <ui-password-field v-model="form.password" autocomplete="current-password" />
         </label>
         <p class="forgot-link">
           <router-link to="/forgot-password">Forgot password?</router-link>
         </p>
 
-        <button type="submit" class="btn-primary" :disabled="isLoading">
+        <ui-button type="submit" :disabled="isLoading">
           {{ isLoading ? 'Signing in...' : 'Sign in' }}
-        </button>
+        </ui-button>
       </form>
 
       <p v-if="error" class="text-error feedback">{{ error }}</p>
 
-      <GoogleAuthButton
-        :api-base="API_BASE"
-        divider-label="or continue with"
-        @success="saveTokensAndRedirect"
-      />
+      <GoogleAuthButton :api-base="API_BASE" divider-label="or continue with" @success="redirect" />
 
       <p class="auth-link">
         No account yet?
         <router-link to="/register">Create one</router-link>
       </p>
-    </div>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api'
+import { API_BASE } from '@/features/shared/config/api.ts'
+import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiPasswordField from '@/components/UiPasswordField.vue'
+import UiCard from '@/components/UiCard.vue'
+
+import { useAuth } from '@/composables/useAuth'
+import type { LoginResponse } from '@/services/accounts/types'
 
 const form = ref({ username: '', password: '' })
 const error = ref('')
 const isLoading = ref(false)
 const router = useRouter()
 
-const saveTokensAndRedirect = (data) => {
+const auth = useAuth()
+
+const redirect = (data: LoginResponse) => {
+  // Remove when we will add cookies support
   localStorage.setItem('access', data.access)
   localStorage.setItem('refresh', data.refresh)
+
   if (data.onboarding_required) {
     localStorage.setItem('needs_onboarding', '1')
     router.push('/complete-profile')
@@ -75,26 +80,23 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/login/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form.value),
-    })
+    const data = await auth.login(form.value)
 
-    const data = await response.json()
-
-    if (response.ok) {
-      saveTokensAndRedirect(data)
-      return
+    redirect(data)
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        error.value = 'Invalid credentials or account not activated.'
+      } else {
+        error.value = 'Network error. Please try again.'
+      }
     }
-
-    error.value = 'Invalid credentials or account not activated.'
-  } catch {
-    error.value = 'Network error. Please try again.'
   } finally {
     isLoading.value = false
   }
 }
+
+onMounted(() => auth.isLoggedIn && router.push('/'))
 </script>
 
 <style scoped>
@@ -131,4 +133,3 @@ const handleLogin = async () => {
   }
 }
 </style>
-

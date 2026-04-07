@@ -1,150 +1,95 @@
 <template>
   <section class="page-shell teams-page">
-    <article class="card header-card">
+    <ui-card>
       <p class="section-eyebrow">Teams</p>
       <h1 class="section-title">Team directory</h1>
-      <p class="section-subtitle">Open a team workspace to view details, edit info, and manage members.</p>
+      <p class="section-subtitle">
+        Open a team workspace to view details, edit info, and manage members.
+      </p>
       <div class="hero-actions">
-        <router-link to="/teams/create" class="btn-primary manage-link">Create new team</router-link>
-        <span class="meta-pill">Total teams: {{ teams.length }}</span>
+        <ui-button asLink to="/teams/create" class="manage-link">Create new team</ui-button>
+        <span class="meta-pill">Total teams: {{ teams?.length }}</span>
       </div>
-    </article>
+    </ui-card>
 
-    <div v-if="loading" class="card state-card text-muted">Loading teams...</div>
+    <ui-card v-if="loading">Loading teams...</ui-card>
 
     <template v-else>
-      <article class="card teams-card">
-        <header class="section-head">
-          <h2>Invitations</h2>
-          <span class="text-muted">{{ pendingInboxInvitations.length }} pending</span>
-        </header>
+      <team-invatations @respondedToInvatation="fetchTeams()" />
 
-        <p v-if="inboxLoading" class="text-muted">Loading invitations...</p>
-        <p v-else-if="pendingInboxInvitations.length === 0" class="text-muted">No pending invitations.</p>
-        <div v-else class="team-grid">
-          <article v-for="invitation in pendingInboxInvitations" :key="`invite-${invitation.id}`" class="team-item">
-            <div class="team-meta">
-              <h3>{{ invitation.team.name }}</h3>
-              <span class="status status--invited">invited</span>
-            </div>
-            <p class="text-muted">Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}</p>
-            <div class="row-actions">
-              <button
-                type="button"
-                class="btn-soft"
-                :disabled="invitationActionLoading[invitation.id]"
-                @click="respondToInvitation(invitation.id, 'accept')"
-              >
-                Accept
-              </button>
-              <button
-                type="button"
-                class="btn-soft"
-                :disabled="invitationActionLoading[invitation.id]"
-                @click="respondToInvitation(invitation.id, 'decline')"
-              >
-                Decline
-              </button>
-            </div>
-          </article>
-        </div>
-      </article>
+      <!-- TODO: add vue query, so i can fetch once and cache using key -->
+      <!-- Then invalidate key or refetch when making changes -->
+      <team-my-teams :teams="teams ?? []" />
 
-      <article class="card teams-card">
-        <header class="section-head">
-          <h2>My teams</h2>
-          <span class="text-muted">{{ myTeams.length }} joined</span>
-        </header>
-
-        <p v-if="myTeams.length === 0" class="text-muted">You are not a member of any team yet.</p>
-        <div v-else class="team-grid">
-          <article v-for="team in myTeamsPageItems" :key="`my-${team.id}`" class="team-item">
-            <div class="team-meta">
-              <h3>{{ team.name }}</h3>
-              <span v-if="isCaptain(team)" class="status-badge">Captain</span>
-            </div>
-            <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
-            <p class="text-muted">Captain: {{ captainName(team) }}</p>
-            <p class="text-muted">Members: {{ team.members.length }}</p>
-            <p v-if="team.my_invitation_status" class="text-muted">My invitation: {{ team.my_invitation_status }}</p>
-            <p v-if="team.my_join_request_status" class="text-muted">My join request: {{ team.my_join_request_status }}</p>
-            <router-link :to="`/teams/${team.id}`" class="btn-soft open-link">Open workspace</router-link>
-          </article>
-        </div>
-
-        <div v-if="myPages > 1" class="pagination">
-          <button class="btn-soft" :disabled="myPage === 1" @click="myPage -= 1" type="button">Prev</button>
-          <span>Page {{ myPage }} / {{ myPages }}</span>
-          <button class="btn-soft" :disabled="myPage === myPages" @click="myPage += 1" type="button">Next</button>
-        </div>
-      </article>
-
-      <article class="card teams-card">
-        <header class="section-head">
-          <h2>Other teams</h2>
-          <span class="text-muted">{{ otherTeams.length }} available</span>
-        </header>
-
-        <p v-if="otherTeams.length === 0" class="text-muted">No other teams available.</p>
-        <div v-else class="team-grid">
-          <article v-for="team in otherTeamsPageItems" :key="`other-${team.id}`" class="team-item">
-            <div class="team-meta">
-              <h3>{{ team.name }}</h3>
-            </div>
-            <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
-            <p class="text-muted">Captain: {{ captainName(team) }}</p>
-            <p class="text-muted">Members: {{ team.members.length }}</p>
-            <p v-if="team.my_invitation_status" class="text-muted">My invitation: {{ team.my_invitation_status }}</p>
-            <p v-if="team.my_join_request_status" class="text-muted">My join request: {{ team.my_join_request_status }}</p>
-            <button
-              v-if="team.can_request_to_join"
-              type="button"
-              class="btn-soft"
-              :disabled="joinRequestLoadingByTeam[team.id]"
-              @click="sendJoinRequest(team.id)"
-            >
-              {{ joinRequestLoadingByTeam[team.id] ? 'Sending...' : 'Request to join' }}
-            </button>
-            <router-link :to="`/teams/${team.id}`" class="btn-soft open-link">Open workspace</router-link>
-          </article>
-        </div>
-
-        <div v-if="otherPages > 1" class="pagination">
-          <button class="btn-soft" :disabled="otherPage === 1" @click="otherPage -= 1" type="button">Prev</button>
-          <span>Page {{ otherPage }} / {{ otherPages }}</span>
-          <button class="btn-soft" :disabled="otherPage === otherPages" @click="otherPage += 1" type="button">Next</button>
-        </div>
-      </article>
+      <teams-other-teams :teams="teams ?? []" @sendedJoinRequest="fetchTeams()" />
     </template>
   </section>
 </template>
 
-<script setup>
-import { useTeamsViewPage } from '@/features/teams/composables/useTeamsViewPage'
+<script setup lang="ts">
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import { onMounted, ref } from 'vue'
+import TeamInvatations from '../components/teamsView/TeamInvatations.vue'
+import TeamMyTeams from '../components/teamsView/TeamMyTeams.vue'
+import type { GetTeamsResponse } from '@/services/teams/types'
+import TeamsOtherTeams from '../components/teamsView/TeamsOtherTeams.vue'
 
-const {
-  captainName,
-  inboxLoading,
-  invitationActionLoading,
-  isCaptain,
-  joinRequestLoadingByTeam,
-  loading,
-  myPage,
-  myPages,
-  myTeams,
-  myTeamsPageItems,
-  otherPage,
-  otherPages,
-  otherTeams,
-  otherTeamsPageItems,
-  pendingInboxInvitations,
-  respondToInvitation,
-  sendJoinRequest,
-  teams,
-} = useTeamsViewPage()
+const { showNotification } = useGlobalNotification()
+
+const teams = ref<GetTeamsResponse[] | null>(null)
+const loading = ref(false)
+
+const fetchTeams = async () => {
+  loading.value = true
+
+  try {
+    const response = await $api.teams.getTeams()
+
+    teams.value = response.data
+  } catch (err) {
+    if (isApiError(err)) {
+      showNotification(
+        err.response ? 'Unable to load teams.' : 'Unable to connect to server.',
+        'error',
+      )
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchTeams()
+})
 </script>
 
-<style scoped src="../styles/teams-view.css"></style>
-<style scoped src="../styles/status-tags.css"></style>
+<style scoped>
+.teams-page {
+  gap: 1.2rem;
+}
 
+.hero-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
 
+.manage-link {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.meta-pill {
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 999px;
+  padding: 0.33rem 0.7rem;
+  font-size: 0.84rem;
+  color: var(--ink-700);
+  background: rgba(255, 255, 255, 0.8);
+}
+</style>

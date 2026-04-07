@@ -1,228 +1,95 @@
 <template>
   <section class="page-shell">
-    <article class="card profile-card">
+    <ui-card class="profile-card">
       <div class="head">
         <div>
           <p class="section-eyebrow">User Center</p>
           <h1 class="section-title profile-title">My profile</h1>
         </div>
-        <p class="meta">Joined: {{ formatDate(profile.created_at) || 'N/A' }}</p>
+        <p class="meta">
+          Joined: {{ auth.user.value?.created_at ? formatDate(auth.user.value.created_at) : 'N/A' }}
+        </p>
       </div>
 
-      <div v-if="loadingProfile" class="state-box">Loading profile...</div>
-      <div v-else-if="profileError" class="state-box error">{{ profileError }}</div>
+      <div v-if="auth.isLoading.value" class="state-box">Loading profile...</div>
       <div v-else class="details">
-        <div class="item item-text">
-          <span class="item-label">Username</span>
-          <strong class="item-value value-wrap">{{ profile.username || '-' }}</strong>
-        </div>
-        <div class="item item-text">
-          <span class="item-label">Email</span>
-          <strong class="item-value value-wrap">{{ profile.email || '-' }}</strong>
-        </div>
-        <div class="item item-role">
-          <span class="item-label">Role</span>
-          <strong class="badge">{{ profile.role || '-' }}</strong>
-        </div>
-        <div class="item item-text">
-          <span class="item-label">Full name</span>
-          <strong class="item-value value-wrap">{{ profile.full_name || '-' }}</strong>
-        </div>
-        <div class="item item-text">
-          <span class="item-label">City</span>
-          <strong class="item-value value-wrap">{{ profile.city || '-' }}</strong>
-        </div>
-        <div class="item item-phone">
-          <span class="item-label">Phone</span>
-          <strong class="item-value value-fixed">{{ profile.phone || '-' }}</strong>
-        </div>
-        <div class="item item-wide">
+        <ui-card class="item-text" title="Username">
+          <strong class="item-value value-wrap">{{ auth.user.value?.username || '-' }}</strong>
+        </ui-card>
+        <ui-card class="item-text" title="Email">
+          <strong class="item-value value-wrap">{{ auth.user.value?.email || '-' }}</strong>
+        </ui-card>
+        <ui-card class="item-role" title="Role">
+          <ui-badge variant="green">{{ auth.user.value?.role ?? '-' }}</ui-badge>
+        </ui-card>
+        <ui-card class="item-text" title="Full name">
+          <strong class="item-value value-wrap">{{ auth.user.value?.full_name || '-' }}</strong>
+        </ui-card>
+        <ui-card class="item-text" title="City">
+          <strong class="item-value value-wrap">{{ auth.user.value?.city || '-' }}</strong>
+        </ui-card>
+        <ui-card class="item-phone" title="phone">
+          <strong class="item-value value-fixed">{{ auth.user.value?.phone || '-' }}</strong>
+        </ui-card>
+        <ui-card class="item-wide">
           <span class="item-label">Teams</span>
           <div class="team-list">
             <router-link
-              v-for="team in profile.teams || []"
+              v-for="team in auth.user.value?.teams || []"
               :key="team.id"
               :to="`/teams/${team.id}`"
               class="team-link"
             >
               {{ team.name }}
             </router-link>
-            <p v-if="!(profile.teams || []).length" class="text-muted">No teams yet.</p>
+            <p v-if="!(auth.user.value?.teams || []).length" class="text-muted">No teams yet.</p>
           </div>
-        </div>
+        </ui-card>
       </div>
 
       <div class="actions">
-        <button class="btn-primary" type="button" :disabled="loadingProfile" @click="goToEditProfile">
+        <ui-button :disabled="auth.isLoading.value" @click="goToEditProfile">
           Edit Profile
-        </button>
-        <button class="btn-secondary" type="button" :disabled="loadingProfile || isDeleting" @click="logoutToLogin">
+        </ui-button>
+        <ui-button
+          variant="outline"
+          :disabled="auth.isLoading.value || isDeleting"
+          @click="auth.logout()"
+        >
           Log Out
-        </button>
+        </ui-button>
       </div>
 
       <div class="danger-zone">
         <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
-        <button class="btn-danger" :disabled="loadingProfile || isDeleting" @click="openDeleteModal" type="button">
-          Delete account
-        </button>
+
+        <delete-profile-modal />
       </div>
-    </article>
-
-    <div v-if="isDeleteModalOpen" class="modal-backdrop" @click.self="closeDeleteModal">
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-        <h3 id="delete-title">Delete account</h3>
-        <p class="modal-text">
-          This action cannot be undone. Enter
-          <code>{{ expectedDeleteText }}</code>
-          to confirm.
-        </p>
-
-        <input
-          v-model="deleteConfirmInput"
-          class="input-control"
-          type="text"
-          :placeholder="expectedDeleteText"
-          :disabled="isDeleting"
-        />
-
-        <p v-if="deleteError" class="text-error modal-error">{{ deleteError }}</p>
-
-        <div class="modal-actions">
-          <button class="btn-cancel" type="button" :disabled="isDeleting" @click="closeDeleteModal">
-            Cancel
-          </button>
-          <button class="btn-danger" type="button" :disabled="!canConfirmDelete" @click="handleDeleteAccount">
-            {{ isDeleting ? 'Deleting...' : 'Delete permanently' }}
-          </button>
-        </div>
-      </div>
-    </div>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
-import { computed, onMounted, ref } from 'vue'
+<script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { API_BASE } from '@/features/shared/config/api'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
+import UiBadge from '@/components/UiBadge.vue'
+import { useAuth } from '@/composables/useAuth'
+import DeleteProfileModal from '../components/modals/DeleteProfileModal.vue'
 
-const profile = ref({})
-const profileError = ref('')
-const loadingProfile = ref(true)
-
+const auth = useAuth()
 const router = useRouter()
-const { showNotification, hideNotification } = useGlobalNotification()
-const isDeleteModalOpen = ref(false)
-const deleteConfirmInput = ref('')
-const deleteError = ref('')
 const isDeleting = ref(false)
-
-const expectedDeleteText = computed(() => profile.value.username || '')
-const canConfirmDelete = computed(
-  () =>
-    Boolean(expectedDeleteText.value) &&
-    deleteConfirmInput.value === expectedDeleteText.value &&
-    !isDeleting.value,
-)
-
-const logoutToLogin = () => {
-  localStorage.removeItem('access')
-  localStorage.removeItem('refresh')
-  localStorage.removeItem('needs_onboarding')
-  router.push('/login')
-}
 
 const goToEditProfile = () => {
   router.push('/profile/edit')
 }
 
-const fetchProfile = async () => {
-  loadingProfile.value = true
-  profileError.value = ''
-
-  const token = localStorage.getItem('access')
-  try {
-    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-
-    if (res.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    if (!res.ok) {
-      profileError.value = 'Could not load profile information.'
-      return
-    }
-
-    const data = await res.json()
-    if (data.needs_onboarding) {
-      localStorage.setItem('needs_onboarding', '1')
-      router.push('/complete-profile')
-      return
-    }
-
-    profile.value = data
-  } catch {
-    profileError.value = 'Server connection error.'
-  } finally {
-    loadingProfile.value = false
-  }
+const formatDate = (date: Date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('uk-UA')
 }
-
-const openDeleteModal = () => {
-  deleteConfirmInput.value = ''
-  deleteError.value = ''
-  isDeleteModalOpen.value = true
-}
-
-const closeDeleteModal = () => {
-  if (isDeleting.value) {
-    return
-  }
-  isDeleteModalOpen.value = false
-}
-
-const handleDeleteAccount = async () => {
-  if (deleteConfirmInput.value !== expectedDeleteText.value) {
-    deleteError.value = `Please enter "${expectedDeleteText.value}" exactly.`
-    return
-  }
-
-  isDeleting.value = true
-  deleteError.value = ''
-  hideNotification()
-
-  const token = localStorage.getItem('access')
-  try {
-    const res = await fetch(`${API_BASE}/api/accounts/profile/`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-
-    if (res.status === 204 || res.status === 200 || res.status === 401) {
-      logoutToLogin()
-      return
-    }
-
-    showNotification('Unable to delete account.', 'error')
-  } catch {
-    showNotification('Server connection error.', 'error')
-  } finally {
-    isDeleting.value = false
-  }
-}
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('uk-UA')
-}
-
-onMounted(fetchProfile)
 </script>
 
 <style scoped>
@@ -247,20 +114,6 @@ onMounted(fetchProfile)
   margin: 0;
   color: var(--ink-500);
   font-size: 0.86rem;
-}
-
-.state-box {
-  margin-top: 1rem;
-  border-radius: 14px;
-  border: 1px solid var(--line-soft);
-  padding: 0.9rem 1rem;
-  background: rgba(255, 255, 255, 0.85);
-}
-
-.state-box.error {
-  color: #991b1b;
-  border-color: rgba(220, 38, 38, 0.25);
-  background: rgba(254, 242, 242, 0.9);
 }
 
 .details {
@@ -289,31 +142,12 @@ onMounted(fetchProfile)
   line-height: 1.2;
 }
 
-.item-value {
-  color: var(--ink-900);
-  line-height: 1.35;
-}
-
-.value-wrap {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-
-.value-fixed {
-  white-space: nowrap;
-}
-
-.item-role {
-  align-content: start;
-  padding-left: 0.85rem;
-}
-
-.item-role .badge {
-  display: inline-flex;
-  justify-self: start;
-  width: fit-content;
-  max-width: 100%;
+.item-role,
+.item-phone,
+.item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
 }
 
 .item-phone {
@@ -331,10 +165,6 @@ onMounted(fetchProfile)
   min-width: 0;
 }
 
-.team-list p {
-  margin: 0;
-}
-
 .team-link {
   color: var(--brand-700);
   text-decoration: none;
@@ -344,13 +174,8 @@ onMounted(fetchProfile)
 }
 
 .badge {
-  display: inline-block;
-  border-radius: 999px;
-  background: rgba(20, 184, 166, 0.2);
-  color: var(--brand-700);
-  padding: 0.15rem 0.5rem;
+  width: max-content;
   text-transform: uppercase;
-  font-size: 0.74rem;
 }
 
 .actions {
@@ -358,22 +183,6 @@ onMounted(fetchProfile)
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
-}
-
-.btn-secondary {
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  background: #fff;
-  color: var(--ink-800);
-  cursor: pointer;
-}
-
-.btn-secondary:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
 }
 
 .danger-zone {
@@ -388,22 +197,6 @@ onMounted(fetchProfile)
   font-weight: 600;
 }
 
-.btn-danger {
-  border: 1px solid #dc2626;
-  background: #fee2e2;
-  color: #991b1b;
-  border-radius: 12px;
-  padding: 0.7rem 1rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.btn-danger:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -412,43 +205,6 @@ onMounted(fetchProfile)
   place-items: center;
   z-index: 50;
   padding: 1rem;
-}
-
-.modal-card {
-  width: min(100%, 520px);
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow-lg);
-  padding: 1.2rem;
-}
-
-.modal-card h3 {
-  margin: 0;
-  font-family: var(--font-display);
-}
-
-.modal-text {
-  margin: 0.7rem 0;
-  color: var(--ink-700);
-}
-
-.modal-text code {
-  background: #f1f5f9;
-  border: 1px solid var(--line-soft);
-  border-radius: 6px;
-  padding: 0.1rem 0.35rem;
-}
-
-.modal-error {
-  margin: 0.5rem 0 0;
-}
-
-.modal-actions {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.6rem;
 }
 
 .btn-cancel {
@@ -468,7 +224,8 @@ onMounted(fetchProfile)
 
 @media (max-width: 760px) {
   .profile-card {
-    padding: 1rem;
+    max-width: 100%;
+    margin: 0;
   }
 
   .head {
@@ -485,4 +242,3 @@ onMounted(fetchProfile)
   }
 }
 </style>
-<style scoped src="../../teams/styles/status-tags.css"></style>

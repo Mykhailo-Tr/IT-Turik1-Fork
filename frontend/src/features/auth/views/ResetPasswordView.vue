@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell centered">
-    <article class="card reset-card">
+    <ui-card class="reset-card">
       <p class="section-eyebrow">Password Recovery</p>
       <h1 class="section-title">Reset password</h1>
 
@@ -8,7 +8,7 @@
 
       <div v-else-if="status === 'success'" class="notice success reset-success">
         {{ message }}
-        <router-link class="btn-primary back-btn" to="/login">Back to Login</router-link>
+        <ui-button asLink to="/login">Back to Login</ui-button>
       </div>
 
       <div v-else-if="status === 'invalid'" class="notice error">
@@ -18,104 +18,112 @@
       <form v-else class="reset-form" @submit.prevent="handleReset">
         <label class="form-label">
           New password
-          <PasswordField
+          <ui-password-field
             v-model="form.new_password"
             autocomplete="new-password"
             placeholder="Create a strong password"
             required
           />
-          <small v-if="errors.new_password" class="text-error">{{ errors.new_password[0] }}</small>
+          <small v-if="errors?.new_password" class="text-error">{{ errors.new_password[0] }}</small>
           <small v-else class="text-muted">
-            Use at least 8 characters, including upper/lowercase letters, a number, and a special character.
+            Use at least 8 characters, including upper/lowercase letters, a number, and a special
+            character.
           </small>
         </label>
 
         <label class="form-label">
           Confirm new password
-          <PasswordField
+          <ui-password-field
             v-model="form.confirm_password"
             autocomplete="new-password"
             placeholder="Repeat your new password"
             required
           />
-          <small v-if="errors.confirm_password" class="text-error">{{ errors.confirm_password[0] }}</small>
+          <small v-if="errors?.confirm_password" class="text-error">{{
+            errors.confirm_password[0]
+          }}</small>
         </label>
 
-        <small v-if="errors.non_field_errors" class="text-error">{{ errors.non_field_errors[0] }}</small>
-        <small v-if="errors.message" class="text-error">{{ errors.message[0] }}</small>
+        <small v-if="errors?.non_field_errors" class="text-error">{{
+          errors.non_field_errors[0]
+        }}</small>
+        <small v-if="errors?.message" class="text-error">{{ errors.message[0] }}</small>
 
-        <button class="btn-primary" :disabled="isLoading" type="submit">
+        <ui-button :disabled="isLoading" type="submit">
           {{ isLoading ? 'Saving...' : 'Set new password' }}
-        </button>
+        </ui-button>
       </form>
-    </article>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import PasswordField from '@/features/shared/components/forms/PasswordField.vue'
-import { API_BASE } from '@/features/shared/config/api'
+import UiPasswordField from '@/components/UiPasswordField.vue'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiCard from '@/components/UiCard.vue'
+
+interface Errors {
+  new_password?: string[]
+  confirm_password?: string[]
+  non_field_errors?: string[]
+  message: string[]
+}
 
 const route = useRoute()
 const status = ref('loading')
 const message = ref('')
 const isLoading = ref(false)
-const errors = ref({})
+const errors = ref<Errors | null>(null)
 const form = ref({
   new_password: '',
   confirm_password: '',
 })
 
-const resetUrl = `${API_BASE}/api/accounts/password-reset/${route.params.uid}/${route.params.token}/`
-
 const validateResetLink = async () => {
   try {
-    const response = await fetch(resetUrl)
-    const data = await response.json()
-
-    if (!response.ok) {
-      status.value = 'invalid'
-      message.value = data.message || 'Password reset link is invalid or expired.'
-      return
-    }
+    await $api.accounts.validatePassword({
+      info: { uid: String(route.params.uid), token: String(route.params.token) },
+    })
 
     status.value = 'ready'
     message.value = ''
-  } catch {
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        errors.value = err.response.data.message || 'Password reset link is invalid or expired.'
+      } else {
+        message.value = 'Server connection error.'
+      }
+    }
     status.value = 'invalid'
-    message.value = 'Server connection error.'
   }
 }
 
 const handleReset = async () => {
   isLoading.value = true
-  errors.value = {}
+  errors.value = null
 
   try {
-    const response = await fetch(resetUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form.value),
+    const response = await $api.accounts.resetPassword({
+      info: { uid: String(route.params.uid), token: String(route.params.token) },
+      body: form.value,
     })
 
-    const data = await response.json()
-
-    if (!response.ok) {
-      if (data.message) {
-        errors.value = { message: [data.message] }
-      } else {
-        errors.value = data
-      }
-      return
-    }
-
     status.value = 'success'
-    message.value = data.message || 'Password has been reset successfully.'
-  } catch {
-    errors.value = { message: ['Server connection error.'] }
+    message.value = response?.data.message || 'Password has been reset successfully.'
+  } catch (err) {
+    if (isApiError(err)) {
+      if (err.response) {
+        errors.value = err.response.data || 'Something went wrong.'
+      } else {
+        errors.value = { message: ['Server connection error.'] }
+      }
+    }
   } finally {
     isLoading.value = false
   }

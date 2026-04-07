@@ -1,18 +1,19 @@
 <template>
   <section class="page-shell centered">
-    <article class="card forgot-card">
+    <ui-card class="forgot-card">
       <p class="section-eyebrow">Password Recovery</p>
       <h1 class="section-title">Forgot your password?</h1>
-      <p class="section-subtitle">Enter your account email and we will send you a password reset link.</p>
+      <p class="section-subtitle">
+        Enter your account email and we will send you a password reset link.
+      </p>
 
       <p v-if="statusMessage" :class="['notice', statusType]">{{ statusMessage }}</p>
 
       <form class="forgot-form" @submit.prevent="handleSubmit">
         <label class="form-label">
           Email
-          <input
+          <ui-input
             v-model="email"
-            class="input-control"
             type="email"
             autocomplete="email"
             placeholder="name@mail.com"
@@ -21,27 +22,31 @@
           <small v-if="errors.email" class="text-error">{{ errors.email[0] }}</small>
         </label>
 
-        <button class="btn-primary" :disabled="isLoading" type="submit">
+        <ui-button :disabled="isLoading" type="submit">
           {{ isLoading ? 'Sending...' : 'Send reset link' }}
-        </button>
+        </ui-button>
       </form>
 
       <p class="auth-link">
         Remembered your password?
         <router-link to="/login">Back to sign in</router-link>
       </p>
-    </article>
+    </ui-card>
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 
-import { API_BASE } from '@/features/shared/config/api'
+import $api from '@/services'
+import { isApiError } from '@/services/apiClient'
+import UiButton from '@/components/UiButton.vue'
+import UiInput from '@/components/UiInput.vue'
+import UiCard from '@/components/UiCard.vue'
 
 const email = ref('')
 const isLoading = ref(false)
-const errors = ref({})
+const errors = ref<{ email?: string }>({})
 const statusMessage = ref('')
 const statusType = ref('success')
 
@@ -51,26 +56,20 @@ const handleSubmit = async () => {
   statusMessage.value = ''
 
   try {
-    const response = await fetch(`${API_BASE}/api/accounts/password-reset/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value }),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      errors.value = data
-      statusType.value = 'error'
-      statusMessage.value = data.detail || 'Please check your email and try again.'
-      return
-    }
+    const response = await $api.accounts.forgotPassword({ email: email.value })
 
     statusType.value = 'success'
-    statusMessage.value = data.message || 'Password reset email sent successfully.'
-  } catch {
-    statusType.value = 'error'
-    statusMessage.value = 'Server connection error.'
+    statusMessage.value = response?.data.message || 'Password reset email sent successfully.'
+  } catch (err) {
+    if (isApiError(err)) {
+      statusType.value = 'error'
+
+      if (err.response) {
+        statusMessage.value = err.response?.data || 'Please check your email and try again.'
+      } else {
+        statusMessage.value = 'Server connection error.'
+      }
+    }
   } finally {
     isLoading.value = false
   }
