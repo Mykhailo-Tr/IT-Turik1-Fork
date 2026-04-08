@@ -11,20 +11,20 @@
       </template>
 
       <form class="form-grid" @submit.prevent="handleFormSubmit">
-        <label class="form-label">
-          Team name
+        <div class="form-item">
+          <label class="form-label"> Team name </label>
           <ui-input v-model="form.name" required />
-        </label>
+        </div>
 
-        <label class="form-label">
-          Team email
+        <div class="form-item">
+          <label class="form-label"> Team email </label>
           <ui-input v-model="form.email" type="email" required />
-        </label>
+        </div>
 
-        <label class="form-label">
-          Organization
+        <div class="form-item">
+          <label class="form-label"> Organization </label>
           <ui-input v-model="form.organization" />
-        </label>
+        </div>
 
         <label class="form-label toggle-field">
           <span>Team visibility</span>
@@ -45,25 +45,25 @@
           </div>
         </label>
 
-        <label class="form-label">
-          Telegram
+        <div class="form-item">
+          <label class="form-label"> Telegram </label>
           <ui-input
             v-model="form.contact_telegram"
             placeholder="@team_username"
             pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
             title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
           />
-        </label>
+        </div>
 
-        <label class="form-label">
-          Discord
+        <div class="form-item">
+          <label class="form-label"> Discord </label>
           <ui-input
             v-model="form.contact_discord"
             placeholder="team.username"
             pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
             title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
           />
-        </label>
+        </div>
 
         <div class="full-width">
           <label class="form-label"> Add initial members </label>
@@ -214,6 +214,12 @@ const handleFormSubmit = () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .full-width {

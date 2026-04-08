@@ -191,8 +191,8 @@
 
       <form v-else class="password-form" @submit.prevent="handleRecoveryRequest">
         <p class="text-muted">No worries. We will send a secure reset link to your email.</p>
-        <label class="form-label">
-          Account email
+        <div class="form-item">
+          <label class="form-label"> Account email </label>
           <ui-input
             v-model="recoveryEmail"
             :class="{ 'field-invalid': passwordErrors?.email }"
@@ -203,7 +203,7 @@
           <small v-if="passwordErrors?.email" class="text-error">{{
             passwordErrors.email[0]
           }}</small>
-        </label>
+        </div>
 
         <ui-button type="submit" :disabled="isRecoveringPassword">
           <LoadingIcon v-if="isRecoveringPassword" />

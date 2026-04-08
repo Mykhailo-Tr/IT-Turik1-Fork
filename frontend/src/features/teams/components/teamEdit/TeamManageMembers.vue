@@ -13,14 +13,13 @@
       </header>
     </template>
 
-    <label class="form-label member-search">
-      Search members
+    <div class="form-item">
       <ui-input
         v-model="memberSearch"
         placeholder="Search by username or email"
         :disabled="props.loading"
       />
-    </label>
+    </div>
 
     <ui-skeleton-loader :loading="props.loading">
       <template #skeleton>
@@ -113,8 +112,8 @@
     <div class="add-member-box">
       <h3>Invite user</h3>
 
-      <label class="form-label">
-        Select user
+      <div class="form-item">
+        <label class="form-label"> Select user </label>
         <ui-skeleton-loader :loading="isLoadingUsers">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45.6px" width="100%" />
@@ -122,7 +121,7 @@
 
           <ui-select :options="userOptions" v-model="addMemberSelection" style="width: 100%" />
         </ui-skeleton-loader>
-      </label>
+      </div>
 
       <p v-if="availableUsers?.length === 0" class="text-muted">No available users to add.</p>
 
@@ -264,8 +263,10 @@ const addMember = () => {
   font-size: 1.15rem;
 }
 
-.member-search {
-  margin-bottom: 0.75rem;
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .member-list {

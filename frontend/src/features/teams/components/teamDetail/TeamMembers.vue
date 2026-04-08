@@ -12,14 +12,13 @@
       </ui-skeleton-loader>
     </header>
 
-    <label class="form-label member-search">
-      Search members
+    <div class="form-item">
       <ui-input
         v-model="memberSearch"
         placeholder="Search by username or email"
         :disabled="props.loading"
       />
-    </label>
+    </div>
 
     <div class="members-sections">
       <section class="members-section">
@@ -461,8 +460,10 @@ const resendInvitation = (userId: UserId) => {
   font-size: 1.15rem;
 }
 
-.member-search {
-  margin-bottom: 0.75rem;
+.form-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
 }
 
 .members-sections {
