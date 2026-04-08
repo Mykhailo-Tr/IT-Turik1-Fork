@@ -1,70 +1,45 @@
-import $api from '@/services'
-import type { GetProfileResponse, UpdateProfileBody } from '@/services/accounts/types'
-import type { User } from '@/services/dbTypes'
+import type { LoginResponse } from '@/api/accounts/types'
+import { accountKeys } from '@/queries/keys'
+import { useQueryClient } from '@tanstack/vue-query'
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
-  const user = ref<GetProfileResponse | null>(null)
-  const isLoaded = ref(false)
-  const isLoading = ref(false)
-  const isInitialized = ref(false)
+  const queryClient = useQueryClient()
 
-  const isLoggedIn = computed(() => !!user.value)
+  function setTokens(data: LoginResponse) {
+    localStorage.setItem('access', data.access)
+    localStorage.setItem('refresh', data.refresh)
 
-  async function update(data: UpdateProfileBody) {
-    await $api.accounts.updateProfile(data)
-
-    await loadUser(true)
-  }
-
-  async function loadUser(force = false) {
-    if (isLoaded.value && !force) return
-    if (!localStorage.getItem('access')) return
-
-    isLoading.value = true
-    try {
-      const response = await $api.accounts.getProfile()
-
-      user.value = response.data
-      isLoaded.value = true
-    } catch {
-      logout()
-    } finally {
-      isInitialized.value = true
-      isLoading.value = false
+    if (data.onboarding_required) {
+      localStorage.setItem('needs_onboarding', '1')
+    } else {
+      localStorage.removeItem('needs_onboarding')
     }
   }
 
-  async function login(credentials: { username: User['username']; password: string }) {
-    isLoading.value = true
-    try {
-      const response = await $api.accounts.login(credentials)
-
-      localStorage.setItem('access', response.data.access)
-      localStorage.setItem('refresh', response.data.refresh)
-
-      if (response.data.onboarding_required) {
-        localStorage.setItem('needs_onboarding', '1')
-      } else {
-        localStorage.removeItem('needs_onboarding')
-      }
-
-      await loadUser(true)
-
-      return response.data
-    } finally {
-      isLoading.value = false
+  function getTokens() {
+    return {
+      access: localStorage.getItem('access'),
+      refresh: localStorage.getItem('refresh'),
+      needsOnboarding: localStorage.getItem('needs_onboarding'),
     }
+  }
+
+  function removeTokens() {
+    localStorage.removeItem('access')
+    localStorage.removeItem('refresh')
+    localStorage.removeItem('needs_onboarding')
   }
 
   function logout() {
-    localStorage.removeItem('access')
-    localStorage.removeItem('refresh')
-    user.value = null
-    isLoaded.value = false
-    isInitialized.value = false
+    removeTokens()
+    queryClient.resetQueries({ queryKey: accountKeys.profile() })
   }
 
-  return { user, isLoggedIn, isLoading, isLoaded, isInitialized, loadUser, update, login, logout }
+  return {
+    getTokens,
+    setTokens,
+    removeTokens,
+    logout,
+  }
 })

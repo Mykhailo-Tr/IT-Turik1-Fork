@@ -94,13 +94,10 @@ const router = createRouter({
 
 router.beforeEach(async (to, _from, next) => {
   const store = useUserStore()
+  const tokens = store.getTokens()
 
-  if (!store.isInitialized) {
-    await store.loadUser()
-  }
-
-  const isAuthenticated: boolean = store.isLoggedIn
-  const needsOnboarding: boolean = localStorage.getItem('needs_onboarding') === '1'
+  const isAuthenticated = !!tokens.access
+  const needsOnboarding = !!tokens.needsOnboarding
 
   if (isAuthenticated && needsOnboarding && to.path !== '/complete-profile') {
     next('/complete-profile')
@@ -113,6 +110,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.requiresAuth && !isAuthenticated) {
+    store.logout()
     next('/login')
     return
   }

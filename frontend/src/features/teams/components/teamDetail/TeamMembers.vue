@@ -2,174 +2,243 @@
   <ui-card class="panel members-panel">
     <header class="panel-head">
       <h2>Members</h2>
-      <span class="text-muted">{{ props.team.members.length }} accepted</span>
+
+      <ui-skeleton-loader :loading="props.loading">
+        <template #skeleton>
+          <ui-skeleton variant="rect" width="80px" />
+        </template>
+
+        <span class="text-muted">{{ props.team?.members.length }} accepted</span>
+      </ui-skeleton-loader>
     </header>
 
     <label class="form-label member-search">
       Search members
-      <ui-input v-model="memberSearch" placeholder="Search by username or email" />
+      <ui-input
+        v-model="memberSearch"
+        placeholder="Search by username or email"
+        :disabled="props.loading"
+      />
     </label>
 
     <div class="members-sections">
       <section class="members-section">
         <header class="section-subhead">
           <h3>Members</h3>
-          <span class="text-muted">{{ filteredMembers.length }} people</span>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="80px" />
+            </template>
+
+            <span class="text-muted">{{ filteredMembers?.length }} people</span>
+          </ui-skeleton-loader>
         </header>
 
-        <div class="member-list">
-          <ui-card
-            v-for="member in filteredMembers"
-            :key="`member-${member.id}`"
-            class="member-row"
-          >
-            <div>
-              <p class="member-name">{{ member.username }}</p>
+        <ui-skeleton-loader class="member-list" :loading="props.loading">
+          <template #skeleton>
+            <div class="member-list">
+              <ui-card
+                v-for="i in 2"
+                :key="i"
+                style="display: flex; flex-direction: column; gap: 10px"
+              >
+                <template #header>
+                  <div style="display: flex; justify-content: space-between; gap: 10px">
+                    <ui-skeleton variant="rect" width="100%" />
+                    <ui-skeleton variant="rect" width="100px" />
+                  </div>
+                </template>
+
+                <ui-skeleton variant="rect" width="200px" />
+              </ui-card>
+            </div>
+          </template>
+
+          <div class="member-list">
+            <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`">
+              <template #header>
+                <div style="display: flex; justify-content: space-between">
+                  <p class="member-name">{{ member.username }}</p>
+
+                  <ui-badge v-if="member.id === props.team?.captain_id" variant="green"
+                    >Captain</ui-badge
+                  >
+                </div>
+              </template>
               <p class="text-muted member-email">{{ member.email }}</p>
-            </div>
-            <div class="member-side">
-              <ui-badge v-if="member.id === props.team.captain_id" variant="green"
-                >Captain</ui-badge
-              >
-              <template v-else>
-                <ui-badge variant="gray">{{
-                  statusByUserId[member.id]?.source || 'Member'
-                }}</ui-badge>
-              </template>
-            </div>
-          </ui-card>
-        </div>
 
-        <p v-if="filteredMembers.length === 0" class="text-muted member-note">
-          No accepted members match your search.
-        </p>
+              <div class="member-side">
+                <template>
+                  <ui-badge variant="gray">{{
+                    statusByUserId[member.id]?.source || 'Member'
+                  }}</ui-badge>
+                </template>
+              </div>
+            </ui-card>
+
+            <p v-if="filteredMembers?.length === 0" class="text-muted">
+              No accepted members match your search.
+            </p>
+          </div>
+        </ui-skeleton-loader>
       </section>
 
-      <section v-if="props.isCaptain" class="members-section">
-        <header class="section-subhead">
-          <h3>Join Requests</h3>
-          <span class="text-muted">{{ filteredPendingJoinRequests.length }} pending</span>
-        </header>
+      <section>
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <div class="members-section">
+              <header class="section-subhead">
+                <ui-skeleton variant="rect" width="150px" />
+                <ui-skeleton variant="rect" width="50px" />
+              </header>
 
-        <p v-if="filteredPendingJoinRequests.length === 0" class="text-muted member-note">
-          No pending join requests.
-        </p>
+              <div class="member-list">
+                <ui-card v-for="i in 2" :key="i">
+                  <div style="display: flex; flex-direction: column; gap: 5px">
+                    <ui-skeleton variant="rect" width="200px" />
+                    <ui-skeleton variant="rect" width="200px" />
+                  </div>
 
-        <div v-else class="member-list">
-          <article
-            v-for="joinRequest in filteredPendingJoinRequests"
-            :key="`join-request-${joinRequest.id}`"
-            class="member-row"
-          >
-            <div>
-              <p class="member-name">{{ joinRequest.user.username }}</p>
-              <p class="text-muted member-email">{{ joinRequest.user.email }}</p>
+                  <template #footer>
+                    <div class="row-actions">
+                      <ui-skeleton variant="rect" width="80px" />
+                      <ui-skeleton variant="rect" width="80px" />
+                    </div>
+                  </template>
+                </ui-card>
+              </div>
             </div>
-            <div class="member-side">
-              <ui-badge v-if="joinRequest.user.id === props.team.captain_id" variant="green"
-                >Captain</ui-badge
-              >
-              <template v-else>
-                <div class="row-actions">
-                  <ui-button
-                    size="sm"
-                    :disabled="joinRequestsLoading[joinRequest.id]"
-                    @click="reviewJoinRequest(joinRequest.id, 'accept')"
+          </template>
+
+          <div v-if="props.isCaptain" class="join-request-list">
+            <header class="section-subhead">
+              <h3>Join Requests</h3>
+              <span class="text-muted">{{ filteredPendingJoinRequests?.length }} pending</span>
+            </header>
+
+            <ui-card
+              v-for="joinRequest in filteredPendingJoinRequests"
+              :key="`join-request-${joinRequest.id}`"
+            >
+              <div>
+                <p class="member-name">{{ joinRequest.user.username }}</p>
+                <p class="text-muted member-email">{{ joinRequest.user.email }}</p>
+              </div>
+
+              <template #footer>
+                <div>
+                  <ui-badge v-if="joinRequest.user.id === props.team?.captain_id" variant="green"
+                    >Captain</ui-badge
                   >
-                    Accept
-                  </ui-button>
-                  <ui-button
-                    variant="outline"
-                    size="sm"
-                    :disabled="joinRequestsLoading[joinRequest.id]"
-                    @click="reviewJoinRequest(joinRequest.id, 'decline')"
-                  >
-                    Decline
-                  </ui-button>
+                  <template v-else>
+                    <div class="row-actions">
+                      <ui-button
+                        size="sm"
+                        :disabled="loadingJoinRequestIds.has(joinRequest.id)"
+                        @click="reviewJoinRequest(joinRequest.id, 'accept')"
+                      >
+                        <loading-icon v-if="loadingJoinRequestIds.has(joinRequest.id)" />
+                        Accept
+                      </ui-button>
+                      <ui-button
+                        variant="outline"
+                        size="sm"
+                        :disabled="loadingJoinRequestIds.has(joinRequest.id)"
+                        @click="reviewJoinRequest(joinRequest.id, 'decline')"
+                      >
+                        Decline
+                      </ui-button>
+                    </div>
+                  </template>
                 </div>
               </template>
-            </div>
-          </article>
-        </div>
+            </ui-card>
+
+            <p v-if="filteredPendingJoinRequests?.length === 0" class="text-muted">
+              No pending join requests.
+            </p>
+          </div>
+        </ui-skeleton-loader>
       </section>
 
-      <section v-if="props.isCaptain" class="members-section">
-        <header class="section-subhead">
-          <h3>Invitations</h3>
-          <span class="text-muted">
-            {{ filteredPendingInvitations.length }} awaiting response
-            <span v-if="filteredDeclinedInvitations.length">
-              , {{ filteredDeclinedInvitations.length }} declined
+      <ui-skeleton-loader :loading="props.loading">
+        <section v-if="props.isCaptain" class="invitations-list">
+          <header class="section-subhead">
+            <h3>Invitations</h3>
+            <span class="text-muted">
+              {{ filteredPendingInvitations.length }} awaiting response
+              <span v-if="filteredDeclinedInvitations.length">
+                , {{ filteredDeclinedInvitations.length }} declined
+              </span>
             </span>
-          </span>
-        </header>
+          </header>
 
-        <p
-          v-if="filteredPendingInvitations.length === 0 && filteredDeclinedInvitations.length === 0"
-          class="text-muted member-note"
-        >
-          No invitations yet.
-        </p>
-
-        <div v-else class="member-list invitations-list">
-          <article
-            v-for="invitation in filteredPendingInvitations"
-            :key="`invitation-pending-${invitation.id}`"
-            class="member-row"
+          <p
+            v-if="
+              filteredPendingInvitations.length === 0 && filteredDeclinedInvitations.length === 0
+            "
+            class="text-muted"
           >
-            <div>
-              <p class="member-name">{{ invitation.user.username }}</p>
-              <p class="text-muted member-email">{{ invitation.user.email }}</p>
-            </div>
-            <div class="member-side">
-              <ui-badge v-if="invitation.user.id === props.team.captain_id" variant="green"
-                >Captain</ui-badge
-              >
-              <template v-else>
-                <div class="status-tags">
-                  <span class="status status--invited">invited</span>
+            No invitations yet.
+          </p>
+
+          <div v-else class="invitations-list">
+            <ui-card
+              v-for="invitation in filteredPendingInvitations"
+              :key="`invitation-pending-${invitation.id}`"
+            >
+              <template #header>
+                <div style="display: flex; justify-content: space-between">
+                  <p class="member-name">{{ invitation.user.username }}</p>
+                  <ui-badge class>invited</ui-badge>
                 </div>
               </template>
-            </div>
-          </article>
 
-          <article
-            v-for="invitation in filteredDeclinedInvitations"
-            :key="`invitation-declined-${invitation.id}`"
-            class="member-row"
-          >
-            <div>
-              <p class="member-name">{{ invitation.user.username }}</p>
               <p class="text-muted member-email">{{ invitation.user.email }}</p>
-            </div>
-            <div class="member-side">
-              <ui-badge v-if="invitation.user.id === props.team.captain_id" variant="green"
-                >Captain</ui-badge
-              >
-              <template v-else>
-                <div class="status-tags">
-                  <ui-badge variant="red">Declined</ui-badge>
-                  <ui-badge>Invatation</ui-badge>
-                </div>
-                <div class="row-actions">
-                  <ui-button
-                    variant="outline"
-                    size="sm"
-                    :disabled="resendInvitationsLoading[invitation.user.id]"
-                    @click="resendInvitation(invitation.user.id)"
-                  >
-                    {{
-                      resendInvitationsLoading[invitation.user.id]
-                        ? 'Resending...'
-                        : 'Resend invitation'
-                    }}
-                  </ui-button>
-                </div>
-              </template>
-            </div>
-          </article>
-        </div>
-      </section>
+
+              <div class="member-side">
+                <ui-badge v-if="invitation.user.id === props.team?.captain_id" variant="green"
+                  >Captain</ui-badge
+                >
+                <template v-else> </template>
+              </div>
+            </ui-card>
+
+            <ui-card
+              v-for="invitation in filteredDeclinedInvitations"
+              :key="`invitation-declined-${invitation.id}`"
+            >
+              <div>
+                <p class="member-name">{{ invitation.user.username }}</p>
+                <p class="text-muted member-email">{{ invitation.user.email }}</p>
+              </div>
+
+              <div class="member-side">
+                <ui-badge v-if="invitation.user.id === props.team?.captain_id" variant="green"
+                  >Captain</ui-badge
+                >
+                <template v-else>
+                  <div class="status-tags">
+                    <ui-badge variant="red">Declined</ui-badge>
+                    <ui-badge>Invatation</ui-badge>
+                  </div>
+                  <div class="row-actions">
+                    <ui-button
+                      variant="outline"
+                      size="sm"
+                      :disabled="loadingInvitationIds.has(invitation.id)"
+                      @click="resendInvitation(invitation.user.id)"
+                    >
+                      <loading-icon v-if="loadingInvitationIds.has(invitation.id)" />
+                      Resend invitation
+                    </ui-button>
+                  </div>
+                </template>
+              </div>
+            </ui-card>
+          </div>
+        </section>
+      </ui-skeleton-loader>
     </div>
   </ui-card>
 </template>
@@ -179,21 +248,24 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useAuth } from '@/composables/useAuth'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { Invitation, JoinRequestId, UserId } from '@/services/dbTypes'
-import type { GetTeamInfoResponse, ManageJoinRequestAction } from '@/services/teams/types'
+import type { Invitation, JoinRequest, JoinRequestId, UserId } from '@/api/dbTypes'
+import type { GetTeamInfoResponse, ManageJoinRequestAction } from '@/api/teams/types'
 import { computed, ref } from 'vue'
+import { useManageJoinRequest, useResendInvitation } from '@/queries/teams'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
+import type { GetProfileResponse } from '@/api/accounts/types'
 
 interface Props {
-  team: GetTeamInfoResponse
+  team?: GetTeamInfoResponse
+  user?: GetProfileResponse
+  loading: boolean
   isCaptain: boolean
 }
 
 const props = defineProps<Props>()
-const auth = useAuth()
 const { showNotification, hideNotification } = useGlobalNotification()
 
 const emit = defineEmits<{
@@ -211,19 +283,19 @@ interface UserStatus {
 const statusByUserId = computed<Record<UserId, UserStatus>>(() => {
   const map: Record<UserId, UserStatus> = {}
 
-  const membersSet = new Set((props.team.members || []).map((m) => m.id))
-  const myInvitationStatus = props.team.my_invitation_status
-  const myJoinRequestStatus = props.team.my_join_request_status
-  const invitations = props.team.invitations || []
-  const joinRequests = props.team.join_requests || []
+  const membersSet = new Set((props.team?.members || []).map((m) => m.id))
+  const myInvitationStatus = props.team?.my_invitation_status
+  const myJoinRequestStatus = props.team?.my_join_request_status
+  const invitations = props.team?.invitations || []
+  const joinRequests = props.team?.join_requests || []
 
-  const invitationByUserId: Record<UserId, (typeof invitations)[number]> = {}
+  const invitationByUserId: Record<UserId, Invitation> = {}
   for (const inv of invitations) {
     const uid = inv?.user?.id
     if (uid) invitationByUserId[uid] = inv
   }
 
-  const joinRequestByUserId: Record<UserId, (typeof joinRequests)[number]> = {}
+  const joinRequestByUserId: Record<UserId, JoinRequest> = {}
   for (const jr of joinRequests) {
     const uid = jr?.user?.id
     if (uid) joinRequestByUserId[uid] = jr
@@ -239,7 +311,7 @@ const statusByUserId = computed<Record<UserId, UserStatus>>(() => {
     const invitation = invitationByUserId[userId]
     const joinRequest = joinRequestByUserId[userId]
     const accepted = membersSet.has(userId)
-    const isCurrentUser = userId === auth.user.value?.id
+    const isCurrentUser = userId === props.user?.id
 
     const invitationStatus = invitation?.status ?? (isCurrentUser ? myInvitationStatus : null)
     const joinRequestStatus = joinRequest?.status ?? (isCurrentUser ? myJoinRequestStatus : null)
@@ -274,50 +346,49 @@ const matches = (parts: (string | undefined)[]) => {
 
 // ── members ───────────────────────────────────────────────────
 const filteredMembers = computed(() =>
-  props.team.members.filter((m) => matches([m.username, m.email, m.full_name])),
+  props.team?.members.filter((m) => matches([m.username, m.email, m.full_name])),
 )
 
 // ── join requests ─────────────────────────────────────────────
-const joinRequestsLoading = ref<Record<number, boolean>>({})
-
 const filteredPendingJoinRequests = computed(() =>
-  (props.team.join_requests ?? [])
-    .filter((r) => r.status === 'pending')
+  props.team?.join_requests
+    ?.filter((r) => r.status === 'pending')
     .filter((r) => matches([r.user.username, r.user.email, r.user.full_name])),
 )
 
-const reviewJoinRequest = async (id: JoinRequestId, action: ManageJoinRequestAction) => {
-  joinRequestsLoading.value = {
-    ...joinRequestsLoading.value,
-    [id]: true,
-  }
+const loadingJoinRequestIds = ref<Set<JoinRequestId>>(new Set())
+const { mutate: manageJoinRequestMutate } = useManageJoinRequest()
 
+const reviewJoinRequest = (id: JoinRequestId, action: ManageJoinRequestAction) => {
+  if (!props.team) return
+
+  loadingJoinRequestIds.value.add(id)
   hideNotification()
-  try {
-    const response = await $api.teams.manageJoinRequest(id, props.team.id, action)
 
-    emit('updateTeam', response.data)
-    const pastTense = {
-      accept: 'accepted',
-      decline: 'declined',
-    }
-    showNotification(`Join request ${pastTense[action]}`, 'success')
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? `Unavle to ${action} join request` : 'Server connection error.',
-        'error',
-      )
-    }
-  }
+  manageJoinRequestMutate(
+    { id, teamId: props.team?.id, action },
+    {
+      onSuccess: () => {
+        const pastTense = { accept: 'accepted', decline: 'declined' }
+        showNotification(`Join request ${pastTense[action]}`, 'success')
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? `Unable to ${action} join request` : 'Server connection error.',
+          'error',
+        )
+      },
+      onSettled: () => {
+        loadingJoinRequestIds.value.delete(id)
+      },
+    },
+  )
 }
 
 // ── invitations ───────────────────────────────────────────────
-const resendInvitationsLoading = ref<Record<UserId, boolean>>({})
-
 const uniqueInvitations = computed(() => {
   const byUserId = new Map<UserId, Invitation>()
-  for (const inv of props.team.invitations) {
+  for (const inv of props.team?.invitations ?? []) {
     const uid = inv.user.id
 
     const prev = byUserId.get(uid)
@@ -340,24 +411,32 @@ const filteredDeclinedInvitations = computed(() =>
     .filter((i) => matches([i.user.username, i.user.email, i.user.full_name])),
 )
 
-const resendInvitation = async (userId: UserId) => {
-  resendInvitationsLoading.value = {
-    ...resendInvitationsLoading.value,
-    [userId]: true,
-  }
+const loadingInvitationIds = ref<Set<UserId>>(new Set())
+const { mutate: resendInvitationMutate } = useResendInvitation()
 
+const resendInvitation = (userId: UserId) => {
+  if (!props.team) return
+
+  loadingInvitationIds.value.add(userId)
   hideNotification()
-  try {
-    const response = await $api.teams.resendInvatation(props.team.id, { user_id: userId })
-    emit('updateTeam', response.data)
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to resent invatation.' : 'Server connection error.',
-        'success',
-      )
-    }
-  }
+
+  resendInvitationMutate(
+    { teamId: props.team.id, body: { user_id: userId } },
+    {
+      onSuccess: (data) => {
+        emit('updateTeam', data)
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to resend invitation.' : 'Server connection error.',
+          'error',
+        )
+      },
+      onSettled: () => {
+        loadingInvitationIds.value.delete(userId)
+      },
+    },
+  )
 }
 </script>
 
@@ -409,24 +488,12 @@ const resendInvitation = async (userId: UserId) => {
   font-size: 1rem;
 }
 
-.member-list {
+.member-list,
+.invitations-list,
+.join-request-list {
   display: grid;
   gap: 0.55rem;
-}
-
-.invitations-list {
   grid-template-rows: auto;
-}
-
-.member-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.7rem;
-  border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0.65rem 0.75rem;
 }
 
 .member-name,
@@ -443,10 +510,6 @@ const resendInvitation = async (userId: UserId) => {
   font-size: 0.84rem;
 }
 
-.member-note {
-  margin-top: 0.8rem;
-}
-
 .member-side {
   display: flex;
   flex-direction: column;
@@ -461,11 +524,6 @@ const resendInvitation = async (userId: UserId) => {
 }
 
 @media (max-width: 640px) {
-  .member-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
   .member-side {
     align-items: flex-start;
   }

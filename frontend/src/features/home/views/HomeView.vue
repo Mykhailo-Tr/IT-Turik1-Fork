@@ -3,59 +3,102 @@
     <ui-card class="hero">
       <div>
         <p class="eyebrow">Dashboard</p>
-        <h1>Welcome back, {{ displayName }}</h1>
+        <h1>
+          Welcome back,
+          <ui-skeleton-loader :loading="isLoading" style="display: inline-block">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="160px" />
+            </template>
+
+            <span>{{ displayName }}</span>
+          </ui-skeleton-loader>
+        </h1>
+
         <p class="sub">Manage your profile and stay ready for upcoming competitions.</p>
       </div>
-
-      <ui-button asLink to="/profile" variant="outline" class="open-profile-btn"
-        >Open profile</ui-button
-      >
     </ui-card>
 
     <div v-if="error" class="state-box error">{{ error }}</div>
 
-    <div v-else-if="auth.user.value" class="grid">
+    <div class="grid">
       <ui-card class="info-card">
-        <h2>Account details</h2>
-        <p><strong>Username:</strong> {{ auth.user.value!.username }}</p>
-        <p><strong>Email:</strong> {{ auth.user.value!.email }}</p>
-        <p><strong>Role:</strong> {{ auth.user.value!.role }}</p>
-        <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
+        <template #header>
+          <h2>Account details</h2>
+        </template>
+
+        <ui-skeleton-loader :loading="isLoading">
+          <template #skeleton>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <ui-skeleton variant="rect" width="55%" />
+              <ui-skeleton variant="rect" width="65%" />
+              <ui-skeleton variant="rect" width="35%" />
+              <ui-skeleton variant="rect" width="70%" />
+            </div>
+          </template>
+
+          <div class="account-data">
+            <p><strong>Username:</strong> {{ user?.username }}</p>
+            <p><strong>Email:</strong> {{ user?.email }}</p>
+            <p><strong>Role:</strong> {{ user?.role }}</p>
+            <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
+          </div>
+        </ui-skeleton-loader>
       </ui-card>
 
       <ui-card class="info-card accent">
-        <h2>Quick status</h2>
-        <ul>
-          <li>
-            Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span>
-          </li>
-          <li>
-            City set: <span>{{ auth.user.value!.city ? 'Yes' : 'No' }}</span>
-          </li>
-          <li>
-            Phone set: <span>{{ auth.user.value!.phone ? 'Yes' : 'No' }}</span>
-          </li>
-        </ul>
+        <template #header>
+          <h2>Quick status</h2>
+        </template>
+
+        <ui-skeleton-loader :loading="isLoading" min-height="90px">
+          <template #skeleton>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <ui-skeleton variant="rect" width="45%" />
+              <ui-skeleton variant="rect" width="38%" />
+              <ui-skeleton variant="rect" width="42%" />
+            </div>
+          </template>
+
+          <ul class="account-data">
+            <li>
+              Profile ready: <span>{{ profileReady ? 'Yes' : 'No' }}</span>
+            </li>
+            <li>
+              City set: <span>{{ user?.city ? 'Yes' : 'No' }}</span>
+            </li>
+            <li>
+              Phone set: <span>{{ user?.phone ? 'Yes' : 'No' }}</span>
+            </li>
+          </ul>
+        </ui-skeleton-loader>
       </ui-card>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import UiButton from '@/components/UiButton.vue'
+import { computed, watch } from 'vue'
 import UiCard from '@/components/UiCard.vue'
-import { useAuth } from '@/composables/useAuth'
+import UiSkeleton from '@/components/UiSkeleton.vue'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import { useProfile } from '@/queries/accounts'
+import { ref } from 'vue'
 
-const auth = useAuth()
+const error = ref<string | null>(null)
 
-const error = ref('')
+const { data: user, isLoading, error: profileError } = useProfile()
 
-const displayName = computed(
-  () => auth.user.value?.full_name || auth.user.value?.username || 'User',
-)
-const profileReady = computed(() => Boolean(auth.user.value?.full_name && auth.user.value?.city))
-const teamNames = computed(() => (auth.user.value?.teams || []).map((team) => team.name).join(', '))
+watch(profileError, (err) => {
+  if (err?.response) {
+    error.value = 'Could not load profile data.'
+  } else {
+    error.value = 'Server is unavailable. Please try again later.'
+  }
+})
+
+const displayName = computed(() => user.value?.full_name || user.value?.username || 'User')
+const profileReady = computed(() => Boolean(user.value?.full_name && user.value?.city))
+const teamNames = computed(() => (user.value?.teams || []).map((team) => team.name).join(', '))
 </script>
 
 <style scoped>
@@ -66,10 +109,6 @@ const teamNames = computed(() => (auth.user.value?.teams || []).map((team) => te
 
 .hero {
   padding: 1.4rem;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: center;
   background:
     linear-gradient(130deg, rgba(15, 118, 110, 0.95), rgba(20, 184, 166, 0.88)),
     linear-gradient(45deg, rgba(249, 115, 22, 0.2), transparent);
@@ -103,11 +142,6 @@ h1 {
   justify-content: flex-end;
 }
 
-.open-profile-btn {
-  color: white;
-  border-color: white;
-}
-
 .state-box {
   border-radius: 16px;
   padding: 1rem 1.1rem;
@@ -127,8 +161,10 @@ h1 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.info-card {
-  padding: 1.2rem;
+.account-data {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .info-card h2 {
@@ -137,7 +173,6 @@ h1 {
 }
 
 .info-card p {
-  margin: 0.5rem 0;
   color: var(--ink-700);
 }
 
@@ -146,7 +181,6 @@ h1 {
 }
 
 ul {
-  margin: 0.8rem 0 0;
   padding: 0;
   list-style: none;
   display: grid;

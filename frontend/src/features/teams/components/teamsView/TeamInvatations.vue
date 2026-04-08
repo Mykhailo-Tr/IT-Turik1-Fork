@@ -1,46 +1,81 @@
 <template>
   <ui-card>
-    <header class="section-head">
-      <h2>Invitations</h2>
-      <span class="text-muted">{{ pendingInboxInvitations?.length ?? 0 }} pending</span>
-    </header>
+    <template #header>
+      <div class="section-head">
+        <h2>Invitations</h2>
+        <ui-skeleton-loader :loading="inboxLoading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="70px" />
+          </template>
 
-    <p v-if="inboxLoading" class="text-muted">Loading invitations...</p>
-    <p v-else-if="pendingInboxInvitations?.length === 0" class="text-muted">
-      No pending invitations.
-    </p>
-    <div v-else class="team-grid">
-      <article
-        v-for="invitation in pendingInboxInvitations"
-        :key="`invite-${invitation.id}`"
-        class="team-item"
-      >
-        <div class="team-meta">
-          <h3>{{ invitation.team.name }}</h3>
-          <span class="status status--invited">invited</span>
+          <span class="text-muted">{{ pendingInboxInvitations?.length ?? 0 }} pending</span>
+        </ui-skeleton-loader>
+      </div>
+    </template>
+
+    <ui-skeleton-loader :loading="inboxLoading">
+      <template #skeleton>
+        <div class="team-grid">
+          <ui-card v-for="i in 2" :key="i" style="display: flex; flex-direction: column; gap: 10px">
+            <template #header>
+              <div class="team-meta">
+                <ui-skeleton variant="rect" width="100%" />
+                <ui-skeleton variant="rect" width="80px" />
+              </div>
+            </template>
+
+            <ui-skeleton variant="rect" width="120px" />
+
+            <template #footer>
+              <div style="display: flex; gap: 10px">
+                <ui-skeleton variant="rect" height="1.8rem" width="80px" />
+                <ui-skeleton variant="rect" height="1.8rem" width="80px" />
+              </div>
+            </template>
+          </ui-card>
         </div>
-        <p class="text-muted">
-          Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}
-        </p>
-        <div class="row-actions">
-          <ui-button
-            size="sm"
-            :disabled="invitationActionLoading[invitation.id]"
-            @click="respondToInvitation(invitation.id, 'accept')"
-          >
-            Accept
-          </ui-button>
-          <ui-button
-            size="sm"
-            variant="outline"
-            :disabled="invitationActionLoading[invitation.id]"
-            @click="respondToInvitation(invitation.id, 'decline')"
-          >
-            Decline
-          </ui-button>
-        </div>
-      </article>
-    </div>
+      </template>
+
+      <p v-if="pendingInboxInvitations?.length === 0" class="text-muted">No pending invitations.</p>
+      <div v-else class="team-grid">
+        <ui-card
+          v-for="invitation in pendingInboxInvitations"
+          :key="`invite-${invitation.id}`"
+          class="team-item"
+        >
+          <template #header>
+            <div class="team-meta">
+              <h3>{{ invitation.team.name }}</h3>
+
+              <ui-badge class="text-muted">
+                Invited by: {{ invitation.invited_by?.username || 'Unknown user' }}
+              </ui-badge>
+            </div>
+          </template>
+
+          <template #footer>
+            <div class="row-actions">
+              <ui-button
+                size="sm"
+                :disabled="loadingIds.has(invitation.id)"
+                @click="respondToInvitation(invitation.id, 'accept')"
+              >
+                <loading-icon v-if="loadingIds.has(invitation.id)" />
+                Accept
+              </ui-button>
+              <ui-button
+                size="sm"
+                variant="outline"
+                :disabled="loadingIds.has(invitation.id)"
+                @click="respondToInvitation(invitation.id, 'decline')"
+              >
+                Decline
+              </ui-button>
+            </div>
+          </template>
+        </ui-card>
+      </div>
+    </ui-skeleton-loader>
   </ui-card>
 </template>
 
@@ -48,74 +83,48 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { Invitation, InvitationId } from '@/services/dbTypes'
-import { computed, onMounted, ref } from 'vue'
+import { useInvitations, useRespondToInvitation } from '@/queries/teams'
+import type { InvitationId } from '@/api/dbTypes'
+import { computed, ref } from 'vue'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
+import UiBadge from '@/components/UiBadge.vue'
 
-const { hideNotification, showNotification } = useGlobalNotification()
-const emit = defineEmits<{
-  (e: 'respondedToInvatation'): void
-}>()
+const { showNotification } = useGlobalNotification()
 
-const inboxLoading = ref(false)
-const inboxInvitations = ref<Invitation[] | null>()
-const invitationActionLoading = ref<Record<InvitationId, boolean>>({})
+const { data: inboxInvitations, isLoading: inboxLoading } = useInvitations()
 
 const pendingInboxInvitations = computed(() =>
   inboxInvitations.value?.filter((invitation) => invitation.status === 'invited'),
 )
 
-const respondToInvitation = async (invitationId: InvitationId, action: 'accept' | 'decline') => {
-  invitationActionLoading.value = {
-    ...invitationActionLoading.value,
-    [invitationId]: true,
-  }
-  hideNotification()
+const { mutate: respond } = useRespondToInvitation()
+const loadingIds = ref<Set<InvitationId>>(new Set())
 
-  try {
-    await $api.teams.respondToInvitation(invitationId, action)
-
-    emit('respondedToInvatation')
-    showNotification(
-      action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.',
-      'success',
-    )
-
-    await fetchInvitations()
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? `Unable to ${action} invitation.` : 'Unable to connect to server.',
-        'error',
-      )
-    }
-  } finally {
-    invitationActionLoading.value = {
-      ...invitationActionLoading.value,
-      [invitationId]: false,
-    }
-  }
+const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'decline') => {
+  loadingIds.value.add(invitationId)
+  respond(
+    { id: invitationId, action },
+    {
+      onSuccess: () => {
+        showNotification(
+          action === 'accept' ? 'Invitation accepted.' : 'Invitation declined.',
+          'success',
+        )
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? `Unable to ${action} invitation.` : 'Unable to connect to server.',
+          'error',
+        )
+      },
+      onSettled: () => {
+        loadingIds.value.delete(invitationId)
+      },
+    },
+  )
 }
-
-const fetchInvitations = async () => {
-  try {
-    const response = await $api.teams.getInvatations()
-
-    inboxInvitations.value = response.data
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to load invitations.' : 'Unable to connect to server.',
-        'error',
-      )
-    }
-  }
-}
-
-onMounted(() => {
-  fetchInvitations()
-})
 </script>
 
 <style>
@@ -138,12 +147,7 @@ onMounted(() => {
 }
 
 .team-item {
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  background: #fff;
   padding: 0.95rem;
-  display: grid;
-  gap: 0.45rem;
 }
 
 .team-meta {

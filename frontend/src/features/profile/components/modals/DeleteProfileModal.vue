@@ -1,7 +1,7 @@
 <template>
   <ui-button
     variant="danger"
-    :disabled="auth.isLoading.value || isLoading"
+    :disabled="isLoading || isDeleting"
     @click="isDeleteModalOpen = true"
     type="button"
   >
@@ -18,7 +18,7 @@
     <ui-input
       v-model="deleteConfirmInput"
       :placeholder="expectedDeleteText"
-      :disabled="isLoading"
+      :disabled="isDeleting"
     />
 
     <p v-if="deleteError">{{ deleteError }}</p>
@@ -27,13 +27,13 @@
       <ui-button
         variant="outline"
         size="sm"
-        :disabled="isLoading"
+        :disabled="isDeleting"
         @click="isDeleteModalOpen = false"
       >
         Cancel
       </ui-button>
       <ui-button size="sm" variant="danger" :disabled="!canDelete" @click="handleDeleteAccount">
-        <loading-icon v-if="isLoading" />
+        <loading-icon v-if="isDeleting" />
         Delete permanently
       </ui-button>
     </template>
@@ -45,27 +45,30 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiModal from '@/components/UiModal.vue'
-import { useAuth } from '@/composables/useAuth'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
 import { computed, ref } from 'vue'
+import { useDeleteAccount, useProfile } from '@/queries/accounts'
+import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
 
-const auth = useAuth()
+const store = useUserStore()
+const { data: user, isLoading } = useProfile()
+const { mutate: deleteAccount, isPending: isDeleting } = useDeleteAccount()
+
+const router = useRouter()
 const { showNotification, hideNotification } = useGlobalNotification()
 
 const isDeleteModalOpen = ref(false)
 const deleteError = ref<string | null>(null)
-const isLoading = ref(false)
 const deleteConfirmInput = ref('')
-const expectedDeleteText = computed(() => auth.user.value?.username || '')
+const expectedDeleteText = computed(() => user.value?.username || '')
 
 const canDelete = computed(
   () =>
     Boolean(expectedDeleteText.value) &&
     deleteConfirmInput.value === expectedDeleteText.value &&
-    !isLoading.value,
+    !isDeleting.value,
 )
 
 const handleDeleteAccount = async () => {
@@ -74,27 +77,21 @@ const handleDeleteAccount = async () => {
     return
   }
 
-  isLoading.value = true
+  isDeleting.value = true
   deleteError.value = ''
   hideNotification()
 
-  try {
-    const response = await $api.accounts.deleteAccount()
-
-    if (response.status === 204 || response.status === 200) {
-      auth.logout()
-      return
-    }
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        showNotification('Unable to delete account.', 'error')
-      } else {
-        showNotification('Server connection error.', 'error')
-      }
-    }
-  } finally {
-    isLoading.value = false
-  }
+  deleteAccount(void 0, {
+    onSuccess: () => {
+      store.logout()
+      router.push('/login')
+    },
+    onError: (err) => {
+      showNotification(
+        err.response ? 'Unable to delete account.' : 'Server connection error.',
+        'error',
+      )
+    },
+  })
 }
 </script>

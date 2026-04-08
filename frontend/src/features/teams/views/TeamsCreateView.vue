@@ -1,14 +1,16 @@
 <template>
   <section class="page-shell teams-page">
     <ui-card>
-      <p class="section-eyebrow">Teams</p>
-      <h1 class="section-title">Create new team</h1>
-      <p class="section-subtitle">Create a team and optionally add initial members.</p>
-      <ui-button asLink class="back-link" variant="outline" size="sm" to="/teams"
-        >Back to teams list</ui-button
-      >
+      <template #header>
+        <p class="section-eyebrow">Teams</p>
+        <h1 class="section-title">Create new team</h1>
+        <p class="section-subtitle">Create a team and optionally add initial members.</p>
+        <ui-button asLink class="back-link" variant="outline" size="sm" to="/teams"
+          >Back to teams list</ui-button
+        >
+      </template>
 
-      <form class="form-grid" @submit.prevent="createTeam">
+      <form class="form-grid" @submit.prevent="handleFormSubmit">
         <label class="form-label">
           Team name
           <ui-input v-model="form.name" required />
@@ -64,32 +66,38 @@
         </label>
 
         <div class="full-width">
-          <label class="form-label">
-            Add initial members
+          <label class="form-label"> Add initial members </label>
+
+          <ui-skeleton-loader :loading="isLoadingUsers">
+            <template #skeleton>
+              <ui-skeleton variant="rect" height="49.6px" width="100%" />
+            </template>
+
             <ui-input
               v-model="memberSearchInput"
               placeholder="Search by username, email, full name"
             />
-          </label>
 
-          <div class="member-picker" v-if="memberSearchInput.length > 0">
-            <label
-              v-for="user in createCandidateUsers"
-              :key="`create-${user.id}`"
-              class="picker-item"
-              @click.prevent="toggleMember(user.id)"
-            >
-              <input type="checkbox" :checked="form.member_ids.includes(user.id)" readonly />
-              <span>{{ user.username }} ({{ user.email }})</span>
-            </label>
-            <p v-if="createCandidateUsers?.length === 0" class="text-muted empty-note">
-              No users found.
-            </p>
-          </div>
+            <div v-if="memberSearchInput.length > 0">
+              <label
+                v-for="user in createCandidateUsers"
+                :key="`create-${user.id}`"
+                class="picker-item"
+                @click.prevent="toggleMember(user.id)"
+              >
+                <input type="checkbox" :checked="form.member_ids.includes(user.id)" readonly />
+                <span>{{ user.username }} ({{ user.email }})</span>
+              </label>
+              <p v-if="createCandidateUsers?.length === 0" class="text-muted empty-note">
+                No users found.
+              </p>
+            </div>
+          </ui-skeleton-loader>
         </div>
 
-        <ui-button class="full-width" :disabled="loading" type="submit">
-          {{ loading ? 'Creating...' : 'Create team' }}
+        <ui-button class="full-width" :disabled="isCreatingTeam" type="submit">
+          <loading-icon v-if="isCreatingTeam" />
+          Create team
         </ui-button>
       </form>
     </ui-card>
@@ -100,15 +108,16 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useAuth } from '@/composables/useAuth'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import type { GetUsersResponse } from '@/services/accounts/types'
-import { isApiError } from '@/services/apiClient'
-import type { UserId } from '@/services/dbTypes'
-import type { CreateTeamBody } from '@/services/teams/types'
-import { computed, onMounted, ref } from 'vue'
+import type { UserId } from '@/api/dbTypes'
+import type { CreateTeamBody } from '@/api/teams/types'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useCreateTeam } from '@/queries/teams'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
+import { useProfile, useUsers } from '@/queries/accounts'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
 const router = useRouter()
 const { showNotification, hideNotification } = useGlobalNotification()
@@ -137,11 +146,9 @@ const resetForm = () => {
   }
 }
 
-const auth = useAuth()
+const { data: user } = useProfile()
 
-const loading = ref(false)
 const memberSearchInput = ref('')
-const users = ref<GetUsersResponse | null>(null)
 
 const toggleMember = (id: UserId) => {
   const idx = form.value.member_ids.indexOf(id)
@@ -151,13 +158,10 @@ const toggleMember = (id: UserId) => {
 
 const createCandidateUsers = computed(() => {
   const search = memberSearchInput.value.trim().toLowerCase()
-  return users.value?.filter((user) => {
-    if (user.id === auth.user.value?.id) return false
+  return users.value?.filter((u) => {
+    if (u.id === user.value?.id) return false
     if (!search) return true
-    return [user.username, user.email, user.full_name || '']
-      .join(' ')
-      .toLowerCase()
-      .includes(search)
+    return [u.username, u.email, u.full_name || ''].join(' ').toLowerCase().includes(search)
   })
 })
 
@@ -184,49 +188,34 @@ const onVisibilityKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const fetchUsers = async () => {
-  try {
-    const response = await $api.accounts.getUsers()
+const { data: users, isLoading: isLoadingUsers, error } = useUsers()
 
-    users.value = response.data
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        showNotification('Unable to load users list.', 'error')
-      } else {
-        showNotification('Unable to connect to server', 'error')
-      }
-    }
+watch(error, (err) => {
+  if (err) {
+    showNotification(
+      err.response ? 'Unable to load users list.' : 'Unable to connect to server.',
+      'error',
+    )
   }
-}
+})
 
-const createTeam = async () => {
-  loading.value = true
+const { mutate: createTeam, isPending: isCreatingTeam } = useCreateTeam()
+
+const handleFormSubmit = () => {
   hideNotification()
 
-  try {
-    const response = await $api.teams.createTeam(form.value)
+  createTeam(
+    { body: form.value },
+    {
+      onSuccess: (data) => {
+        showNotification('Team created successfully.', 'success')
+        resetForm()
 
-    showNotification('Team created successfully.', 'success')
-    resetForm()
-
-    router.push(`/teams/${response.data.id}`)
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        showNotification('Unable to create team.', 'error')
-      } else {
-        showNotification('Server connection error.', 'error')
-      }
-    }
-  } finally {
-    loading.value = false
-  }
+        router.push(`/teams/${data.id}`)
+      },
+    },
+  )
 }
-
-onMounted(() => {
-  fetchUsers()
-})
 </script>
 
 <style scoped>
@@ -247,17 +236,6 @@ onMounted(() => {
 
 .full-width {
   grid-column: 1 / -1;
-}
-
-.member-picker {
-  border: 1px solid var(--line-soft);
-  border-radius: 12px;
-  background: #fff;
-  padding: 0.6rem;
-  max-height: 180px;
-  overflow: auto;
-  display: grid;
-  gap: 0.45rem;
 }
 
 .toggle-field {

@@ -2,6 +2,7 @@
   <div id="app" class="app-shell">
     <div class="bg-orb orb-a"></div>
     <div class="bg-orb orb-b"></div>
+    <VueQueryDevtools />
 
     <app-navbar />
 
@@ -35,6 +36,7 @@
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import AppNavbar from './components/shared/AppNavbar.vue'
 import UiButton from './components/UiButton.vue'
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 
 const { notification, hideNotification } = useGlobalNotification()
 </script>

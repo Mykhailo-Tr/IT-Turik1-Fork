@@ -1,31 +1,71 @@
 <template>
   <ui-card>
-    <header class="section-head">
-      <h2>My teams</h2>
-      <span class="text-muted">{{ myTeams.length }} joined</span>
-    </header>
+    <template #header>
+      <div class="section-head">
+        <h2>My teams</h2>
+        <ui-skeleton-loader :loading="isLoadingTeams">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="70px" />
+          </template>
 
-    <p v-if="myTeams.length === 0" class="text-muted">You are not a member of any team yet.</p>
-    <div v-else class="team-grid">
-      <ui-card v-for="team in myTeamsPageItems" :key="`my-${team.id}`" class="team-item">
-        <div class="team-meta">
-          <h3>{{ team.name }}</h3>
-          <ui-badge v-if="isCaptain(team)" variant="blue">Captain</ui-badge>
+          <span class="text-muted">{{ myTeams?.length }} joined</span>
+        </ui-skeleton-loader>
+      </div>
+    </template>
+
+    <ui-skeleton-loader :loading="isLoadingTeams">
+      <template #skeleton>
+        <div class="team-grid">
+          <ui-card v-for="i in 2" :key="i" style="display: flex; flex-direction: column; gap: 10px">
+            <template #header>
+              <div class="team-header">
+                <ui-skeleton variant="rect" width="100%" />
+                <ui-skeleton variant="rect" width="160px" />
+              </div>
+            </template>
+
+            <div style="display: flex; flex-direction: column; gap: 5px">
+              <ui-skeleton variant="rect" width="80px" />
+              <ui-skeleton variant="rect" width="120px" />
+              <ui-skeleton variant="rect" width="100px" />
+            </div>
+
+            <template #footer>
+              <ui-skeleton variant="rect" height="2rem" width="100%" />
+            </template>
+          </ui-card>
         </div>
-        <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
-        <p class="text-muted">Captain: {{ captainName(team) }}</p>
-        <p class="text-muted">Members: {{ team.members.length }}</p>
-        <p v-if="team.my_invitation_status" class="text-muted">
-          My invitation: {{ team.my_invitation_status }}
-        </p>
-        <p v-if="team.my_join_request_status" class="text-muted">
-          My join request: {{ team.my_join_request_status }}
-        </p>
-        <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}`"
-          >Open workspace</ui-button
-        >
-      </ui-card>
-    </div>
+      </template>
+
+      <p v-if="myTeams?.length === 0" class="text-muted">You are not a member of any team yet.</p>
+
+      <div v-else class="team-grid">
+        <ui-card v-for="team in myTeamsPageItems" :key="`my-${team.id}`" class="team-item">
+          <template #header>
+            <div class="team-header">
+              <h3>{{ team.name }}</h3>
+              <ui-badge v-if="isCaptain(team)" variant="blue">Captain</ui-badge>
+            </div>
+          </template>
+
+          <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
+          <p class="text-muted">Captain: {{ captainName(team) }}</p>
+          <p class="text-muted">Members: {{ team.members.length }}</p>
+          <p v-if="team.my_invitation_status" class="text-muted">
+            My invitation: {{ team.my_invitation_status }}
+          </p>
+          <p v-if="team.my_join_request_status" class="text-muted">
+            My join request: {{ team.my_join_request_status }}
+          </p>
+
+          <template #footer>
+            <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}`"
+              >Open workspace</ui-button
+            >
+          </template>
+        </ui-card>
+      </div>
+    </ui-skeleton-loader>
 
     <div v-if="myPages > 1" class="pagination">
       <ui-button size="sm" variant="outline" :disabled="myPage === 1" @click="myPage -= 1">
@@ -43,34 +83,35 @@
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useAuth } from '@/composables/useAuth'
-import type { GetTeamsResponse } from '@/services/teams/types'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
+import { useTeams } from '@/queries/teams'
+import { useProfile } from '@/queries/accounts'
 
 const TEAMS_PER_PAGE = 8
 
-interface Props {
-  teams: GetTeamsResponse[]
-}
+const { data: teams, isLoading: isLoadingTeams } = useTeams()
+const { data: user } = useProfile()
 
-const props = defineProps<Props>()
-const auth = useAuth()
+const myTeams = computed(() => teams.value?.filter((team) => isAcceptedMember(team)))
+const myTeamsPageItems = computed(() => {
+  const from = (myPage.value - 1) * TEAMS_PER_PAGE
+  return myTeams.value?.slice(from, from + TEAMS_PER_PAGE)
+})
 
 const myPage = ref(1)
-const myPages = computed(() => Math.max(1, Math.ceil(myTeams.value.length / TEAMS_PER_PAGE)))
+const myPages = computed(() =>
+  Math.max(1, Math.ceil((myTeams.value?.length ?? 0) / TEAMS_PER_PAGE)),
+)
 
-const isCaptain = (team: GetTeamsResponse) => team.captain_id === auth.user.value?.id
-const captainName = (team: GetTeamsResponse) => {
+const isCaptain = (team: GetTeamInfoResponse) => team.captain_id === user.value?.id
+const captainName = (team: GetTeamInfoResponse) => {
   const captain = team.members.find((member) => member.id === team.captain_id)
   return captain?.username || `User #${team.captain_id}`
 }
-const isAcceptedMember = (team: GetTeamsResponse) => team.is_member || isCaptain(team)
-
-const myTeams = computed(() => props.teams.filter((team) => isAcceptedMember(team)))
-const myTeamsPageItems = computed(() => {
-  const from = (myPage.value - 1) * TEAMS_PER_PAGE
-  return myTeams.value.slice(from, from + TEAMS_PER_PAGE)
-})
+const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCaptain(team)
 </script>
 
 <style scoped>
@@ -97,22 +138,17 @@ const myTeamsPageItems = computed(() => {
 }
 
 .team-item {
-  border: 1px solid var(--line-soft);
-  border-radius: 16px;
-  background: #fff;
   padding: 0.95rem;
-  display: grid;
-  gap: 0.45rem;
 }
 
-.team-meta {
+.team-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
 }
 
-.team-meta h3 {
+.team-header h3 {
   margin: 0;
   font-family: var(--font-display);
 }

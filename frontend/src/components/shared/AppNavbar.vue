@@ -4,7 +4,7 @@
       <router-link to="/" class="brand">TournamentOS</router-link>
 
       <div class="nav-links">
-        <template v-if="!auth.isLoggedIn.value">
+        <template v-if="!user">
           <router-link to="/login" :class="navItemClass('login')">Login</router-link>
           <router-link to="/register" style="text-decoration: none">
             <ui-button :class="navItemClass('register', true)">Register</ui-button>
@@ -18,7 +18,7 @@
           <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
             >Admin</router-link
           >
-          <ui-button @click="auth.logout()" size="sm" variant="danger" class="logout-btn"
+          <ui-button @click="logout" size="sm" variant="danger" class="logout-btn"
             >Logout</ui-button
           >
         </template>
@@ -28,14 +28,19 @@
 </template>
 
 <script setup lang="ts">
-import { useAuth } from '@/composables/useAuth'
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import UiButton from '../UiButton.vue'
-const route = useRoute()
-const auth = useAuth()
+import { useUserStore } from '@/stores/user'
+import { useProfile } from '@/queries/accounts'
 
-const isAdmin = computed(() => auth.user.value?.role === 'admin')
+const route = useRoute()
+const router = useRouter()
+const store = useUserStore()
+
+const { data: user } = useProfile()
+
+const isAdmin = computed(() => user.value?.role === 'admin')
 
 type Section = 'home' | 'teams' | 'profile' | 'admin' | 'login' | 'register'
 
@@ -44,6 +49,11 @@ const navItemClass = (section: Section, cta = false) => ({
   'nav-cta': cta,
   active: isSectionActive(section),
 })
+
+const logout = () => {
+  store.logout()
+  router.push('/login')
+}
 
 const isSectionActive = (section: Section) => {
   const path = route.path

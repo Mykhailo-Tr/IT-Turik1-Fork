@@ -1,61 +1,106 @@
 <template>
-  <ui-card class="panel info-panel">
-    <header class="panel-head">
-      <h2>Team profile</h2>
-      <ui-badge v-if="props.isCaptain" variant="green">You are team captain</ui-badge>
-    </header>
+  <ui-card>
+    <template #header>
+      <div class="panel-head">
+        <h2>Team profile</h2>
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="150px" />
+          </template>
+
+          <ui-badge v-if="props.isCaptain" variant="green">You are team captain</ui-badge>
+        </ui-skeleton-loader>
+      </div>
+    </template>
 
     <div class="info-grid">
-      <div class="info-item">
-        <span>Name</span>
-        <strong>{{ props.team.name }}</strong>
-      </div>
-      <div class="info-item">
-        <span>Email</span>
-        <strong>{{ props.team.email }}</strong>
-      </div>
-      <div class="info-item">
-        <span>Organization</span>
-        <strong>{{ props.team.organization || '-' }}</strong>
-      </div>
-      <div class="info-item">
-        <span>Captain</span>
-        <strong>{{ captainName }}</strong>
-      </div>
-      <div class="info-item">
-        <span>Members count</span>
-        <strong>{{ props.team.members.length }}</strong>
-      </div>
-      <div class="info-item">
-        <span>Visibility</span>
-        <strong>{{ props.team.is_public ? 'Public' : 'Private' }}</strong>
-      </div>
+      <ui-card title="Name" class="info-item">
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+          </template>
+
+          <strong>{{ props.team?.name }}</strong>
+        </ui-skeleton-loader>
+      </ui-card>
+
+      <ui-card title="Email" class="info-item">
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+          </template>
+
+          <strong>{{ props.team?.email }}</strong>
+        </ui-skeleton-loader>
+      </ui-card>
+
+      <ui-card title="Organization" class="info-item">
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+          </template>
+
+          <strong>{{ props.team?.organization || '-' }}</strong>
+        </ui-skeleton-loader>
+      </ui-card>
+
+      <ui-card title="Captain" class="info-item">
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+          </template>
+
+          <strong>{{ captainName }}</strong>
+        </ui-skeleton-loader>
+      </ui-card>
+
+      <ui-card title="Members count" class="info-item">
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+          </template>
+
+          <strong>{{ props.team?.members.length }}</strong>
+        </ui-skeleton-loader>
+      </ui-card>
+
+      <ui-card title="Visibility" class="info-item">
+        <ui-skeleton-loader :loading="props.loading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+          </template>
+
+          <strong>{{ props.team?.is_public ? 'Public' : 'Private' }}</strong>
+        </ui-skeleton-loader>
+      </ui-card>
     </div>
 
     <div v-if="!props.isCaptain" class="status-line">
-      <p v-if="props.team.my_invitation_status" class="text-muted">
-        Your invitation status: {{ props.team.my_invitation_status }}
+      <p v-if="props.team?.my_invitation_status" class="text-muted">
+        Your invitation status: <ui-badge>{{ props.team.my_invitation_status }}</ui-badge>
       </p>
-      <p v-if="props.team.my_join_request_status" class="text-muted">
-        Your join request status: {{ props.team.my_join_request_status }}
+      <p v-if="props.team?.my_join_request_status" class="text-muted">
+        Your join request status: <ui-badge>{{ props.team.my_join_request_status }}</ui-badge>
       </p>
     </div>
 
-    <div class="info-actions">
-      <ui-button
-        v-if="props.team.can_request_to_join"
-        size="sm"
-        :disabled="joinRequestLoading"
-        @click="sendJoinRequest"
-      >
-        <loading-icon v-if="joinRequestLoading" size="md" />
-        {{ joinRequestLoading ? 'Sending...' : 'Request to join this team' }}
-      </ui-button>
+    <template #footer>
+      <div class="info-actions">
+        <ui-button
+          v-if="props.team?.can_request_to_join"
+          size="sm"
+          :disabled="joinRequestLoading"
+          @click="sendJoinRequest"
+        >
+          <loading-icon v-if="joinRequestLoading" size="md" />
+          {{ joinRequestLoading ? 'Sending...' : 'Request to join this team' }}
+        </ui-button>
 
-      <ui-button v-if="canLeaveTeam" variant="danger" size="sm" @click="leaveTeam">
-        Leave team
-      </ui-button>
-    </div>
+        <ui-button v-if="canLeaveTeam" variant="danger" size="sm" @click="leaveTeam">
+          Leave team
+        </ui-button>
+      </div>
+    </template>
   </ui-card>
 </template>
 
@@ -63,81 +108,84 @@
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import { computed, ref } from 'vue'
-import type { GetTeamInfoResponse } from '@/services/teams/types'
+import { computed } from 'vue'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useLeaveTeam, useSendJoinRequest } from '@/queries/teams'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 
 interface Props {
-  team: GetTeamInfoResponse
+  team?: GetTeamInfoResponse
+  loading: boolean
   isCaptain: boolean
 }
 
 const props = defineProps<Props>()
+const { showNotification, hideNotification } = useGlobalNotification()
 
 const emit = defineEmits<{
-  /** Captain confirmed delete */
   (e: 'deleted'): void
-  /** Member wants to leave */
   (e: 'leave'): void
 }>()
 
-const { showNotification, hideNotification } = useGlobalNotification()
-
 const captainName = computed(() => {
-  const captain = props.team.members.find((member) => member.id === props.team.captain_id)
-  return captain?.username || `User #${props.team.captain_id}`
+  const captain = props.team?.members.find((member) => member.id === props.team?.captain_id)
+  return captain?.username || `User #${props.team?.captain_id}`
 })
 
+const canLeaveTeam = computed(() => props.team?.is_member && !props.isCaptain)
+
 // ── Join Request ────────────────────────────────────────────────────
-const joinRequestLoading = ref(false)
+const { mutate: sendJoinRequestMutate, isPending: joinRequestLoading } = useSendJoinRequest()
 
-const sendJoinRequest = async () => {
-  joinRequestLoading.value = true
+const sendJoinRequest = () => {
+  if (!props.team) return
   hideNotification()
-  try {
-    await $api.teams.sendJoinRequest(props.team.id)
 
-    emit('deleted')
-    showNotification('Join request sent.', 'success')
-  } catch (err) {
-    if (isApiError(err)) {
-      showNotification(
-        err.response ? 'Unable to send join request.' : 'Server connection error.',
-        'error',
-      )
-    }
-  } finally {
-    joinRequestLoading.value = false
-  }
+  sendJoinRequestMutate(
+    { id: props.team?.id },
+    {
+      onSuccess: () => {
+        emit('deleted')
+        showNotification('Join request sent.', 'success')
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to send join request.' : 'Server connection error.',
+          'error',
+        )
+      },
+    },
+  )
 }
 
 // ── Leave Team ────────────────────────────────────────────────────
-const canLeaveTeam = computed(() => props.team.is_member && !props.isCaptain)
+const { mutate: leaveTeamMutate } = useLeaveTeam()
 
-const leaveTeam = async () => {
-  try {
-    await $api.teams.leave(props.team.id)
-    emit('leave')
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        showNotification('Unable to leave team.', 'error')
-      } else {
-        showNotification('Unable to connect to server.', 'error')
-      }
-    }
-  }
+const leaveTeam = () => {
+  if (!props.team) return
+  hideNotification()
+
+  leaveTeamMutate(
+    { id: props.team.id },
+    {
+      onSuccess: () => {
+        emit('leave')
+      },
+      onError: (err) => {
+        showNotification(
+          err.response ? 'Unable to leave team.' : 'Unable to connect to server.',
+          'error',
+        )
+      },
+    },
+  )
 }
 </script>
 
 <style scoped>
-.panel {
-  padding: 1.2rem;
-}
-
 .panel-head {
   display: flex;
   align-items: center;
@@ -152,6 +200,8 @@ const leaveTeam = async () => {
 }
 
 .info-item {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--line-soft);
   border-radius: 12px;
   padding: 0.7rem;
@@ -202,5 +252,35 @@ const leaveTeam = async () => {
 .modal-error {
   margin: 0.5rem 0 0;
   font-size: 0.8rem;
+}
+
+@media (max-width: 1020px) {
+  .hero-top {
+    flex-direction: column;
+  }
+
+  .hero-contacts {
+    justify-items: start;
+  }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .member-row,
+  .manage-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .member-side {
+    align-items: flex-start;
+  }
+
+  .status-tags {
+    justify-content: flex-start;
+  }
 }
 </style>

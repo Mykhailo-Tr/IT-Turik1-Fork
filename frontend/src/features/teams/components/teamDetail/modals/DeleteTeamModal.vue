@@ -1,33 +1,27 @@
 <template>
-  <ui-button size="sm" variant="danger" @click="isDeleteModalOpen = true">Delete team</ui-button>
+  <ui-button :disabled="props.disabled" size="sm" variant="danger" @click="isDeleteModalOpen = true"
+    >Delete team</ui-button
+  >
 
-  <ui-modal v-model="isDeleteModalOpen" title="Delete team" :close-on-backdrop="!deleteTeamLoading">
+  <ui-modal v-model="isDeleteModalOpen" title="Delete team" :close-on-backdrop="!isDeleting">
     <p class="modal-text">
       This action cannot be undone. Enter
-      <ui-badge variant="red">{{ props.team.name }}</ui-badge>
+      <ui-badge variant="red">{{ props.team?.name }}</ui-badge>
       to confirm.
     </p>
 
-    <ui-input
-      v-model="deleteConfirmInput"
-      :placeholder="props.team.name"
-      :disabled="deleteTeamLoading"
-    />
+    <ui-input v-model="deleteConfirmInput" :placeholder="props.team?.name" :disabled="isDeleting" />
 
     <p v-if="deleteError" class="text-error">{{ deleteError }}</p>
 
     <template #footer>
-      <ui-button
-        variant="outline"
-        size="sm"
-        :disabled="deleteTeamLoading"
-        @click="closeDeleteModal"
-      >
+      <ui-button variant="outline" size="sm" :disabled="isDeleting" @click="closeDeleteModal">
         Cancel
       </ui-button>
 
-      <ui-button variant="danger" size="sm" :disabled="!canDeleteTeam" @click="deleteTeam">
-        {{ deleteTeamLoading ? 'Deleting...' : 'Delete permanently' }}
+      <ui-button variant="danger" size="sm" :disabled="!canDeleteTeam" @click="handleDeleteTeam">
+        <loading-icon v-if="isDeleting" />
+        Delete permanently
       </ui-button>
     </template>
   </ui-modal>
@@ -39,17 +33,20 @@ import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiModal from '@/components/UiModal.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
-import type { GetTeamInfoResponse } from '@/services/teams/types'
+import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
+import { useDeleteTeam } from '@/queries/teams'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
 
 interface Props {
-  team: GetTeamInfoResponse
+  team?: GetTeamInfoResponse
+  disabled?: boolean
 }
 
 const props = defineProps<Props>()
 const { hideNotification } = useGlobalNotification()
+
+const { mutate: deleteTeam, isPending: isDeleting } = useDeleteTeam()
 
 const emit = defineEmits<{
   (e: 'deleted'): void
@@ -57,38 +54,38 @@ const emit = defineEmits<{
 
 const isDeleteModalOpen = ref(false)
 const deleteConfirmInput = ref('')
-const deleteTeamLoading = ref(false)
 const deleteError = ref('')
 
 const canDeleteTeam = computed(
-  () => deleteConfirmInput.value === props.team.name && !deleteTeamLoading.value,
+  () => deleteConfirmInput.value === props.team?.name && !isDeleting.value,
 )
 
 function closeDeleteModal() {
   isDeleteModalOpen.value = false
 }
 
-const deleteTeam = async () => {
+const handleDeleteTeam = async () => {
+  if (!props.team) return
+
   if (!canDeleteTeam.value) {
-    deleteError.value = `Please enter "${props.team.name}" exactly.`
+    deleteError.value = `Please enter "${props.team?.name}" exactly.`
     return
   }
 
-  deleteTeamLoading.value = true
   deleteError.value = ''
   hideNotification()
 
-  try {
-    await $api.teams.deleteTeam(props.team.id)
-
-    closeDeleteModal()
-    emit('deleted')
-  } catch (err) {
-    if (isApiError(err)) {
-      deleteError.value = err.response ? 'Unable to delete team.' : 'Server connection error.'
-    }
-  } finally {
-    deleteTeamLoading.value = false
-  }
+  deleteTeam(
+    { id: props.team.id },
+    {
+      onSuccess: () => {
+        closeDeleteModal()
+        emit('deleted')
+      },
+      onError: (err) => {
+        deleteError.value = err.response ? 'Unable to delete team.' : 'Server connection error.'
+      },
+    },
+  )
 }
 </script>

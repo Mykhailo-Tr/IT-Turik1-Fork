@@ -1,205 +1,216 @@
 <template>
   <section class="page-shell">
-    <ui-card class="profile-card">
-      <div class="head">
-        <div>
-          <p class="section-eyebrow">User Center</p>
-          <h1 class="section-title profile-title">Edit Profile</h1>
+    <ui-card>
+      <template #header>
+        <div class="head">
+          <div>
+            <p class="section-eyebrow">User Center</p>
+            <h1 class="section-title profile-title">Edit Profile</h1>
+          </div>
         </div>
-      </div>
 
-      <p class="section-subtitle">Update your account details below and save your changes.</p>
+        <p class="section-subtitle">Update your account details below and save your changes.</p>
+      </template>
 
-      <div v-if="auth.isLoading.value" class="state-box">Loading profile...</div>
-
-      <form v-else @submit.prevent="handleSubmit" class="profile-form">
+      <form @submit.prevent="handleSubmit" class="profile-form">
         <div class="form-grid">
-          <label class="form-label">
-            Full name
-            <ui-input
-              v-model="form.full_name"
-              :class="{ 'field-invalid': getFieldError('full_name') }"
-              type="text"
-              placeholder="John Doe"
-              required
-              @blur="touchField('full_name')"
-            />
+          <div class="form-item">
+            <label class="form-label"> Full name </label>
+
+            <ui-skeleton-loader :loading="isLoading" style="width: 100%">
+              <template #skeleton>
+                <ui-skeleton variant="rect" height="45px" width="100%" />
+              </template>
+
+              <ui-input
+                v-model="form.full_name"
+                :class="{ 'field-invalid': getFieldError('full_name') }"
+                style="width: 100%"
+                type="text"
+                placeholder="John Doe"
+                required
+                @blur="touchField('full_name')"
+              />
+            </ui-skeleton-loader>
             <small v-if="getFieldError('full_name')" class="text-error">{{
               getFieldError('full_name')
             }}</small>
-          </label>
+          </div>
 
-          <label class="form-label">
-            Username
-            <ui-input
-              v-model="form.username"
-              :class="{ 'field-invalid': getFieldError('username') }"
-              placeholder="johndoe"
-              required
-              @blur="touchField('username')"
-            />
+          <div class="form-item">
+            <label class="form-label"> Username </label>
+
+            <ui-skeleton-loader :loading="isLoading" style="width: 100%">
+              <template #skeleton>
+                <ui-skeleton variant="rect" height="45px" width="100%" />
+              </template>
+
+              <ui-input
+                v-model="form.username"
+                :class="{ 'field-invalid': getFieldError('username') }"
+                style="width: 100%"
+                placeholder="johndoe"
+                required
+                @blur="touchField('username')"
+              />
+            </ui-skeleton-loader>
+
             <small v-if="getFieldError('username')" class="text-error">{{
               getFieldError('username')
             }}</small>
-          </label>
+          </div>
 
-          <label class="form-label">
-            Phone number
-            <PhoneField
-              v-model="form.phone"
-              :error="getFieldError('phone')"
-              @update:modelValue="touchField('phone')"
-            />
-          </label>
+          <div class="form-item">
+            <label class="form-label"> Phone number </label>
 
-          <label class="form-label">
-            City
-            <ui-input
-              v-model="form.city"
-              :class="{ 'field-invalid': getFieldError('city') }"
-              type="text"
-              placeholder="Kyiv"
-              required
-              @blur="touchField('city')"
-            />
+            <ui-skeleton-loader :loading="isLoading" style="width: 100%">
+              <template #skeleton>
+                <ui-skeleton variant="rect" height="45px" width="100%" />
+              </template>
+
+              <PhoneField
+                v-model="form.phone"
+                :error="getFieldError('phone')"
+                @update:modelValue="touchField('phone')"
+              />
+            </ui-skeleton-loader>
+          </div>
+
+          <div class="form-item">
+            <label class="form-label"> City </label>
+            <ui-skeleton-loader :loading="isLoading" style="width: 100%">
+              <template #skeleton>
+                <ui-skeleton variant="rect" height="45px" width="100%" />
+              </template>
+
+              <ui-input
+                v-model="form.city"
+                :class="{ 'field-invalid': getFieldError('city') }"
+                style="width: 100%"
+                type="text"
+                placeholder="Kyiv"
+                required
+                @blur="touchField('city')"
+              />
+            </ui-skeleton-loader>
+
             <small v-if="getFieldError('city')" class="text-error">{{
               getFieldError('city')
             }}</small>
-          </label>
+          </div>
         </div>
 
         <div class="actions">
-          <ui-button type="submit" :disabled="loading">
-            <LoadingIcon v-if="loading" />
+          <ui-button type="submit" :disabled="isUpdatingProfile">
+            <LoadingIcon v-if="isUpdatingProfile" />
             Save changes
           </ui-button>
-          <ui-button variant="outline" :disabled="loading" @click="openPasswordModal">
-            <LoadingIcon v-if="loading" />
-            Change Password
-          </ui-button>
-          <ui-button variant="outline" :disabled="loading" @click="goBackToProfile">
-            <LoadingIcon v-if="loading" />
-            Cancel
-          </ui-button>
+          <ui-button variant="outline" @click="isPasswordModalOpen = true"
+            >Change Password</ui-button
+          >
+          <ui-button variant="outline" :disabled="isUpdatingProfile" @click="goBackToProfile"
+            >Cancel</ui-button
+          >
         </div>
       </form>
     </ui-card>
 
-    <div v-if="isPasswordModalOpen" class="modal-backdrop" @click.self="closePasswordModal">
-      <article
-        class="modal-card"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="password-modal-title"
-      >
-        <div class="password-head">
-          <h2 id="password-modal-title" class="panel-title">Change Password</h2>
-          <button
-            class="icon-close"
-            type="button"
-            :disabled="passwordLoading"
-            @click="closePasswordModal"
-          >
-            ×
-          </button>
-        </div>
-
-        <div class="mode-switch">
-          <ui-button
-            variant="outline-accent"
-            class="switch-btn"
-            :class="{ active: passwordMode === 'manual' }"
-            :disabled="passwordLoading"
-            @click="setPasswordMode('manual')"
-          >
-            Use Current Password
-          </ui-button>
-          <ui-button
-            variant="outline-accent"
-            class="switch-btn"
-            :class="{ active: passwordMode === 'recovery' }"
-            :disabled="passwordLoading"
-            @click="setPasswordMode('recovery')"
-          >
-            Forgot Password
-          </ui-button>
-        </div>
-
-        <p v-if="passwordMessage" :class="['notice', passwordMessageType]">{{ passwordMessage }}</p>
-
-        <form
-          v-if="passwordMode === 'manual'"
-          class="password-form"
-          @submit.prevent="handlePasswordChange"
+    <ui-modal v-model="isPasswordModalOpen" title="Change Password" @close="resetPasswordState">
+      <div class="mode-switch">
+        <ui-button
+          variant="outline-accent"
+          class="switch-btn"
+          :class="{ active: passwordMode === 'manual' }"
+          :disabled="isChangingPassword"
+          @click="setPasswordMode('manual')"
         >
-          <label class="form-label">
-            Current password
-            <ui-password-field
-              v-model="passwordForm.current_password"
-              autocomplete="current-password"
-              required
-            />
-            <small v-if="passwordErrors?.current_password" class="text-error">{{
-              passwordErrors.current_password[0]
-            }}</small>
-          </label>
+          Use Current Password
+        </ui-button>
+        <ui-button
+          variant="outline-accent"
+          class="switch-btn"
+          :class="{ active: passwordMode === 'recovery' }"
+          :disabled="isChangingPassword"
+          @click="setPasswordMode('recovery')"
+        >
+          Forgot Password
+        </ui-button>
+      </div>
 
-          <label class="form-label">
-            New password
-            <ui-password-field
-              v-model="passwordForm.new_password"
-              autocomplete="new-password"
-              required
-            />
-            <small v-if="passwordErrors?.new_password" class="text-error">{{
-              passwordErrors.new_password[0]
-            }}</small>
-          </label>
+      <p v-if="passwordMessage" :class="['notice', passwordMessageType]">{{ passwordMessage }}</p>
 
-          <label class="form-label">
-            Confirm new password
-            <ui-password-field
-              v-model="passwordForm.confirm_password"
-              autocomplete="new-password"
-              required
-            />
-            <small v-if="passwordErrors?.confirm_password" class="text-error">{{
-              passwordErrors.confirm_password[0]
-            }}</small>
-          </label>
-
-          <small v-if="passwordErrors?.non_field_errors" class="text-error">{{
-            passwordErrors.non_field_errors[0]
+      <form
+        v-if="passwordMode === 'manual'"
+        class="password-form"
+        @submit.prevent="handlePasswordChange"
+      >
+        <label class="form-label">
+          Current password
+          <ui-password-field
+            v-model="passwordForm.current_password"
+            autocomplete="current-password"
+            required
+          />
+          <small v-if="passwordErrors?.current_password" class="text-error">{{
+            passwordErrors.current_password[0]
           }}</small>
-          <ui-button type="submit" :disabled="passwordLoading">
-            <LoadingIcon v-if="passwordLoading" />
-            Update password
-          </ui-button>
-        </form>
+        </label>
 
-        <form v-else class="password-form" @submit.prevent="handleRecoveryRequest">
-          <p class="text-muted">No worries. We will send a secure reset link to your email.</p>
-          <label class="form-label">
-            Account email
-            <ui-input
-              v-model="recoveryEmail"
-              :class="{ 'field-invalid': passwordErrors?.email }"
-              type="email"
-              autocomplete="email"
-              required
-            />
-            <small v-if="passwordErrors?.email" class="text-error">{{
-              passwordErrors.email[0]
-            }}</small>
-          </label>
+        <label class="form-label">
+          New password
+          <ui-password-field
+            v-model="passwordForm.new_password"
+            autocomplete="new-password"
+            required
+          />
+          <small v-if="passwordErrors?.new_password" class="text-error">{{
+            passwordErrors.new_password[0]
+          }}</small>
+        </label>
 
-          <ui-button type="submit" :disabled="passwordLoading">
-            <LoadingIcon v-if="passwordLoading" />
-            Send reset link
-          </ui-button>
-        </form>
-      </article>
-    </div>
+        <label class="form-label">
+          Confirm new password
+          <ui-password-field
+            v-model="passwordForm.confirm_password"
+            autocomplete="new-password"
+            required
+          />
+          <small v-if="passwordErrors?.confirm_password" class="text-error">{{
+            passwordErrors.confirm_password[0]
+          }}</small>
+        </label>
+
+        <small v-if="passwordErrors?.non_field_errors" class="text-error">{{
+          passwordErrors.non_field_errors[0]
+        }}</small>
+        <ui-button type="submit" :disabled="isChangingPassword">
+          <loading-icon v-if="isChangingPassword" />
+          Update password
+        </ui-button>
+      </form>
+
+      <form v-else class="password-form" @submit.prevent="handleRecoveryRequest">
+        <p class="text-muted">No worries. We will send a secure reset link to your email.</p>
+        <label class="form-label">
+          Account email
+          <ui-input
+            v-model="recoveryEmail"
+            :class="{ 'field-invalid': passwordErrors?.email }"
+            type="email"
+            autocomplete="email"
+            required
+          />
+          <small v-if="passwordErrors?.email" class="text-error">{{
+            passwordErrors.email[0]
+          }}</small>
+        </label>
+
+        <ui-button type="submit" :disabled="isRecoveringPassword">
+          <LoadingIcon v-if="isRecoveringPassword" />
+          Send reset link
+        </ui-button>
+      </form>
+    </ui-modal>
   </section>
 </template>
 
@@ -209,13 +220,19 @@ import { useRouter } from 'vue-router'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import $api from '@/services'
-import { isApiError } from '@/services/apiClient'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useAuth } from '@/composables/useAuth'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
+import {
+  useChangePassword,
+  useForgotPassword,
+  useProfile,
+  useUpdateProfile,
+} from '@/queries/accounts'
+import UiModal from '@/components/UiModal.vue'
+import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
+import UiSkeleton from '@/components/UiSkeleton.vue'
 
 interface PasswordErrors {
   current_password?: string[]
@@ -224,6 +241,8 @@ interface PasswordErrors {
   confirm_password?: string[]
   non_field_errors?: string[]
 }
+
+type ProfileErrors = Record<FormField, string[]>
 
 type PasswordMode = 'recovery' | 'manual'
 
@@ -251,21 +270,20 @@ interface PasswordForm {
   confirm_password: string
 }
 
-const auth = useAuth()
+const { data: user, isLoading } = useProfile()
 
 const form = computed<ProfileForm>(() => ({
-  username: auth.user.value?.username ?? '',
-  full_name: auth.user.value?.full_name ?? '',
-  phone: auth.user.value?.phone ?? '',
-  city: auth.user.value?.city ?? '',
+  username: user.value?.username ?? '',
+  full_name: user.value?.full_name ?? '',
+  phone: user.value?.phone ?? '',
+  city: user.value?.city ?? '',
 }))
-const loading = ref(false)
-const errors = ref<Record<FormField, string[]> | null>(null)
+
+const updateProfileErrors = ref<ProfileErrors[] | null>(null)
 const touched = ref<TouchedFields>({ full_name: false, username: false, phone: false, city: false })
 const isPasswordModalOpen = ref(false)
 const passwordMode = ref<PasswordMode>('manual')
-const recoveryEmail = computed(() => auth.user.value?.email ?? '')
-const passwordLoading = ref(false)
+const recoveryEmail = computed(() => user.value?.email ?? '')
 const passwordErrors = ref<PasswordErrors | null>(null)
 const passwordMessage = ref('')
 const passwordMessageType = ref<'success' | 'error'>('success')
@@ -320,8 +338,8 @@ const touchAllFields = (): void => {
 }
 
 const getFieldError = (field: FormField): string => {
-  if (errors.value?.[field]?.[0]) {
-    return errors.value[field]![0]
+  if (updateProfileErrors.value?.[field]?.[0]) {
+    return updateProfileErrors.value[field]![0]
   }
   if (!touched.value[field]) {
     return ''
@@ -341,111 +359,95 @@ const resetPasswordState = () => {
   }
 }
 
-const openPasswordModal = () => {
-  isPasswordModalOpen.value = true
-}
-
-const closePasswordModal = () => {
-  if (passwordLoading.value) return
-  isPasswordModalOpen.value = false
-  passwordMode.value = 'manual'
-  resetPasswordState()
-}
-
 const setPasswordMode = (mode: PasswordMode) => {
   passwordMode.value = mode
   passwordErrors.value = {}
   passwordMessage.value = ''
 }
 
-const handleSubmit = async () => {
-  loading.value = true
-  errors.value = null
+const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
+
+const handleSubmit = () => {
+  updateProfileErrors.value = null
   touchAllFields()
   hideNotification()
 
   if (hasClientErrors()) {
     showNotification('Please fix highlighted fields before saving.', 'error')
-    loading.value = false
     return
   }
 
-  try {
-    await auth.update(form.value)
-
-    showNotification('Profile updated successfully.', 'success')
-    setTimeout(() => {
-      router.push('/profile')
-    }, 550)
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        errors.value = err.response.data
-        showNotification('Validation error. Please check your data.', 'error')
-      } else {
-        showNotification('Server connection error.', 'error')
-      }
-    }
-  } finally {
-    loading.value = false
-  }
+  updateProfile(
+    { body: form.value },
+    {
+      onSuccess: () => {
+        showNotification('Profile updated successfully.', 'success')
+        router.push('/profile')
+      },
+      onError: (err) => {
+        if (err.response) {
+          updateProfileErrors.value = err.response.data as ProfileErrors[]
+          showNotification('Validation error. Please check your data.', 'error')
+        } else {
+          showNotification('Server connection error.', 'error')
+        }
+      },
+    },
+  )
 }
 
-const handlePasswordChange = async () => {
-  passwordLoading.value = true
+const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword()
+const { mutate: forgotPassword, isPending: isRecoveringPassword } = useForgotPassword()
+
+const handlePasswordChange = () => {
   passwordErrors.value = {}
   passwordMessage.value = ''
 
-  try {
-    const response = await $api.accounts.changePassword(passwordForm.value)
-
-    resetPasswordState()
-    passwordMessageType.value = 'success'
-    passwordMessage.value = response.data.message || 'Password changed successfully.'
-    showNotification('Password updated successfully.', 'success')
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        passwordErrors.value = err.response.data
+  changePassword(
+    { body: passwordForm.value },
+    {
+      onSuccess: () => {
+        resetPasswordState()
+        passwordMessageType.value = 'success'
+        passwordMessage.value = 'Password changed successfully.'
+        showNotification('Password updated successfully.', 'success')
+      },
+      onError: (err) => {
         passwordMessageType.value = 'error'
-        passwordMessage.value = err.response.data.detail || 'Please fix password form errors.'
-      } else {
-        passwordMessageType.value = 'error'
-        passwordMessage.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    passwordLoading.value = false
-  }
+        if (err.response) {
+          passwordErrors.value = err.response.data as PasswordErrors
+          passwordMessage.value = 'Please fix password form errors.'
+        } else {
+          passwordMessage.value = 'Server connection error.'
+        }
+      },
+    },
+  )
 }
 
-const handleRecoveryRequest = async () => {
-  passwordLoading.value = true
+const handleRecoveryRequest = () => {
   passwordErrors.value = {}
   passwordMessage.value = ''
 
-  try {
-    const response = await $api.accounts.forgotPassword({
-      email: recoveryEmail.value,
-    })
-
-    passwordMessageType.value = 'success'
-    passwordMessage.value = response?.data.message || 'Password reset email sent successfully.'
-    showNotification('Reset link sent. Check your email.', 'success')
-  } catch (err) {
-    if (isApiError(err)) {
-      if (err.response) {
-        passwordErrors.value = err.response.data
+  forgotPassword(
+    { body: { email: recoveryEmail.value } },
+    {
+      onSuccess: (data) => {
+        passwordMessageType.value = 'success'
+        passwordMessage.value = data?.message || 'Password reset email sent successfully.'
+        showNotification('Reset link sent. Check your email.', 'success')
+      },
+      onError: (err) => {
         passwordMessageType.value = 'error'
-        passwordMessage.value = err.response.data.detail || 'Could not send reset email.'
-      } else {
-        passwordMessageType.value = 'error'
-        passwordMessage.value = 'Server connection error.'
-      }
-    }
-  } finally {
-    passwordLoading.value = false
-  }
+        if (err.response) {
+          passwordErrors.value = err.response.data as PasswordErrors
+          passwordMessage.value = 'Could not send reset email.'
+        } else {
+          passwordMessage.value = 'Server connection error.'
+        }
+      },
+    },
+  )
 }
 
 const goBackToProfile = () => {
@@ -454,12 +456,6 @@ const goBackToProfile = () => {
 </script>
 
 <style scoped>
-.profile-card {
-  width: min(100%, 860px);
-  margin: 0 auto;
-  padding: 1.7rem;
-}
-
 .head {
   display: flex;
   justify-content: space-between;
@@ -494,6 +490,12 @@ const goBackToProfile = () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .actions {
@@ -568,6 +570,7 @@ const goBackToProfile = () => {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-bottom: 0.8rem;
 }
 
 .switch-btn {
