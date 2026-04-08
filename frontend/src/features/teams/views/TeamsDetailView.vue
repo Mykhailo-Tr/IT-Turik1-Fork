@@ -75,12 +75,14 @@
       />
     </div>
 
-    <team-manage-zone
-      :team="team"
-      :loading="isInfoLoading"
-      :is-captain="isCaptain"
-      @update-team="(newTeamValue) => (team = newTeamValue)"
-    />
+    <ui-skeleton-loader :loading="isInfoLoading">
+      <team-manage-zone
+        :team="team"
+        :loading="isInfoLoading"
+        :is-captain="isCaptain"
+        @update-team="(newTeamValue) => (team = newTeamValue)"
+      />
+    </ui-skeleton-loader>
   </section>
 </template>
 
