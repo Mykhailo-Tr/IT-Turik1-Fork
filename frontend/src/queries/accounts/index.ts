@@ -4,6 +4,7 @@ import $api from '@/api'
 import { accountKeys } from '../keys'
 import { computed, toValue, type MaybeRef } from 'vue'
 import type {
+  ActivateAccountArgs,
   ChangePasswordArgs,
   CreateRoleCodesArgs,
   CreateRoleCodesResponse,
@@ -54,6 +55,12 @@ export const useUpdateProfile = () => {
 export const useDeleteAccount = () => {
   return useMutation<unknown, AxiosError>({
     mutationFn: $api.accounts.deleteAccount,
+  })
+}
+
+export const useActivateAccount = () => {
+  return useMutation<unknown, AxiosError, ActivateAccountArgs>({
+    mutationFn: $api.accounts.activateAccount,
   })
 }
 

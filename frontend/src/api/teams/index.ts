@@ -1,10 +1,8 @@
 import apiClient from '../apiClient'
-import type { TeamId, UserId } from '../dbTypes'
+import type { TeamId } from '../dbTypes'
 import type {
   AddMemberArgs,
-  AddMemberBody,
   ChangeTeamVisibilityArgs,
-  ChangeTeamVisibilityBody,
   CreateTeamArgs,
   CreateTeamResponse,
   DeleteTeamArgs,
@@ -19,7 +17,6 @@ import type {
   ResendInvitationArgs,
   RespondToInvitationArgs,
   SendJoinRequestArgs,
-  UpdateTeamInfoArgs,
   UpdateTeamInfoBody,
 } from './types'
 

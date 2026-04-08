@@ -130,3 +130,8 @@ export type CreateRoleCodesResponse = Pick<GetRoleCodesResponse, 'active_counts'
   created: ActivationCode[]
   active_counts: Record<RoleCodesUserRole, number>
 }
+
+export interface ActivateAccountArgs {
+  uid: string
+  token: string
+}

@@ -21,6 +21,7 @@ import type {
   GetRoleCodesArgs,
   CreateRoleCodesArgs,
   ValidatePasswordResponse,
+  ActivateAccountArgs,
 } from './types'
 
 const prefix = '/api/accounts'
@@ -33,6 +34,11 @@ export const accountsService = {
 
   async deleteAccount() {
     const { data } = await apiClient.delete(`${prefix}/profile/`)
+    return data
+  },
+
+  async activateAccount(args: ActivateAccountArgs) {
+    const { data } = await apiClient.get(`${prefix}/activate/${args.uid}/${args.token}`)
     return data
   },
 

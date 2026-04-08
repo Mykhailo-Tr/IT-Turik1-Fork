@@ -21,32 +21,33 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { API_BASE } from '@/features/shared/config/api'
 import UiCard from '@/components/UiCard.vue'
+import { useActivateAccount } from '@/queries/accounts'
 
 const route = useRoute()
 const status = ref('loading')
 const message = ref('')
 
+const { mutate: activate } = useActivateAccount()
+
 onMounted(async () => {
   const { uid, token } = route.params
+  if (!uid) return
+  if (!token) return
 
-  try {
-    const res = await fetch(`${API_BASE}/api/accounts/activate/${uid}/${token}/`)
-    const data = await res.json()
-
-    if (res.ok) {
-      status.value = 'success'
-      message.value = data.message
-      return
-    }
-
-    status.value = 'error'
-    message.value = data.message || 'Activation failed.'
-  } catch {
-    status.value = 'error'
-    message.value = 'Server is unavailable.'
-  }
+  activate(
+    { uid: uid as string, token: token as string },
+    {
+      onSuccess: () => {
+        status.value = 'success'
+        message.value = data.message
+      },
+      onError: () => {
+        status.value = 'error'
+        message.value = 'Server is unavailable'
+      },
+    },
+  )
 })
 </script>
 
