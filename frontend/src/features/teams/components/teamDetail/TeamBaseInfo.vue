@@ -15,6 +15,10 @@
 
     <div class="info-grid">
       <ui-card title="Name" class="info-item">
+        <template #header>
+          <span class="card-text-title">Name</span>
+        </template>
+
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
@@ -25,6 +29,10 @@
       </ui-card>
 
       <ui-card title="Email" class="info-item">
+        <template #header>
+          <span class="card-text-title">Email</span>
+        </template>
+
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
@@ -35,6 +43,10 @@
       </ui-card>
 
       <ui-card title="Organization" class="info-item">
+        <template #header>
+          <span class="card-text-title">Organization</span>
+        </template>
+
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
@@ -45,6 +57,10 @@
       </ui-card>
 
       <ui-card title="Captain" class="info-item">
+        <template #header>
+          <span class="card-text-title">Captain</span>
+        </template>
+
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
@@ -55,6 +71,10 @@
       </ui-card>
 
       <ui-card title="Members count" class="info-item">
+        <template #header>
+          <span class="card-text-title">Members count</span>
+        </template>
+
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
@@ -65,6 +85,10 @@
       </ui-card>
 
       <ui-card title="Visibility" class="info-item">
+        <template #header>
+          <span class="card-text-title">Visibility</span>
+        </template>
+
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
