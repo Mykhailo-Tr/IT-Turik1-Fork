@@ -13,33 +13,47 @@
     </ui-button>
 
     <Transition name="dropdown">
-      <ul
-        v-if="isOpen"
-        class="select-dropdown"
-        role="listbox"
-        :aria-activedescendant="activeDescendant"
-        ref="listRef"
-        @keydown="handleListKeydown"
-        tabindex="-1"
-      >
-        <li
-          v-for="(option, index) in options"
-          :key="option.value"
-          :id="`option-${option.value}`"
-          class="select-option"
-          :class="{
-            selected: option.value === modelValue,
-            focused: index === focusedIndex,
-          }"
-          role="option"
-          :aria-selected="option.value === modelValue"
-          @click="selectOption(option)"
-          @mouseenter="focusedIndex = index"
+      <div v-if="isOpen" class="select-dropdown" :class="dropdownPosition" ref="dropdownRef">
+        <div class="select-search-wrapper">
+          <input
+            ref="searchInputRef"
+            v-model="searchQuery"
+            class="select-search"
+            type="text"
+            placeholder="Search..."
+            @keydown="handleSearchKeydown"
+          />
+        </div>
+
+        <ul
+          class="select-list"
+          role="listbox"
+          :aria-multiselectable="multiple"
+          :aria-activedescendant="activeDescendant"
+          ref="listRef"
+          tabindex="-1"
         >
-          {{ option.label }}
-          <selected-icon v-if="option.value === modelValue" class="select-check" />
-        </li>
-      </ul>
+          <li
+            v-for="(option, index) in filteredOptions"
+            :key="option.value"
+            :id="`option-${option.value}`"
+            class="select-option"
+            :class="{
+              selected: isSelected(option),
+              focused: index === focusedIndex,
+            }"
+            role="option"
+            :aria-selected="isSelected(option)"
+            @click="selectOption(option)"
+            @mouseenter="focusedIndex = index"
+          >
+            {{ option.label }}
+            <selected-icon v-if="isSelected(option)" class="select-check" />
+          </li>
+
+          <li v-if="!filteredOptions.length" class="select-empty">No options found</li>
+        </ul>
+      </div>
     </Transition>
   </div>
 </template>
@@ -50,64 +64,131 @@ import UiButton from './UiButton.vue'
 import ArrowDown from '@/icons/ArrowDown.vue'
 import SelectedIcon from '@/icons/SelectedIcon.vue'
 
-export type SelectOptionValue = string | number
+export type SelectOptionValue = string
 
 export interface SelectOption {
   value: SelectOptionValue
   label: string
 }
 
-interface Props {
-  modelValue?: SelectOptionValue | null
-  options?: SelectOption[]
-  placeholder?: string
-}
+type Props =
+  | {
+      multiple?: false
+      modelValue: SelectOptionValue | null
+      options?: SelectOption[]
+      placeholder?: string
+      height?: number
+    }
+  | {
+      multiple: true
+      modelValue: SelectOptionValue[]
+      options?: SelectOption[]
+      placeholder?: string
+      height?: number
+    }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   options: () => [],
   placeholder: 'Select an option',
+  height: 300,
 })
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: SelectOptionValue): void
+  (e: 'update:modelValue', value: SelectOptionValue | SelectOptionValue[]): void
 }>()
 
 const isOpen = ref<boolean>(false)
 const focusedIndex = ref<number>(-1)
+const searchQuery = ref<string>('')
+const dropdownPosition = ref<'bottom' | 'top'>('bottom')
 const wrapperRef = ref<HTMLDivElement | null>(null)
 const listRef = ref<HTMLUListElement | null>(null)
+const searchInputRef = ref<HTMLInputElement | null>(null)
+
+const DROPDOWN_HEIGHT = props.height
+
+const filteredOptions = computed(() =>
+  searchQuery.value.trim()
+    ? props.options.filter((o) => o.label.toLowerCase().includes(searchQuery.value.toLowerCase()))
+    : props.options,
+)
+
+function isSelected(option: SelectOption): boolean {
+  if (props.multiple) {
+    return (props.modelValue as SelectOptionValue[]).includes(option.value)
+  }
+  return option.value === props.modelValue
+}
 
 const selectedLabel = computed<string>(() => {
+  if (props.multiple) {
+    const arr = props.modelValue as SelectOptionValue[]
+    if (!arr.length) return props.placeholder
+    const labels = arr.map((v) => props.options.find((o) => o.value === v)?.label ?? v)
+    return labels.length === 1 ? labels[0]! : `${labels[0]!} +${labels.length - 1} more`
+  }
   const found = props.options.find((o) => o.value === props.modelValue)
   return found ? found.label : props.placeholder
 })
 
 const activeDescendant = computed<string | undefined>(() => {
   if (focusedIndex.value < 0) return undefined
-  const opt = props.options[focusedIndex.value]
+  const opt = filteredOptions.value[focusedIndex.value]
   return opt ? `option-${opt.value}` : undefined
 })
 
+function computeDropdownPosition() {
+  if (!wrapperRef.value) return
+  const rect = wrapperRef.value.getBoundingClientRect()
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+  dropdownPosition.value =
+    spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow ? 'top' : 'bottom'
+}
+
 watch(isOpen, async (opened) => {
   if (opened) {
-    const selectedIdx = props.options.findIndex((o) => o.value === props.modelValue)
+    computeDropdownPosition()
+    searchQuery.value = ''
+    const selectedIdx = filteredOptions.value.findIndex((o) =>
+      props.multiple
+        ? (props.modelValue as SelectOptionValue[]).includes(o.value)
+        : o.value === props.modelValue,
+    )
     focusedIndex.value = selectedIdx >= 0 ? selectedIdx : 0
     await nextTick()
-    listRef.value?.focus()
+    searchInputRef.value?.focus()
     scrollToFocused()
   } else {
     focusedIndex.value = -1
+    searchQuery.value = ''
   }
+})
+
+watch(filteredOptions, () => {
+  focusedIndex.value = 0
 })
 
 function toggleOpen() {
   isOpen.value = !isOpen.value
 }
 
-async function selectOption(option: SelectOption) {
-  emit('update:modelValue', option.value)
-  wrapperRef.value?.querySelector<HTMLElement>('.select-trigger')?.focus()
+function selectOption(option: SelectOption) {
+  if (props.multiple) {
+    const arr = [...(props.modelValue as SelectOptionValue[])]
+    const idx = arr.indexOf(option.value)
+    if (idx >= 0) {
+      arr.splice(idx, 1)
+    } else {
+      arr.push(option.value)
+    }
+    emit('update:modelValue', arr)
+  } else {
+    emit('update:modelValue', option.value)
+    isOpen.value = false
+    wrapperRef.value?.querySelector<HTMLElement>('.select-trigger')?.focus()
+  }
 }
 
 function handleTriggerKeydown(e: KeyboardEvent) {
@@ -124,11 +205,11 @@ function handleTriggerKeydown(e: KeyboardEvent) {
   }
 }
 
-function handleListKeydown(e: KeyboardEvent) {
+function handleSearchKeydown(e: KeyboardEvent) {
   switch (e.key) {
     case 'ArrowDown':
       e.preventDefault()
-      focusedIndex.value = Math.min(focusedIndex.value + 1, props.options.length - 1)
+      focusedIndex.value = Math.min(focusedIndex.value + 1, filteredOptions.value.length - 1)
       scrollToFocused()
       break
     case 'ArrowUp':
@@ -136,22 +217,11 @@ function handleListKeydown(e: KeyboardEvent) {
       focusedIndex.value = Math.max(focusedIndex.value - 1, 0)
       scrollToFocused()
       break
-    case 'Home':
-      e.preventDefault()
-      focusedIndex.value = 0
-      scrollToFocused()
-      break
-    case 'End':
-      e.preventDefault()
-      focusedIndex.value = props.options.length - 1
-      scrollToFocused()
-      break
     case 'Enter':
       e.preventDefault()
-      if (focusedIndex.value >= 0) {
-        selectOption(props.options[focusedIndex.value]!)
+      if (focusedIndex.value >= 0 && filteredOptions.value[focusedIndex.value]) {
+        selectOption(filteredOptions.value[focusedIndex.value]!)
       }
-      isOpen.value = false
       break
     case 'Escape':
     case 'Tab':
@@ -201,14 +271,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   min-width: 200px;
 }
 
-.main-btn {
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  padding: 0.75rem 0.85rem;
-  font: inherit;
-  background: #fff;
-}
-
 .select-trigger {
   width: 100%;
   display: flex;
@@ -238,33 +300,66 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 }
 
 .select-dropdown {
+  width: max-content;
   position: absolute;
-  top: calc(100% + 3px);
   left: 0;
   right: 0;
   z-index: 50;
-  list-style: none;
-  margin: 0;
-  padding: 0.35rem;
   background: #fff;
   border: 1px solid var(--line-strong);
   border-radius: 12px;
   box-shadow: 0 8px 20px rgb(0 0 0 / 11%);
   overflow: hidden;
-  outline: none;
-  max-height: 260px;
-  overflow-y: auto;
 }
 
-.select-dropdown:focus-visible {
+.select-dropdown.bottom {
+  top: calc(100% + 3px);
+}
+
+.select-dropdown.top {
+  bottom: calc(100% + 3px);
+}
+
+.select-search-wrapper {
+  padding: 0.35rem 0.35rem 0;
+}
+
+.select-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.875rem;
+  background: transparent;
+  color: inherit;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.select-search:focus {
   border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
+}
+
+.select-search::placeholder {
+  color: #9ca3af;
+}
+
+.select-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem;
+  max-height: 220px;
+  overflow-y: auto;
+  outline: none;
 }
 
 .select-option {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 4px;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
   cursor: pointer;
@@ -286,6 +381,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-option.selected.focused {
   background: #dcfce7;
+}
+
+.select-empty {
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #9ca3af;
 }
 
 .select-check {
