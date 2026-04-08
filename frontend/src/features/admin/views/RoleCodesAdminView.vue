@@ -9,7 +9,6 @@
         </p>
       </template>
 
-      <p v-if="statusMessage" :class="['notice', statusType]">{{ statusMessage }}</p>
       <div v-if="forbidden" class="state-box error">You do not have access to this page.</div>
 
       <template v-else>
@@ -34,6 +33,7 @@
             <label class="form-label"> Role </label>
             <ui-select
               v-model="generateForm.role"
+              :miltiple="true"
               :options="[
                 { value: 'jury', label: 'Jury' },
                 { value: 'organizer', label: 'Organizer' },
@@ -71,8 +71,7 @@
                 { value: 'organizer', label: 'Organizer' },
                 { value: 'admin', label: 'Admin' },
               ]"
-            >
-            </ui-select>
+            />
           </div>
         </div>
 
@@ -144,6 +143,7 @@ import UiCard from '@/components/UiCard.vue'
 import { useGenerateCodes, useRoleCodes } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
+import { useGlobalNotification } from '@/features/shared/lib/notifications'
 
 interface Errors {
   role: string[]
@@ -160,6 +160,8 @@ const generateForm = ref({
   role: 'jury',
   quantity: '1',
 })
+
+const { showNotification } = useGlobalNotification()
 
 const { data, isLoading, error } = useRoleCodes({
   filter: computed(() => ({ role: selectedRoleFilter.value })),
@@ -185,9 +187,6 @@ watch(error, (err) => {
 const { mutate: generateCodes, isPending: submitting } = useGenerateCodes()
 
 const handleGenerate = () => {
-  errors.value = null
-  statusMessage.value = ''
-
   generateCodes(
     {
       body: {
@@ -197,8 +196,7 @@ const handleGenerate = () => {
     },
     {
       onSuccess: (data) => {
-        statusType.value = 'success'
-        statusMessage.value = `Generated ${data.created?.length || 0} code(s) successfully.`
+        showNotification(`Generated ${data.created?.length || 0} code(s) successfully.`, 'success')
       },
       onError: (err) => {
         if (err.response?.status === 403) {
@@ -206,12 +204,10 @@ const handleGenerate = () => {
           return
         }
 
-        statusType.value = 'error'
         if (err.response) {
-          errors.value = err.response.data as Errors
-          statusMessage.value = 'Unable to generate codes.'
+          showNotification(err.response.data.message as string, 'error')
         } else {
-          statusMessage.value = 'Server connection error.'
+          showNotification('Unable to generate codes.', 'error')
         }
       },
     },
