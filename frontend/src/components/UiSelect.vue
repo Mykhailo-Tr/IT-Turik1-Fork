@@ -91,7 +91,6 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   options: () => [],
   placeholder: 'Select an option',
-  height: 300,
 })
 
 const emit = defineEmits<{
@@ -105,8 +104,6 @@ const dropdownPosition = ref<'bottom' | 'top'>('bottom')
 const wrapperRef = ref<HTMLDivElement | null>(null)
 const listRef = ref<HTMLUListElement | null>(null)
 const searchInputRef = ref<HTMLInputElement | null>(null)
-
-const DROPDOWN_HEIGHT = props.height
 
 const filteredOptions = computed(() =>
   searchQuery.value.trim()
@@ -143,8 +140,11 @@ function computeDropdownPosition() {
   const rect = wrapperRef.value.getBoundingClientRect()
   const spaceBelow = window.innerHeight - rect.bottom
   const spaceAbove = rect.top
-  dropdownPosition.value =
-    spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow ? 'top' : 'bottom'
+
+  const dropdownHeight =
+    (listRef.value?.clientHeight ?? 220) + (searchInputRef.value?.clientHeight ?? 40) + 15
+
+  dropdownPosition.value = spaceBelow < dropdownHeight && spaceAbove > spaceBelow ? 'top' : 'bottom'
 }
 
 watch(isOpen, async (opened) => {
@@ -300,7 +300,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 }
 
 .select-dropdown {
-  width: max-content;
+  width: 100%;
   position: absolute;
   left: 0;
   right: 0;
@@ -359,7 +359,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
   padding: 0.55rem 0.75rem;
   border-radius: 8px;
   cursor: pointer;
