@@ -32,7 +32,7 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiModal from '@/components/UiModal.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
 import { useDeleteTeam } from '@/queries/teams'
@@ -44,7 +44,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { hideNotification } = useGlobalNotification()
+const { hideNotification } = useNotification()
 
 const { mutate: deleteTeam, isPending: isDeleting } = useDeleteTeam()
 

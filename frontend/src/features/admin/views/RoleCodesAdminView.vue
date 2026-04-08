@@ -143,7 +143,7 @@ import UiCard from '@/components/UiCard.vue'
 import { useGenerateCodes, useRoleCodes } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 
 interface Errors {
   role: string[]
@@ -161,7 +161,7 @@ const generateForm = ref({
   quantity: '1',
 })
 
-const { showNotification } = useGlobalNotification()
+const { showNotification } = useNotification()
 
 const { data, isLoading, error } = useRoleCodes({
   filter: computed(() => ({ role: selectedRoleFilter.value })),

@@ -45,7 +45,7 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiModal from '@/components/UiModal.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { computed, ref } from 'vue'
 import { useDeleteAccount, useProfile } from '@/queries/accounts'
@@ -57,7 +57,7 @@ const { data: user, isLoading } = useProfile()
 const { mutate: deleteAccount, isPending: isDeleting } = useDeleteAccount()
 
 const router = useRouter()
-const { showNotification, hideNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useNotification()
 
 const isDeleteModalOpen = ref(false)
 const deleteError = ref<string | null>(null)

@@ -100,7 +100,7 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiModal from '@/components/UiModal.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import DangerIcon from '@/icons/DangerIcon.vue'
 import EyeInCircle from '@/icons/EyeInCircle.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
@@ -118,7 +118,7 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<Props>()
-const { showNotification, hideNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useNotification()
 
 const selectedVisibility = ref(props.team?.is_public)
 const visibilityLoading = ref(false)

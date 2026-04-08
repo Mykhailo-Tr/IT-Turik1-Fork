@@ -134,7 +134,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { computed } from 'vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import { useLeaveTeam, useSendJoinRequest } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
@@ -147,7 +147,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { showNotification, hideNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useNotification()
 
 const emit = defineEmits<{
   (e: 'deleted'): void

@@ -11,17 +11,14 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { renderGoogleButton, type GoogleCredentialResponse } from '@/features/shared/lib/googleAuth'
-import { API_BASE } from '@/features/shared/config/api'
 import { useGoogleLogin } from '@/queries/accounts'
 
 interface Props {
-  apiBase?: string
   dividerLabel?: string
   buttonWidth?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  apiBase: API_BASE,
   dividerLabel: 'or continue with',
   buttonWidth: 340,
 })

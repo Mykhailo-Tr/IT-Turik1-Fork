@@ -33,12 +33,12 @@
 </template>
 
 <script setup lang="ts">
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import AppNavbar from './components/shared/AppNavbar.vue'
 import UiButton from './components/UiButton.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 
-const { notification, hideNotification } = useGlobalNotification()
+const { notification, hideNotification } = useNotification()
 </script>
 
 <style scoped>

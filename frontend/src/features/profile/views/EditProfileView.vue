@@ -219,7 +219,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
@@ -293,7 +293,7 @@ const passwordForm = ref<PasswordForm>({
   confirm_password: '',
 })
 const router = useRouter()
-const { showNotification, hideNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useNotification()
 
 const validateFullName = (value: string): string => {
   if (!value?.trim()) return 'Full name is required.'

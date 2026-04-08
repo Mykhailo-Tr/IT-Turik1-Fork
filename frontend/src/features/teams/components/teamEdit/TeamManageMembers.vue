@@ -138,7 +138,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import type { User, UserId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
@@ -156,7 +156,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { showNotification } = useGlobalNotification()
+const { showNotification } = useNotification()
 
 const { data: users, isLoading: isLoadingUsers } = useUsers()
 

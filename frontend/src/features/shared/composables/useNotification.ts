@@ -115,7 +115,7 @@ const showNotification = (
 
 const notification = computed(() => state.current)
 
-export const useGlobalNotification = () => ({
+export const useNotification = () => ({
   notification: readonly(notification),
   showNotification,
   hideNotification: clearNotification,

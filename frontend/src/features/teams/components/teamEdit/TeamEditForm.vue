@@ -95,7 +95,7 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { ref } from 'vue'
@@ -111,7 +111,7 @@ interface Props {
 
 const props = defineProps<Props>()
 const router = useRouter()
-const { hideNotification, showNotification } = useGlobalNotification()
+const { hideNotification, showNotification } = useNotification()
 
 const form = ref({
   name: props.team?.name ?? '',

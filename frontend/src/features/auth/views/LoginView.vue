@@ -31,11 +31,7 @@
 
       <p v-if="error" class="text-error feedback">{{ error }}</p>
 
-      <GoogleAuthButton
-        :api-base="API_BASE"
-        divider-label="or continue with"
-        @success="saveAndRedirect"
-      />
+      <GoogleAuthButton divider-label="or continue with" @success="saveAndRedirect" />
 
       <template #footer>
         <p class="auth-link">
@@ -51,7 +47,6 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
-import { API_BASE } from '@/features/shared/config/api.ts'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'

@@ -87,11 +87,7 @@
         </ui-button>
         <p v-if="errors?.form" class="text-error text-center">{{ errors.form[0] }}</p>
 
-        <GoogleAuthButton
-          :api-base="API_BASE"
-          divider-label="or sign up with"
-          @success="saveTokensAndRedirect"
-        />
+        <GoogleAuthButton divider-label="or sign up with" @success="saveTokensAndRedirect" />
 
         <p class="auth-link">
           Already have an account?
@@ -109,7 +105,6 @@ import { useRouter } from 'vue-router'
 import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
-import { API_BASE } from '@/features/shared/config/api.ts'
 import type { RegisterResponse } from '@/api/accounts/types'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'

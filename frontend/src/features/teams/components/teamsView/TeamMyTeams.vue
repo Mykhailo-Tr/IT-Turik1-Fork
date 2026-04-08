@@ -163,11 +163,4 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
   align-items: center;
   gap: 0.6rem;
 }
-
-@media (max-width: 640px) {
-  .section-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
 </style>

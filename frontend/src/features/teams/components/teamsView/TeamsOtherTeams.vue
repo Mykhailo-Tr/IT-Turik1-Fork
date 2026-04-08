@@ -107,7 +107,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import type { TeamId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
@@ -122,7 +122,7 @@ const OTHER_TEAMS_PER_PAGE = 8
 const { data: user } = useProfile()
 const { data: teams, isLoading: isLoadingTeams } = useTeams()
 
-const { showNotification } = useGlobalNotification()
+const { showNotification } = useNotification()
 
 const otherPage = ref(1)
 const loadingIds = ref<Set<TeamId>>(new Set())
@@ -221,12 +221,5 @@ const sendJoinRequest = (teamId: TeamId) => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-@media (max-width: 640px) {
-  .section-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }
 </style>

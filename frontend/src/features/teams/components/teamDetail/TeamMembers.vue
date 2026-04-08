@@ -247,7 +247,7 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import type { Invitation, JoinRequest, JoinRequestId, UserId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse, ManageJoinRequestAction } from '@/api/teams/types'
 import { computed, ref } from 'vue'
@@ -265,7 +265,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { showNotification, hideNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useNotification()
 
 const emit = defineEmits<{
   (e: 'updateTeam', newTeamValue: GetTeamInfoResponse): void

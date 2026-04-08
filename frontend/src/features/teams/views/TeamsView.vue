@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import { watch } from 'vue'
 import TeamInvatations from '../components/teamsView/TeamInvatations.vue'
 import TeamMyTeams from '../components/teamsView/TeamMyTeams.vue'
@@ -43,7 +43,7 @@ import { useTeams } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 
-const { showNotification } = useGlobalNotification()
+const { showNotification } = useNotification()
 
 const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useTeams()
 

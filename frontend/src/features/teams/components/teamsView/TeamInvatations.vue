@@ -82,7 +82,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import { useInvitations, useRespondToInvitation } from '@/queries/teams'
 import type { InvitationId } from '@/api/dbTypes'
 import { computed, ref } from 'vue'
@@ -91,7 +91,7 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiBadge from '@/components/UiBadge.vue'
 
-const { showNotification } = useGlobalNotification()
+const { showNotification } = useNotification()
 
 const { data: inboxInvitations, isLoading: inboxLoading } = useInvitations()
 
@@ -170,12 +170,5 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-@media (max-width: 640px) {
-  .section-head {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }
 </style>

@@ -100,7 +100,7 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useGlobalNotification } from '@/features/shared/lib/notifications'
+import { useNotification } from '@/features/shared/composables/useNotification'
 import type { CreateTeamBody } from '@/api/teams/types'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -112,7 +112,7 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSelect from '@/components/UiSelect.vue'
 
 const router = useRouter()
-const { showNotification, hideNotification } = useGlobalNotification()
+const { showNotification, hideNotification } = useNotification()
 
 type Form = CreateTeamBody
 
