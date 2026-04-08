@@ -69,7 +69,7 @@
       <team-members
         :team="team"
         :user="user"
-        :loading="isInfoLoading"
+        :loading="isInfoLoading || isProfileLoading"
         :is-captain="isCaptain"
         @update-team="(newTeamValue) => (team = newTeamValue)"
       />
@@ -106,7 +106,7 @@ import TeamManageZone from '../components/teamDetail/TeamManageZone.vue'
 const router = useRouter()
 const route = useRoute()
 
-const { data: user } = useProfile()
+const { data: user, isLoading: isProfileLoading } = useProfile()
 const { data: team, isLoading: isInfoLoading } = useTeamInfo(Number(route.params.id))
 
 const isCaptain = computed(() => team.value?.captain_id === user.value?.id)

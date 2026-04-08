@@ -207,33 +207,34 @@
               v-for="invitation in filteredDeclinedInvitations"
               :key="`invitation-declined-${invitation.id}`"
             >
-              <div>
-                <p class="member-name">{{ invitation.user.username }}</p>
-                <p class="text-muted member-email">{{ invitation.user.email }}</p>
-              </div>
-
-              <div class="member-side">
-                <ui-badge v-if="invitation.user.id === props.team?.captain_id" variant="green"
-                  >Captain</ui-badge
-                >
-                <template v-else>
-                  <div class="status-tags">
+              <template #header>
+                <div style="display: flex; justify-content: space-between">
+                  <p class="member-name">{{ invitation.user.username }}</p>
+                  <ui-badge v-if="invitation.user.id === props.team?.captain_id" variant="green"
+                    >Captain</ui-badge
+                  >
+                  <div v-else style="display: flex; gap: 4px">
                     <ui-badge variant="red">Declined</ui-badge>
                     <ui-badge>Invatation</ui-badge>
                   </div>
-                  <div class="row-actions">
-                    <ui-button
-                      variant="outline"
-                      size="sm"
-                      :disabled="loadingInvitationIds.has(invitation.id)"
-                      @click="resendInvitation(invitation.user.id)"
-                    >
-                      <loading-icon v-if="loadingInvitationIds.has(invitation.id)" />
-                      Resend invitation
-                    </ui-button>
-                  </div>
-                </template>
-              </div>
+                </div>
+              </template>
+
+              <p class="text-muted member-email">{{ invitation.user.email }}</p>
+
+              <template #footer>
+                <div class="row-actions">
+                  <ui-button
+                    variant="outline"
+                    size="sm"
+                    :disabled="loadingInvitationIds.has(invitation.id)"
+                    @click="resendInvitation(invitation.user.id)"
+                  >
+                    <loading-icon v-if="loadingInvitationIds.has(invitation.id)" />
+                    Resend invitation
+                  </ui-button>
+                </div>
+              </template>
             </ui-card>
           </div>
         </section>
@@ -439,7 +440,7 @@ const resendInvitation = (userId: UserId) => {
 }
 </script>
 
-<style>
+<style scoped>
 .panel {
   padding: 1.2rem;
   border: 1px solid var(--line-soft);

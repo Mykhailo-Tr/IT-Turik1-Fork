@@ -127,7 +127,7 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
 }
 </script>
 
-<style>
+<style scoped>
 .section-head {
   display: flex;
   align-items: center;

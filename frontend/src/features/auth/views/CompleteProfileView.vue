@@ -10,14 +10,14 @@
       <p v-if="message" :class="['notice', messageType]">{{ message }}</p>
 
       <form class="form-grid" @submit.prevent="handleSubmit">
-        <label class="form-label">
-          Username
+        <div class="form-item">
+          <label class="form-label"> Username </label>
           <ui-input v-model="form.username" required />
           <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
-        </label>
+        </div>
 
-        <label class="form-label">
-          Role
+        <div class="form-item">
+          <label class="form-label"> Role </label>
           <ui-select
             :options="[
               { value: 'team', label: 'Team Member' },
@@ -29,51 +29,53 @@
             required
           />
           <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
-        </label>
+        </div>
 
-        <label v-if="isRestrictedRole" class="form-label full-width">
-          Redeem code
-          <ui-input
-            v-model="form.redeem_code"
-            placeholder="Enter one-time activation code"
-            required
-          />
-          <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
-        </label>
+        <div>
+          <div class="form-item" v-if="isRestrictedRole">
+            <label class="form-label full-width"> Redeem code </label>
+            <ui-input
+              v-model="form.redeem_code"
+              placeholder="Enter one-time activation code"
+              required
+            />
+            <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+          </div>
 
-        <label class="form-label full-width">
-          Password
-          <ui-password-field
-            v-model="form.password"
-            autocomplete="new-password"
-            placeholder="Create a strong password"
-            required
-          />
-          <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
-          <small v-else class="field-help">
-            Use at least 8 characters, including upper/lowercase letters, a number, and a special
-            character.
-          </small>
-        </label>
+          <div class="form-item">
+            <label class="form-label full-width"> Password </label>
+            <ui-password-field
+              v-model="form.password"
+              autocomplete="new-password"
+              placeholder="Create a strong password"
+              required
+            />
+            <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
+            <small v-else class="field-help">
+              Use at least 8 characters, including upper/lowercase letters, a number, and a special
+              character.
+            </small>
+          </div>
+        </div>
 
-        <label class="form-label full-width">
-          Full name
+        <div class="form-item">
+          <label class="form-label full-width"> Full name </label>
           <ui-input v-model="form.full_name" />
-        </label>
+        </div>
 
-        <label class="form-label">
-          Phone
+        <div class="form-item">
+          <label class="form-label"> Phone </label>
           <PhoneField
             v-model="form.phone"
             :error="errors?.phone?.[0]"
             placeholder="Enter phone number"
           />
-        </label>
+        </div>
 
-        <label class="form-label">
-          City
+        <div class="form-item">
+          <label class="form-label"> City </label>
           <ui-input v-model="form.city" />
-        </label>
+        </div>
 
         <ui-button class="submit-btn" :disabled="isUpdatingProfile" type="submit">
           <loading-icon v-if="isUpdatingProfile" />
@@ -85,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
@@ -113,7 +115,7 @@ const errors = ref<Errors | null>(null)
 
 const { data: user } = useProfile()
 
-const form = computed(() => ({
+const form = reactive({
   username: user.value?.username ?? '',
   role: user.value?.role ?? 'team',
   redeem_code: '',
@@ -121,16 +123,16 @@ const form = computed(() => ({
   full_name: user.value?.full_name ?? '',
   phone: user.value?.phone ?? '',
   city: user.value?.city ?? '',
-}))
+})
 
 const restrictedRoles = ['jury', 'organizer', 'admin']
-const isRestrictedRole = computed(() => restrictedRoles.includes(form.value.role))
+const isRestrictedRole = computed(() => restrictedRoles.includes(form.role))
 
 watch(
-  () => form.value.role,
+  () => form.role,
   (newRole) => {
     if (!restrictedRoles.includes(newRole)) {
-      form.value.redeem_code = ''
+      form.redeem_code = ''
     }
   },
 )
@@ -150,7 +152,7 @@ const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile
 const handleSubmit = async () => {
   message.value = ''
 
-  const passwordError = getPasswordError(form.value.password)
+  const passwordError = getPasswordError(form.password)
   if (passwordError) {
     errors.value = { password: [passwordError] }
     messageType.value = 'error'
@@ -159,7 +161,7 @@ const handleSubmit = async () => {
   }
 
   updateProfile(
-    { body: form.value },
+    { body: form },
     {
       onSuccess: () => {
         localStorage.removeItem('needs_onboarding')
@@ -189,6 +191,12 @@ const handleSubmit = async () => {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .full-width {

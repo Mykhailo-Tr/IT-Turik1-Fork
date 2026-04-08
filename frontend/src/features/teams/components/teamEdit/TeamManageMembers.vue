@@ -15,6 +15,7 @@
 
     <div class="form-item">
       <ui-input
+        class="search-input"
         v-model="memberSearch"
         placeholder="Search by username or email"
         :disabled="props.loading"
@@ -255,6 +256,10 @@ const addMember = () => {
   justify-content: space-between;
   gap: 0.7rem;
   margin-bottom: 0.9rem;
+}
+
+.search-input {
+  margin-bottom: 12px;
 }
 
 .panel-head h2 {
