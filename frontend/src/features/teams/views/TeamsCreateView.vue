@@ -70,28 +70,20 @@
 
           <ui-skeleton-loader :loading="isLoadingUsers">
             <template #skeleton>
-              <ui-skeleton variant="rect" height="49.6px" width="100%" />
+              <ui-skeleton variant="rect" height="48px" width="200px" />
             </template>
 
-            <ui-input
-              v-model="memberSearchInput"
-              placeholder="Search by username, email, full name"
+            <ui-select
+              v-model="form.member_ids"
+              :multiple="true"
+              :options="
+                createCandidateUsers?.map((u) => ({
+                  value: u.id,
+                  label: `${u.username} (${u.email})`,
+                }))
+              "
+              placeholder="Select members"
             />
-
-            <div v-if="memberSearchInput.length > 0">
-              <label
-                v-for="user in createCandidateUsers"
-                :key="`create-${user.id}`"
-                class="picker-item"
-                @click.prevent="toggleMember(user.id)"
-              >
-                <input type="checkbox" :checked="form.member_ids.includes(user.id)" readonly />
-                <span>{{ user.username }} ({{ user.email }})</span>
-              </label>
-              <p v-if="createCandidateUsers?.length === 0" class="text-muted empty-note">
-                No users found.
-              </p>
-            </div>
           </ui-skeleton-loader>
         </div>
 
@@ -109,7 +101,6 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
 import { useGlobalNotification } from '@/features/shared/lib/notifications'
-import type { UserId } from '@/api/dbTypes'
 import type { CreateTeamBody } from '@/api/teams/types'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -118,6 +109,7 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { useProfile, useUsers } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
+import UiSelect from '@/components/UiSelect.vue'
 
 const router = useRouter()
 const { showNotification, hideNotification } = useGlobalNotification()
@@ -148,20 +140,10 @@ const resetForm = () => {
 
 const { data: user } = useProfile()
 
-const memberSearchInput = ref('')
-
-const toggleMember = (id: UserId) => {
-  const idx = form.value.member_ids.indexOf(id)
-  if (idx === -1) form.value.member_ids.push(id)
-  else form.value.member_ids.splice(idx, 1)
-}
-
 const createCandidateUsers = computed(() => {
-  const search = memberSearchInput.value.trim().toLowerCase()
   return users.value?.filter((u) => {
     if (u.id === user.value?.id) return false
-    if (!search) return true
-    return [u.username, u.email, u.full_name || ''].join(' ').toLowerCase().includes(search)
+    return [u.username, u.email, u.full_name || ''].join(' ').toLowerCase()
   })
 })
 
@@ -286,17 +268,6 @@ const handleFormSubmit = () => {
 
 .switch-knob.is-public {
   transform: translateX(1.3rem);
-}
-
-.picker-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--ink-800);
-}
-
-.empty-note {
-  margin: 0;
 }
 
 @media (max-width: 760px) {
