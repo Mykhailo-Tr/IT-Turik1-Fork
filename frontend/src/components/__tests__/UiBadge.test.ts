@@ -17,6 +17,6 @@ describe('UiBadge', () => {
       slots: { default: 'Badge text' },
     })
 
-    expect(wrapper.getByText('Badge text')).toBeInTheDocument
+    expect(wrapper.getByText('Badge text')).toBeInTheDocument()
   })
 })
