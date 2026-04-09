@@ -4,11 +4,11 @@ import UiCard from '../UiCard.vue'
 
 describe('UiCard', () => {
   it('renders default slot content', async () => {
-    const wrapper = render(UiCard, {
+    const screen = render(UiCard, {
       slots: { default: 'Card content' },
     })
 
-    expect(wrapper.getByText('Card content')).toBeInTheDocument()
+    expect(screen.getByText('Card content')).toBeInTheDocument()
   })
 
   it('renders a header only when the header slot is provided', async () => {
@@ -40,7 +40,7 @@ describe('UiCard', () => {
   })
 
   it('renders all slots together', async () => {
-    const wrapper = render(UiCard, {
+    const screen = render(UiCard, {
       slots: {
         header: 'Header',
         default: 'Body',
@@ -48,7 +48,7 @@ describe('UiCard', () => {
       },
     })
 
-    const card = wrapper.getByRole('article')
+    const card = screen.getByRole('article')
 
     expect(card.getByText('Header')).toBeInTheDocument()
     expect(card.getByText('Body')).toBeInTheDocument()

@@ -17,7 +17,7 @@ describe('UiPasswordField', () => {
       props: { modelValue: 'secret' },
     })
 
-    const button = screen.getByTestId('password-toggle')
+    const button = screen.getByRole('button')
     await button.click()
 
     const input = screen.getByRole('textbox')
@@ -47,8 +47,11 @@ describe('UiPasswordField', () => {
       props: { modelValue: 'secret', disabled: true },
     })
 
-    const button = screen.getByTestId('password-toggle')
+    const button = screen.getByRole('button')
     expect(button).toBeDisabled()
+
+    const input = screen.getByRole('textbox')
+    expect(input).toBeDisabled()
   })
 
   it('passes through placeholder attribute to the input', async () => {

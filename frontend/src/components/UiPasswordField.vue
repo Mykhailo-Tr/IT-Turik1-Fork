@@ -4,6 +4,7 @@
       v-bind="$attrs"
       :type="isVisible ? 'text' : 'password'"
       :value="modelValue"
+      :disabled="disabled"
       class="password-input"
       @input="onInput"
     />
@@ -14,7 +15,6 @@
       :disabled="disabled"
       type="button"
       class="password-toggle"
-      data-testid="password-toggle"
       @click="isVisible = !isVisible"
     >
       <IconEye class="toggle-icon" :is-crossed="isVisible" />

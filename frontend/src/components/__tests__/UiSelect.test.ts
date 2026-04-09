@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-vue'
 import UiSelect, { type SelectOption } from '../UiSelect.vue'
@@ -57,9 +57,8 @@ describe('UiSelect', () => {
   })
 
   it('selects an option and closes the dropdown in single select mode', async () => {
-    const onUpdate = vi.fn()
     const screen = await render(UiSelect, {
-      props: { modelValue: null, options: mockOptions, 'onUpdate:modelValue': onUpdate },
+      props: { modelValue: null, options: mockOptions },
     })
 
     const trigger = screen.getByRole('button')
@@ -68,7 +67,7 @@ describe('UiSelect', () => {
     const options = screen.getByTestId('select-option').first()
     await options.click()
 
-    expect(onUpdate).toHaveBeenCalledWith('apple')
+    expect(screen.emitted('update:modelValue')?.[0]).toStrictEqual(['apple'])
     expect(() => screen.getByTestId('select-dropdown')).not.toThrow()
   })
 

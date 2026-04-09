@@ -34,8 +34,6 @@ describe('UiSkeletonLoader', () => {
 
     await screen.rerender({ loading: true })
 
-    console.log(screen.debug())
-
     expect(screen.getByText('Loading...')).toBeInTheDocument()
     await expect.poll(() => screen.getByText('Content').query()).not.toBeInTheDocument()
   })

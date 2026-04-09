@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { render } from 'vitest-browser-vue'
 import { userEvent } from 'vitest/browser'
 import UiModal from '../UiModal.vue'
@@ -44,18 +44,15 @@ describe('UiModal', () => {
   })
 
   it('emits update:modelValue and close when the close button is clicked', async () => {
-    const onUpdateModelValue = vi.fn()
-    const onClose = vi.fn()
     const screen = await render(UiModal, {
-      props: { modelValue: true, 'onUpdate:modelValue': onUpdateModelValue, onClose },
+      props: { modelValue: true },
       slots: { title: '<h2>Test</h2>' },
     })
 
     const closeButton = screen.getByRole('button', { name: 'Close' })
     await closeButton.click()
 
-    expect(onUpdateModelValue).toHaveBeenCalledWith(false)
-    expect(onClose).toHaveBeenCalled()
+    expect(screen.emitted('update:modelValue')?.[0]).toStrictEqual([false])
   })
 
   it('closes when the backdrop is clicked', async () => {

@@ -4,19 +4,19 @@ import UiBadge from '../UiBadge.vue'
 
 describe('UiBadge', () => {
   it('renders slot content correctly', () => {
-    const wrapper = render(UiBadge, {
+    const screen = render(UiBadge, {
       slots: { default: 'Badge text' },
     })
 
-    expect(wrapper.getByText('Badge text')).toBeInTheDocument()
+    expect(screen.getByText('Badge text')).toBeInTheDocument()
   })
 
   it('supports the variant prop without breaking rendering', () => {
-    const wrapper = render(UiBadge, {
+    const screen = render(UiBadge, {
       props: { variant: 'red' },
       slots: { default: 'Badge text' },
     })
 
-    expect(wrapper.getByText('Badge text')).toBeInTheDocument()
+    expect(screen.getByText('Badge text')).toBeInTheDocument()
   })
 })
