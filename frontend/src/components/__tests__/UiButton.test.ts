@@ -21,7 +21,7 @@ describe('UiButton', () => {
     expect(button).toHaveAttribute('type', 'button')
   })
 
-  it('forwards natevie attributes to the button', () => {
+  it('forwards native attributes to the button', () => {
     const screen = render(UiButton, {
       attrs: { disabled: true },
       slots: { default: 'Disabled' },
