@@ -2,6 +2,8 @@ from django.urls import path
 
 from .views import (
     TeamDetailView,
+    TeamInfoMembersView,
+    TeamInfoView,
     TeamInvitationAcceptView,
     TeamInvitationDeclineView,
     TeamInvitationListView,
@@ -15,6 +17,8 @@ from .views import (
 
 urlpatterns = [
     path('', TeamListCreateView.as_view(), name='teams'),
+    path('<int:pk>/info/', TeamInfoView.as_view(), name='team_info'),
+    path('<int:pk>/info-members/', TeamInfoMembersView.as_view(), name='team_info_members'),
     path('<int:pk>/', TeamDetailView.as_view(), name='team_detail'),
     path('<int:pk>/leave/', TeamLeaveView.as_view(), name='team_leave'),
     path('<int:pk>/members/', TeamMemberManageView.as_view(), name='team_members'),

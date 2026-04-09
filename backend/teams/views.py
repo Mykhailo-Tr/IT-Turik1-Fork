@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
@@ -14,7 +14,9 @@ from .serializers import (
     clear_invitation_states_for_member,
     clear_join_request_states_for_member,
     TeamInvitationInboxSerializer,
-    TeamMemberSerializer,
+    TeamInfoMembersSerializer,
+    TeamInfoSerializer,
+    TeamListSerializer,
     TeamSerializer,
     invite_user_to_team,
 )
@@ -38,6 +40,25 @@ def get_team_queryset():
     )
 
 
+def get_team_info_queryset():
+    return (
+        Team.objects.select_related('captain')
+        .annotate(members_count=Count('members', distinct=True))
+        .prefetch_related(
+            Prefetch('members', queryset=User.objects.only('id')),
+            Prefetch(
+                'invitations',
+                queryset=TeamInvitation.objects.only('id', 'team_id', 'user_id', 'status').order_by('-created_at'),
+            ),
+            Prefetch(
+                'join_requests',
+                queryset=TeamJoinRequest.objects.only('id', 'team_id', 'user_id', 'status').order_by('-created_at'),
+            ),
+        )
+        .order_by('id')
+    )
+
+
 def is_team_member(team, user):
     if team.captain_id == user.id:
         return True
@@ -52,28 +73,54 @@ class TeamListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TeamSerializer
 
-    def get_queryset(self):
-        if is_platform_admin(self.request.user):
-            return get_team_queryset()
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TeamListSerializer
+        return TeamSerializer
 
-        user_id = self.request.user.id
-        return (
-            get_team_queryset()
-            .filter(
-                Q(is_public=True)
-                | Q(captain_id=user_id)
-                | Q(team_members__user_id=user_id)
-            )
-            .distinct()
-        )
+    def get_queryset(self):
+        queryset = Team.objects.select_related('captain').annotate(
+            members_count=Count('team_members', distinct=True)
+        ).order_by('id')
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
+
+        return queryset.filter(is_public=True)
 
     def perform_create(self, serializer):
         serializer.save(captain=self.request.user)
 
 
+class TeamInfoView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TeamInfoSerializer
+
+    def get_queryset(self):
+        queryset = get_team_info_queryset()
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
+        return queryset.filter(is_public=True)
+
+
+class TeamInfoMembersView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TeamInfoMembersSerializer
+
+    def get_queryset(self):
+        return get_team_queryset()
+
+    def get_object(self):
+        team = super().get_object()
+        if is_platform_admin(self.request.user) or is_team_member(team, self.request.user):
+            return team
+        raise PermissionDenied('Only team members, captains, or admins can access team members info.')
+
+
 class TeamDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = TeamSerializer
+    http_method_names = ['put', 'patch', 'delete', 'head', 'options']
 
     def get_queryset(self):
         return get_team_queryset()

@@ -70,6 +70,15 @@ class TeamSummarySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'is_public')
 
 
+class TeamListSerializer(serializers.ModelSerializer):
+    captain = serializers.CharField(source='captain.username', read_only=True)
+    members_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Team
+        fields = ('id', 'name', 'is_public', 'captain', 'members_count')
+
+
 class TeamInvitationSerializer(serializers.ModelSerializer):
     user = TeamMemberSerializer(read_only=True)
     invited_by_id = serializers.IntegerField(read_only=True)
@@ -262,3 +271,36 @@ class TeamSerializer(serializers.ModelSerializer):
                 invite_user_to_team(team=instance, user=user, invited_by=request_user)
 
         return instance
+
+
+class TeamInfoSerializer(TeamSerializer):
+    captain = serializers.CharField(source='captain.username', read_only=True)
+    members_count = serializers.IntegerField(read_only=True)
+
+    class Meta(TeamSerializer.Meta):
+        fields = (
+            'id',
+            'name',
+            'email',
+            'captain',
+            'is_public',
+            'organization',
+            'contact_telegram',
+            'contact_discord',
+            'members_count',
+            'my_invitation_status',
+            'my_join_request_status',
+            'is_member',
+            'is_captain',
+            'can_request_to_join',
+        )
+
+
+class TeamInfoMembersSerializer(TeamSerializer):
+    class Meta(TeamSerializer.Meta):
+        fields = (
+            'captain_id',
+            'members',
+            'invitations',
+            'join_requests',
+        )
