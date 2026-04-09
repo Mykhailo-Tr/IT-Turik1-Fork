@@ -11,25 +11,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps({
-  variant: {
-    type: String as () => 'circle' | 'rect',
-    default: 'text',
-  },
-  width: {
-    type: [String, Number],
-    default: '100%',
-  },
-  height: {
-    type: [String, Number],
-    default: '24px',
-  },
+export type Variant = 'rect' | 'rounded'
+
+interface Props {
+  variant?: Variant
+  width?: string | number
+  height?: string | number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  variant: 'rect',
+  width: '100%',
+  height: '24px',
 })
 
-const styleVars = computed(() => ({
-  width: typeof props.width === 'number' ? `${props.width}px` : props.width,
-  height: typeof props.height === 'number' ? `${props.height}px` : props.height,
-}))
+const styleVars = computed(() => {
+  const width = typeof props.width === 'number' ? `${props.width}px` : props.width
+  const height = typeof props.height === 'number' ? `${props.height}px` : props.height
+
+  return { width, height }
+})
 
 const variantClass = computed(() => `skeleton--${props.variant}`)
 </script>
@@ -50,7 +51,7 @@ const variantClass = computed(() => `skeleton--${props.variant}`)
   animation: shimmer 2s infinite linear;
 }
 
-.skeleton--circle {
+.skeleton--rounded {
   border-radius: 50%;
 }
 

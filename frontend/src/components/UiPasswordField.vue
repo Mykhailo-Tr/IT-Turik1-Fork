@@ -14,10 +14,10 @@
       :disabled="disabled"
       type="button"
       class="password-toggle"
+      data-testid="password-toggle"
       @click="isVisible = !isVisible"
     >
-      <IconEye v-if="isVisible" is-crossed />
-      <IconEye v-else />
+      <IconEye class="toggle-icon" :is-crossed="isVisible" />
     </button>
   </div>
 </template>

@@ -3,14 +3,13 @@
 </template>
 
 <script setup lang="ts">
-type Variants = 'green' | 'blue' | 'gray' | 'red' | 'orange'
+export type Variants = 'green' | 'blue' | 'gray' | 'red' | 'orange'
 
-const props = withDefaults(
-  defineProps<{
-    variant?: Variants
-  }>(),
-  { variant: 'gray' },
-)
+interface Props {
+  variant?: Variants
+}
+
+const props = withDefaults(defineProps<Props>(), { variant: 'gray' })
 </script>
 
 <style scoped>

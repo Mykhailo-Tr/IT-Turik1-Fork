@@ -3,7 +3,11 @@
     >Delete team</ui-button
   >
 
-  <ui-modal v-model="isDeleteModalOpen" title="Delete team" :close-on-backdrop="!isDeleting">
+  <ui-modal v-model="isDeleteModalOpen" :close-on-backdrop="!isDeleting">
+    <template #title>
+      <h3>Delete team</h3>
+    </template>
+
     <p class="modal-text">
       This action cannot be undone. Enter
       <ui-badge variant="red">{{ props.team?.name }}</ui-badge>

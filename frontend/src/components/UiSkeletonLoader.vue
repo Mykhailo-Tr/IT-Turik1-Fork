@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
   loading: true,
 })
 
-const containerHeight = computed(() => props.minHeight ?? undefined)
+const containerHeight = computed(() => props.minHeight)
 </script>
 
 <style scoped>

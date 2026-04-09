@@ -2,7 +2,7 @@
   <component
     :is="props.asLink ? RouterLink : 'button'"
     :to="props.asLink ? props.to : undefined"
-    type="button"
+    :type="props.asLink ? undefined : 'button'"
     :class="['btn', variantClass, sizeClass]"
     v-bind="$attrs"
   >
@@ -14,25 +14,9 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-const variants = {
-  default: 'default-btn',
-  outline: 'outline-btn',
-  'outline-accent': 'outline-accent-btn',
-  ghost: 'ghost-btn',
-  danger: 'danger-btn',
-  warning: 'warning-btn',
-} as const
+export type Variant = 'default' | 'outline' | 'outline-accent' | 'ghost' | 'danger' | 'warning'
 
-const sizes = {
-  xs: 'btn-xs',
-  sm: 'btn-sm',
-  md: 'btn-md',
-  lg: 'btn-lg',
-} as const
-
-type Size = keyof typeof sizes
-
-type Variant = keyof typeof variants
+export type Size = 'xs' | 'sm' | 'md' | 'lg'
 
 type Props = {
   asLink?: boolean
@@ -42,10 +26,26 @@ type Props = {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  asLink: false,
   variant: 'default',
+  asLink: false,
   size: 'md',
 })
+
+const variants: Record<Variant, string> = {
+  default: 'default-btn',
+  outline: 'outline-btn',
+  'outline-accent': 'outline-accent-btn',
+  ghost: 'ghost-btn',
+  danger: 'danger-btn',
+  warning: 'warning-btn',
+}
+
+const sizes: Record<Size, string> = {
+  xs: 'btn-xs',
+  sm: 'btn-sm',
+  md: 'btn-md',
+  lg: 'btn-lg',
+}
 
 const variantClass = computed(() => variants[props.variant])
 const sizeClass = computed(() => sizes[props.size])

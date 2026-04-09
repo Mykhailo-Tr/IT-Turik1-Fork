@@ -13,12 +13,19 @@
     </ui-button>
 
     <Transition name="dropdown">
-      <div v-if="isOpen" class="select-dropdown" :class="dropdownPosition" ref="dropdownRef">
+      <div
+        v-if="isOpen"
+        class="select-dropdown"
+        data-testid="select-dropdown"
+        :class="dropdownPosition"
+        ref="dropdownRef"
+      >
         <div class="select-search-wrapper">
           <input
             ref="searchInputRef"
             v-model="searchQuery"
             class="select-search"
+            data-testid="select-search"
             type="text"
             placeholder="Search..."
             @keydown="handleSearchKeydown"
@@ -28,6 +35,7 @@
         <ul
           class="select-list"
           role="listbox"
+          data-testid="select-list"
           :aria-multiselectable="multiple"
           :aria-activedescendant="activeDescendant"
           ref="listRef"
@@ -37,6 +45,7 @@
             v-for="(option, index) in filteredOptions"
             :key="option.value"
             :id="`option-${option.value}`"
+            data-testid="select-option"
             class="select-option"
             :class="{
               selected: isSelected(option),
@@ -51,7 +60,9 @@
             <selected-icon v-if="isSelected(option)" class="select-check" />
           </li>
 
-          <li v-if="!filteredOptions.length" class="select-empty">No options found</li>
+          <li v-if="!filteredOptions.length" data-testid="select-empty" class="select-empty">
+            No options found
+          </li>
         </ul>
       </div>
     </Transition>
