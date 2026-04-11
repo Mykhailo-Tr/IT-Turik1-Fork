@@ -3,6 +3,7 @@ import re
 from django.utils import timezone
 from rest_framework import serializers
 
+from accounts.utils.permissions import is_platform_admin
 from accounts.models import User
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
@@ -52,10 +53,6 @@ def invite_user_to_team(*, team, user, invited_by):
     )
 
     return invitation, created
-
-
-def is_platform_admin(user):
-    return bool(user and user.is_authenticated and (user.is_superuser or user.role == 'admin'))
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):

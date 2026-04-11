@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.utils.permissions import is_platform_admin
 from accounts.models import User
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
@@ -42,10 +43,6 @@ def is_team_member(team, user):
     if team.captain_id == user.id:
         return True
     return any(member.id == user.id for member in team.members.all())
-
-
-def is_platform_admin(user):
-    return bool(user and user.is_authenticated and (user.is_superuser or user.role == 'admin'))
 
 
 class TeamListCreateView(generics.ListCreateAPIView):
