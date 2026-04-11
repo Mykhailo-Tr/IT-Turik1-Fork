@@ -1,5 +1,11 @@
 <template>
-  <ui-card class="panel members-panel">
+  <ui-card class="panel members-panel" :is-error="props.isError">
+    <template #error>
+      <div style="display: flex; justify-content: center; align-items: center; height: 302px">
+        <p>Failed to fetch team members</p>
+      </div>
+    </template>
+
     <template #header>
       <header class="panel-head">
         <h2>Members management</h2>
@@ -8,7 +14,7 @@
             <ui-skeleton variant="rect" width="100px" />
           </template>
 
-          <span class="text-muted">{{ team?.members.length }} people</span>
+          <span class="text-muted">{{ team?.members.length ?? 0 }} people</span>
         </ui-skeleton-loader>
       </header>
     </template>
@@ -139,7 +145,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import type { User, UserId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
@@ -154,6 +160,7 @@ export type Member = Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'rol
 interface Props {
   team?: GetTeamInfoResponse
   loading: boolean
+  isError?: boolean
 }
 
 const props = defineProps<Props>()

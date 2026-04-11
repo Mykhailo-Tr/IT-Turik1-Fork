@@ -103,29 +103,37 @@
           </template>
 
           <div class="codes-list">
-            <ui-card v-for="code in codes" :key="code.id">
-              <template #header>
-                <div class="code-head">
-                  <strong class="mono">{{ code.code }}</strong>
-                  <span :class="['status-pill', code.is_used ? 'used' : 'active']">
-                    {{ code.is_used ? 'Used' : 'Active' }}
-                  </span>
-                </div>
-              </template>
+            <div
+              v-if="isLoadingError"
+              style="display: flex; height: 120px; justify-content: center; align-items: center"
+            >
+              <p>Error while fetching role codes (code: {{ error?.code }})</p>
+            </div>
 
-              <p><strong>Role:</strong> {{ code.role }}</p>
-              <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
-              <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
-              <template v-if="code.is_used">
-                <p><strong>Used by:</strong> {{ code.used_by }}</p>
-                <p>
-                  <strong>Used at:</strong>
-                  {{ code.used_at ? formatDateTime(code.used_at) : '-' }}
-                </p>
-              </template>
-            </ui-card>
+            <template v-else>
+              <ui-card v-for="code in codes" :key="code.id">
+                <template #header>
+                  <div class="code-head">
+                    <strong class="mono">{{ code.code }}</strong>
+                    <span :class="['status-pill', code.is_used ? 'used' : 'active']">
+                      {{ code.is_used ? 'Used' : 'Active' }}
+                    </span>
+                  </div>
+                </template>
 
-            <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
+                <p><strong>Role:</strong> {{ code.role }}</p>
+                <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
+                <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
+                <template v-if="code.is_used">
+                  <p><strong>Used by:</strong> {{ code.used_by }}</p>
+                  <p>
+                    <strong>Used at:</strong>
+                    {{ code.used_at ? formatDateTime(code.used_at) : '-' }}
+                  </p>
+                </template>
+              </ui-card>
+              <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
+            </template>
           </div>
         </ui-skeleton-loader>
       </template>
@@ -143,7 +151,8 @@ import UiCard from '@/components/UiCard.vue'
 import { useGenerateCodes, useRoleCodes } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
+import { parseError } from '@/api'
 
 interface Errors {
   role: string[]
@@ -163,14 +172,20 @@ const generateForm = ref({
 
 const { showNotification } = useNotification()
 
-const { data, isLoading, error } = useRoleCodes({
+const {
+  data,
+  isLoading,
+  isLoadingError,
+  error: getRoleCodesError,
+} = useRoleCodes({
   filter: computed(() => ({ role: selectedRoleFilter.value })),
 })
+const error = computed(() => parseError(getRoleCodesError.value))
 
 const codes = computed(() => data.value?.codes || [])
 const activeCounts = computed(() => data.value?.active_counts)
 
-watch(error, (err) => {
+watch(getRoleCodesError, (err) => {
   if (err) {
     if (err.response?.status === 403) {
       forbidden.value = true

@@ -1,5 +1,11 @@
 <template>
-  <ui-card>
+  <ui-card :is-error="isLoadingError">
+    <template #error>
+      <div style="display: flex; height: 136px; justify-content: center; align-items: center">
+        <p>Error while fetching invitations (code: {{ error?.code }})</p>
+      </div>
+    </template>
+
     <template #header>
       <div class="section-head">
         <h2>Invitations</h2>
@@ -82,7 +88,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import { useInvitations, useRespondToInvitation } from '@/queries/teams'
 import type { InvitationId } from '@/api/dbTypes'
 import { computed, ref } from 'vue'
@@ -90,16 +96,24 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiBadge from '@/components/UiBadge.vue'
+import { parseError } from '@/api'
 
 const { showNotification } = useNotification()
 
-const { data: inboxInvitations, isLoading: inboxLoading } = useInvitations()
+const {
+  data: inboxInvitations,
+  isLoading: inboxLoading,
+  isLoadingError,
+  error: invitationsError,
+} = useInvitations()
+const error = computed(() => parseError(invitationsError.value))
 
 const pendingInboxInvitations = computed(() =>
   inboxInvitations.value?.filter((invitation) => invitation.status === 'invited'),
 )
 
 const { mutate: respond } = useRespondToInvitation()
+
 const loadingIds = ref<Set<InvitationId>>(new Set())
 
 const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'decline') => {
@@ -114,10 +128,7 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
         )
       },
       onError: (err) => {
-        showNotification(
-          err.response ? `Unable to ${action} invitation.` : 'Unable to connect to server.',
-          'error',
-        )
+        showNotification(parseError(err)?.message, 'error')
       },
       onSettled: () => {
         loadingIds.value.delete(invitationId)

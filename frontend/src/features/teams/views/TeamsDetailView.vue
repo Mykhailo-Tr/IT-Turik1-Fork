@@ -61,6 +61,7 @@
       <team-base-info
         :team="team"
         :loading="isInfoLoading"
+        :loading-error="isInfoLoadingError"
         :is-captain="isCaptain"
         @deleted="router.push('/teams')"
         @leave="router.push('/teams')"
@@ -69,6 +70,7 @@
       <team-members
         :team="team"
         :user="user"
+        :loading-error="isInfoLoadingError"
         :loading="isInfoLoading || isProfileLoading"
         :is-captain="isCaptain"
         @update-team="(newTeamValue) => (team = newTeamValue)"
@@ -107,7 +109,11 @@ const router = useRouter()
 const route = useRoute()
 
 const { data: user, isLoading: isProfileLoading } = useProfile()
-const { data: team, isLoading: isInfoLoading } = useTeamInfo(Number(route.params.id))
+const {
+  data: team,
+  isLoading: isInfoLoading,
+  isLoadingError: isInfoLoadingError,
+} = useTeamInfo({ id: Number(route.params.id) })
 
 const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
 </script>
@@ -165,7 +171,7 @@ const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
   border: 1px solid var(--line-soft);
 }
 
-@media (max-width: 1020px) {
+@media (max-width: 720px) {
   .hero-contacts {
     justify-items: start;
   }

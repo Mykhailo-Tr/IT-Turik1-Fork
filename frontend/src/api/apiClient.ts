@@ -4,7 +4,7 @@ import axios from 'axios'
 
 export const API_BASE: string = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: API_BASE,
   headers: {
     Accept: 'application/json',
@@ -33,12 +33,7 @@ apiClient.interceptors.response.use(
         router.push('/login')
       }
     }
+
     return Promise.reject(err)
   },
 )
-
-export function isApiError(err: unknown) {
-  return axios.isAxiosError(err)
-}
-
-export default apiClient

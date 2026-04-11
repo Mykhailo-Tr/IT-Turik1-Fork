@@ -1,9 +1,22 @@
 <template>
-  <input class="input" type="text" :value="modelValue" @input="handleInput" />
+  <input
+    :class="['input', { invalid: isInvalid }]"
+    type="text"
+    :value="modelValue"
+    @input="handleInput"
+  />
 </template>
 
 <script setup lang="ts">
-defineProps({ modelValue: { type: String, default: '' } })
+interface Props {
+  modelValue?: string
+  isInvalid?: boolean
+}
+
+withDefaults(defineProps<Props>(), {
+  modelValue: '',
+  invalid: false,
+})
 const emit = defineEmits(['update:modelValue'])
 
 function handleInput(event: Event) {
@@ -24,8 +37,17 @@ function handleInput(event: Event) {
     box-shadow 0.2s ease;
 }
 
-.input:disabled:hover {
+.input:disabled {
   cursor: not-allowed;
+}
+
+.invalid {
+  border-color: rgba(220, 38, 38, 0.7);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.input[type='radio']:focus {
+  box-shadow: none;
 }
 
 .input:focus {

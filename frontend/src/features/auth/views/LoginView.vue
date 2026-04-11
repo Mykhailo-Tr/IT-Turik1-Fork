@@ -29,7 +29,9 @@
         </ui-button>
       </form>
 
-      <p v-if="error" class="text-error feedback">{{ error }}</p>
+      <p v-if="error" class="text-error feedback">
+        {{ error.message }}
+      </p>
 
       <GoogleAuthButton divider-label="or continue with" @success="saveAndRedirect" />
 
@@ -44,9 +46,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
+import GoogleAuthButton from '@/components/shared/GoogleAuthButton.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
@@ -56,12 +58,12 @@ import { useLogin } from '@/queries/accounts'
 import { useQueryClient } from '@tanstack/vue-query'
 import { accountKeys } from '@/queries/keys'
 import type { LoginResponse } from '@/api/accounts/types'
+import { parseError } from '@/api'
 
 const queryClient = useQueryClient()
 const store = useUserStore()
 
 const form = ref({ username: '', password: '' })
-const error = ref('')
 const router = useRouter()
 
 const saveAndRedirect = (data: LoginResponse) => {
@@ -69,7 +71,8 @@ const saveAndRedirect = (data: LoginResponse) => {
   router.push('/')
 }
 
-const { mutate: login, isPending } = useLogin()
+const { mutate: login, isPending, error: loginError } = useLogin()
+const error = computed(() => parseError(loginError.value))
 
 const handleLogin = async () => {
   login(
@@ -78,13 +81,6 @@ const handleLogin = async () => {
       onSuccess: (data) => {
         saveAndRedirect(data)
         queryClient.invalidateQueries({ queryKey: accountKeys.profile() })
-      },
-      onError: (err) => {
-        if (err.response) {
-          error.value = 'Invalid credentials or account not activated.'
-        } else {
-          error.value = 'Network error. Please try again.'
-        }
       },
     },
   )

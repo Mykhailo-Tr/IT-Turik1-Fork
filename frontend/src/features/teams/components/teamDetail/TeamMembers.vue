@@ -1,5 +1,11 @@
 <template>
-  <ui-card class="panel members-panel">
+  <ui-card class="panel members-panel" :is-error="loadingError">
+    <template #error>
+      <div style="display: flex; justify-content: center; align-items: center; height: 502px">
+        <p>Failed to fetch members</p>
+      </div>
+    </template>
+
     <header class="panel-head">
       <h2>Members</h2>
 
@@ -8,7 +14,7 @@
           <ui-skeleton variant="rect" width="80px" />
         </template>
 
-        <span class="text-muted">{{ props.team?.members.length }} accepted</span>
+        <span class="text-muted">{{ props.team?.members.length ?? 0 }} accepted</span>
       </ui-skeleton-loader>
     </header>
 
@@ -33,7 +39,7 @@
           </ui-skeleton-loader>
         </header>
 
-        <ui-skeleton-loader class="member-list" :loading="props.loading">
+        <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <div class="member-list">
               <ui-card
@@ -248,7 +254,7 @@ import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import type { Invitation, JoinRequest, JoinRequestId, UserId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse, ManageJoinRequestAction } from '@/api/teams/types'
 import { computed, ref } from 'vue'
@@ -262,6 +268,7 @@ interface Props {
   team?: GetTeamInfoResponse
   user?: GetProfileResponse
   loading: boolean
+  loadingError?: boolean
   isCaptain: boolean
 }
 
@@ -493,6 +500,8 @@ const resendInvitation = (userId: UserId) => {
 .member-list,
 .invitations-list,
 .join-request-list {
+  overflow-y: auto;
+  max-height: 300px;
   display: grid;
   gap: 0.55rem;
   grid-template-rows: auto;

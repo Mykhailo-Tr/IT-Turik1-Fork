@@ -6,6 +6,7 @@ export interface GoogleCredentialResponse {
 }
 
 export const loadGoogleScript = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if ((window as any).google?.accounts?.id) {
     return Promise.resolve()
   }
@@ -55,6 +56,7 @@ export const renderGoogleButton = async ({
 
   await loadGoogleScript()
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const google = (window as any).google?.accounts?.id
 
   if (!google) {

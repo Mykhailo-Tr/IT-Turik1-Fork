@@ -18,10 +18,23 @@
       </div>
     </ui-card>
 
-    <div v-if="error" class="state-box error">{{ error }}</div>
-
     <div class="grid">
-      <ui-card class="info-card">
+      <ui-card class="info-card" :is-error="isLoadingError">
+        <template #error>
+          <div
+            style="
+              width: 100%;
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 126px;
+            "
+          >
+            <p>Failed to fetch account info (code: {{ error?.code }})</p>
+          </div>
+        </template>
+
         <template #header>
           <h2>Account details</h2>
         </template>
@@ -37,15 +50,29 @@
           </template>
 
           <div class="account-data">
-            <p><strong>Username:</strong> {{ user?.username }}</p>
-            <p><strong>Email:</strong> {{ user?.email }}</p>
-            <p><strong>Role:</strong> {{ user?.role }}</p>
+            <p><strong>Username:</strong> {{ user?.username ?? '-' }}</p>
+            <p><strong>Email:</strong> {{ user?.email ?? '-' }}</p>
+            <p><strong>Role:</strong> {{ user?.role ?? '-' }}</p>
             <p v-if="teamNames"><strong>Teams:</strong> {{ teamNames }}</p>
           </div>
         </ui-skeleton-loader>
       </ui-card>
 
-      <ui-card class="info-card accent">
+      <ui-card class="info-card accent" :is-error="isLoadingError">
+        <template #error>
+          <div
+            style="
+              width: 100%;
+              height: 100%;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+            "
+          >
+            <p>Failed to fetch profile status (code: {{ error?.code }})</p>
+          </div>
+        </template>
+
         <template #header>
           <h2>Quick status</h2>
         </template>
@@ -77,24 +104,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { useProfile } from '@/queries/accounts'
-import { ref } from 'vue'
+import { parseError } from '@/api'
 
-const error = ref<string | null>(null)
-
-const { data: user, isLoading, error: profileError } = useProfile()
-
-watch(profileError, (err) => {
-  if (err?.response) {
-    error.value = 'Could not load profile data.'
-  } else {
-    error.value = 'Server is unavailable. Please try again later.'
-  }
-})
+const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
+const error = computed(() => parseError(profileError.value))
 
 const displayName = computed(() => user.value?.full_name || user.value?.username || 'User')
 const profileReady = computed(() => Boolean(user.value?.full_name && user.value?.city))
@@ -140,19 +158,6 @@ h1 {
   gap: 0.55rem;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-
-.state-box {
-  border-radius: 16px;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--line-soft);
-  background: var(--surface-strong);
-}
-
-.state-box.error {
-  border-color: rgba(220, 38, 38, 0.25);
-  color: #b91c1c;
-  background: rgba(254, 242, 242, 0.9);
 }
 
 .grid {

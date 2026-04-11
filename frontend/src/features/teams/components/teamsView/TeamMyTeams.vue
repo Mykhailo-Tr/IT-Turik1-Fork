@@ -1,5 +1,11 @@
 <template>
-  <ui-card>
+  <ui-card :isError="isLoadingError">
+    <template #error>
+      <div style="display: flex; height: 136px; justify-content: center; align-items: center">
+        <p>Error while fetching my teams (code: {{ error?.code }})</p>
+      </div>
+    </template>
+
     <template #header>
       <div class="section-head">
         <h2>My teams</h2>
@@ -8,7 +14,7 @@
             <ui-skeleton variant="rect" width="70px" />
           </template>
 
-          <span class="text-muted">{{ myTeams?.length }} joined</span>
+          <span class="text-muted">{{ myTeams?.length ?? 0 }} joined</span>
         </ui-skeleton-loader>
       </div>
     </template>
@@ -89,10 +95,12 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useTeams } from '@/queries/teams'
 import { useProfile } from '@/queries/accounts'
+import { parseError } from '@/api'
 
 const TEAMS_PER_PAGE = 8
 
-const { data: teams, isLoading: isLoadingTeams } = useTeams()
+const { data: teams, isLoading: isLoadingTeams, isLoadingError, error: teamsError } = useTeams()
+const error = computed(() => parseError(teamsError.value))
 const { data: user } = useProfile()
 
 const myTeams = computed(() => teams.value?.filter((team) => isAcceptedMember(team)))

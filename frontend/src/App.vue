@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import AppNavbar from './components/shared/AppNavbar.vue'
 import UiButton from './components/UiButton.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'

@@ -35,7 +35,7 @@ describe('UiSelect', () => {
     const trigger = screen.getByRole('button')
     await trigger.click()
 
-    const options = screen.getByTestId('select-option').all()
+    const options = screen.getByRole('option').all()
     expect(options.length).toBe(4)
     expect(screen.getByTestId('select-search')).not.toBeNull()
   })
@@ -51,7 +51,7 @@ describe('UiSelect', () => {
     const input = screen.getByRole('textbox')
     await input.fill('ban')
 
-    const options = screen.getByTestId('select-option').all()
+    const options = screen.getByRole('option').all()
     expect(options.length).toBe(1)
     expect(options[0]).toHaveTextContent('Banana')
   })
@@ -64,7 +64,7 @@ describe('UiSelect', () => {
     const trigger = screen.getByRole('button')
     await trigger.click()
 
-    const options = screen.getByTestId('select-option').first()
+    const options = screen.getByRole('option').first()
     await options.click()
 
     expect(screen.emitted('update:modelValue')?.[0]).toStrictEqual(['apple'])
@@ -83,9 +83,11 @@ describe('UiSelect', () => {
     const trigger = screen.getByRole('button')
     await trigger.click()
 
-    const options = screen.getByTestId('select-option').all()
+    const options = screen.getByRole('option').all()
     await options[1].click()
     await options[2].click()
+
+    console.log(screen.emitted('update:modelValue'))
 
     expect(screen.emitted('update:modelValue')).toStrictEqual([
       [['apple', 'banana']],
@@ -133,9 +135,41 @@ describe('UiSelect', () => {
     const trigger = screen.getByRole('button')
     await trigger.click()
 
-    const options = screen.getByTestId('select-option')
+    const options = screen.getByRole('option')
     expect(options.length).toBe(0)
     expect(screen.getByTestId('select-empty')).toBeInTheDocument()
+  })
+
+  it('handles loading correcty', async () => {
+    const screen = await render(UiSelect, {
+      props: { modelValue: null, isLoading: true, options: mockOptions },
+    })
+
+    const trigger = screen.getByRole('button')
+    expect(trigger).toBeDisabled
+
+    const loading = screen.getByTestId('loading-icon')
+    const arrow = screen.getByTestId('arrow-icon')
+
+    expect(loading).toBeInTheDocument()
+    expect(arrow).not.toBeInTheDocument()
+
+    await screen.rerender({ isLoading: false })
+
+    expect(arrow).toBeInTheDocument()
+    expect(loading).not.toBeInTheDocument()
+  })
+
+  it('handles erorr correcty', async () => {
+    const screen = await render(UiSelect, {
+      props: { modelValue: null, isError: true, error: 'Some error', options: mockOptions },
+    })
+
+    const trigger = screen.getByRole('button')
+    await trigger.click()
+
+    const error = screen.getByRole('alert')
+    expect(error).toBeInTheDocument()
   })
 
   it('applies accessible aria attributes to the trigger and listbox', async () => {

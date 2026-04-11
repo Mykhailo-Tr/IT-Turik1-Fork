@@ -3,13 +3,16 @@
     <ui-button
       variant="outline-accent"
       class="select-trigger"
+      :disabled="isLoading"
       @click="toggleOpen"
       @keydown="handleTriggerKeydown"
       :aria-expanded="isOpen"
       aria-haspopup="listbox"
     >
       <span class="select-value">{{ selectedLabel }}</span>
-      <arrow-down class="select-chevron" />
+
+      <LoadingIcon v-if="isLoading" data-testid="loading-icon" />
+      <arrow-down v-else class="select-chevron" data-testid="arrow-icon" />
     </ui-button>
 
     <Transition name="dropdown">
@@ -22,6 +25,7 @@
       >
         <div class="select-search-wrapper">
           <input
+            :disabled="isError || isLoading"
             ref="searchInputRef"
             v-model="searchQuery"
             class="select-search"
@@ -45,7 +49,6 @@
             v-for="(option, index) in filteredOptions"
             :key="option.value"
             :id="`option-${option.value}`"
-            data-testid="select-option"
             class="select-option"
             :class="{
               selected: isSelected(option),
@@ -60,7 +63,8 @@
             <selected-icon v-if="isSelected(option)" class="select-check" />
           </li>
 
-          <li v-if="!filteredOptions.length" data-testid="select-empty" class="select-empty">
+          <li v-if="isError" role="alert" class="select-error">{{ error }}</li>
+          <li v-else-if="!filteredOptions.length" data-testid="select-empty" class="select-empty">
             No options found
           </li>
         </ul>
@@ -74,6 +78,7 @@ import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import UiButton from './UiButton.vue'
 import ArrowDown from '@/icons/ArrowDown.vue'
 import SelectedIcon from '@/icons/SelectedIcon.vue'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
 
 export type SelectOptionValue = string
 
@@ -89,6 +94,10 @@ type Props =
       options?: SelectOption[]
       placeholder?: string
       height?: number
+      minWidth?: string
+      isLoading?: boolean
+      isError?: boolean
+      error?: string
     }
   | {
       multiple: true
@@ -96,6 +105,10 @@ type Props =
       options?: SelectOption[]
       placeholder?: string
       height?: number
+      minWidth?: string
+      isLoading?: boolean
+      isError?: boolean
+      error?: string
     }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -178,7 +191,9 @@ watch(isOpen, async (opened) => {
 })
 
 watch(filteredOptions, () => {
-  focusedIndex.value = 0
+  if (searchQuery.value.trim()) {
+    focusedIndex.value = 0
+  }
 })
 
 function toggleOpen() {
@@ -311,7 +326,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 }
 
 .select-dropdown {
-  width: 100%;
   position: absolute;
   left: 0;
   right: 0;
@@ -351,6 +365,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-search:focus {
   border-color: var(--brand-500);
+}
+
+.select-search:disabled {
+  cursor: not-allowed;
 }
 
 .select-search::placeholder {
@@ -393,6 +411,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   background: #dcfce7;
 }
 
+.select-error,
 .select-empty {
   padding: 0.75rem;
   text-align: center;

@@ -85,20 +85,22 @@ const clearNotification = (clearQueue = false): void => {
 }
 
 const showNotification = (
-  message: string,
+  message?: string,
   type: NotificationType = 'success',
-  options: ShowNotificationOptions = {},
+  options?: ShowNotificationOptions,
 ): void => {
   const text = String(message || '').trim()
   if (!text) return
 
+  if (notification.value) clearNotification()
+
   const payload: NotificationPayload = {
     message: text,
     type,
-    duration: options.duration ?? DEFAULT_DURATION_MS,
+    duration: options?.duration ?? DEFAULT_DURATION_MS,
   }
 
-  if (options.mode === 'queue' && state.current) {
+  if (options?.mode === 'queue' && state.current) {
     const lastQueued = state.queue[state.queue.length - 1]
     if (sameNotification(state.current, payload) || sameNotification(lastQueued, payload)) return
     state.queue.push(payload)

@@ -13,17 +13,34 @@
       <form class="form-grid" @submit.prevent="handleFormSubmit">
         <div class="form-item">
           <label class="form-label"> Team name </label>
-          <ui-input v-model="form.name" required />
+          <ui-input v-model="form.name" :is-invalid="!!createTeamError?.details.name" required />
+          <small v-if="createTeamError?.details.name" class="text-error">{{
+            createTeamError?.details.name[0]
+          }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> Team email </label>
-          <ui-input v-model="form.email" type="email" required />
+          <ui-input
+            v-model="form.email"
+            :is-invalid="!!createTeamError?.details.email"
+            type="email"
+            required
+          />
+          <small v-if="createTeamError?.details.email" class="text-error">{{
+            createTeamError?.details.email[0]
+          }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> Organization </label>
-          <ui-input v-model="form.organization" />
+          <ui-input
+            v-model="form.organization"
+            :is-invalid="!!createTeamError?.details.organization"
+          />
+          <small v-if="createTeamError?.details.organization" class="text-error">{{
+            createTeamError?.details.organization[0]
+          }}</small>
         </div>
 
         <label class="form-label toggle-field">
@@ -43,48 +60,59 @@
             </button>
             <span class="visibility-label">Public</span>
           </div>
+          <small v-if="createTeamError?.details.is_public" class="text-error">{{
+            createTeamError?.details.is_public[0]
+          }}</small>
         </label>
 
         <div class="form-item">
           <label class="form-label"> Telegram </label>
           <ui-input
             v-model="form.contact_telegram"
+            :is-invalid="!!createTeamError?.details.contact_telegram"
             placeholder="@team_username"
             pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
             title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
           />
+          <small v-if="createTeamError?.details.contact_telegram" class="text-error">{{
+            createTeamError?.details.contact_telegram[0]
+          }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> Discord </label>
           <ui-input
             v-model="form.contact_discord"
+            :is-invalid="!!createTeamError?.details.contact_discord"
             placeholder="team.username"
             pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
             title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
           />
+          <small v-if="createTeamError?.details.contact_discord" class="text-error">{{
+            createTeamError?.details.contact_discord[0]
+          }}</small>
         </div>
 
-        <div class="full-width">
+        <div class="form-item">
           <label class="form-label"> Add initial members </label>
 
-          <ui-skeleton-loader :loading="isLoadingUsers">
-            <template #skeleton>
-              <ui-skeleton variant="rect" height="48px" width="200px" />
-            </template>
-
-            <ui-select
-              v-model="form.member_ids"
-              :multiple="true"
-              :options="
-                createCandidateUsers?.map((u) => ({
-                  value: u.id,
-                  label: `${u.username} (${u.email})`,
-                }))
-              "
-              placeholder="Select members"
-            />
-          </ui-skeleton-loader>
+          <ui-select
+            v-model="form.member_ids"
+            :isLoading="isLoadingUsers"
+            :isError="isLoadingError"
+            :error="`Error while fetching users (code: ${getUsersError?.code})`"
+            :multiple="true"
+            :options="
+              createCandidateUsers?.map((u) => ({
+                value: u.id,
+                label: `${u.username} (${u.email})`,
+              }))
+            "
+            placeholder="Select members"
+          />
+          <small v-if="createTeamError?.details.member_ids" class="text-error">{{
+            createTeamError?.details.member_ids[0]
+          }}</small>
         </div>
 
         <ui-button class="full-width" :disabled="isCreatingTeam" type="submit">
@@ -100,16 +128,15 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import type { CreateTeamBody } from '@/api/teams/types'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCreateTeam } from '@/queries/teams'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { useProfile, useUsers } from '@/queries/accounts'
-import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
-import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSelect from '@/components/UiSelect.vue'
+import { parseError } from '@/api'
 
 const router = useRouter()
 const { showNotification, hideNotification } = useNotification()
@@ -170,18 +197,11 @@ const onVisibilityKeydown = (event: KeyboardEvent) => {
   }
 }
 
-const { data: users, isLoading: isLoadingUsers, error } = useUsers()
+const { data: users, isLoading: isLoadingUsers, error: usersError, isLoadingError } = useUsers()
+const getUsersError = computed(() => parseError(usersError.value))
 
-watch(error, (err) => {
-  if (err) {
-    showNotification(
-      err.response ? 'Unable to load users list.' : 'Unable to connect to server.',
-      'error',
-    )
-  }
-})
-
-const { mutate: createTeam, isPending: isCreatingTeam } = useCreateTeam()
+const { mutate: createTeam, isPending: isCreatingTeam, error } = useCreateTeam()
+const createTeamError = computed(() => parseError(error.value))
 
 const handleFormSubmit = () => {
   hideNotification()

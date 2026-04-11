@@ -24,7 +24,8 @@
 
               <ui-input
                 v-model="form.full_name"
-                :class="{ 'field-invalid': getFieldError('full_name') }"
+                :class="{ 'field-invalid': formErrors.full_name }"
+                :disabled="isLoadingError"
                 style="width: 100%"
                 type="text"
                 placeholder="John Doe"
@@ -32,9 +33,7 @@
                 @blur="touchField('full_name')"
               />
             </ui-skeleton-loader>
-            <small v-if="getFieldError('full_name')" class="text-error">{{
-              getFieldError('full_name')
-            }}</small>
+            <small v-if="formErrors.full_name" class="text-error">{{ formErrors.full_name }}</small>
           </div>
 
           <div class="form-item">
@@ -47,7 +46,8 @@
 
               <ui-input
                 v-model="form.username"
-                :class="{ 'field-invalid': getFieldError('username') }"
+                :class="{ 'field-invalid': formErrors.username }"
+                :disabled="isLoadingError"
                 style="width: 100%"
                 placeholder="johndoe"
                 required
@@ -55,9 +55,7 @@
               />
             </ui-skeleton-loader>
 
-            <small v-if="getFieldError('username')" class="text-error">{{
-              getFieldError('username')
-            }}</small>
+            <small v-if="formErrors.username" class="text-error">{{ formErrors.username }}</small>
           </div>
 
           <div class="form-item">
@@ -70,7 +68,8 @@
 
               <PhoneField
                 v-model="form.phone"
-                :error="getFieldError('phone')"
+                :disabled="isLoadingError"
+                :error="formErrors.phone"
                 @update:modelValue="touchField('phone')"
               />
             </ui-skeleton-loader>
@@ -85,7 +84,8 @@
 
               <ui-input
                 v-model="form.city"
-                :class="{ 'field-invalid': getFieldError('city') }"
+                :class="{ 'field-invalid': error?.details.city }"
+                :disabled="isLoadingError"
                 style="width: 100%"
                 type="text"
                 placeholder="Kyiv"
@@ -94,165 +94,44 @@
               />
             </ui-skeleton-loader>
 
-            <small v-if="getFieldError('city')" class="text-error">{{
-              getFieldError('city')
-            }}</small>
+            <small v-if="formErrors.city" class="text-error">{{ formErrors.city }}</small>
           </div>
         </div>
 
         <div class="actions">
-          <ui-button type="submit" :disabled="isUpdatingProfile">
+          <ui-button type="submit" :disabled="isUpdatingProfile || isLoadingError || isLoading">
             <LoadingIcon v-if="isUpdatingProfile" />
             Save changes
           </ui-button>
-          <ui-button variant="outline" @click="isPasswordModalOpen = true"
-            >Change Password</ui-button
-          >
-          <ui-button variant="outline" :disabled="isUpdatingProfile" @click="goBackToProfile"
+          <ChangePasswordModal :disabled="isLoadingError || isLoading" />
+          <ui-button
+            variant="outline"
+            :disabled="isUpdatingProfile || isLoadingError || isLoading"
+            @click="goBackToProfile"
             >Cancel</ui-button
           >
         </div>
       </form>
     </ui-card>
-
-    <ui-modal v-model="isPasswordModalOpen" @close="resetPasswordState">
-      <template #title>
-        <h3>Change Password</h3>
-      </template>
-
-      <div class="mode-switch">
-        <ui-button
-          variant="outline-accent"
-          class="switch-btn"
-          :class="{ active: passwordMode === 'manual' }"
-          :disabled="isChangingPassword"
-          @click="setPasswordMode('manual')"
-        >
-          Use Current Password
-        </ui-button>
-        <ui-button
-          variant="outline-accent"
-          class="switch-btn"
-          :class="{ active: passwordMode === 'recovery' }"
-          :disabled="isChangingPassword"
-          @click="setPasswordMode('recovery')"
-        >
-          Forgot Password
-        </ui-button>
-      </div>
-
-      <p v-if="passwordMessage" :class="['notice', passwordMessageType]">{{ passwordMessage }}</p>
-
-      <form
-        v-if="passwordMode === 'manual'"
-        class="password-form"
-        @submit.prevent="handlePasswordChange"
-      >
-        <label class="form-label">
-          Current password
-          <ui-password-field
-            v-model="passwordForm.current_password"
-            autocomplete="current-password"
-            required
-          />
-          <small v-if="passwordErrors?.current_password" class="text-error">{{
-            passwordErrors.current_password[0]
-          }}</small>
-        </label>
-
-        <label class="form-label">
-          New password
-          <ui-password-field
-            v-model="passwordForm.new_password"
-            autocomplete="new-password"
-            required
-          />
-          <small v-if="passwordErrors?.new_password" class="text-error">{{
-            passwordErrors.new_password[0]
-          }}</small>
-        </label>
-
-        <label class="form-label">
-          Confirm new password
-          <ui-password-field
-            v-model="passwordForm.confirm_password"
-            autocomplete="new-password"
-            required
-          />
-          <small v-if="passwordErrors?.confirm_password" class="text-error">{{
-            passwordErrors.confirm_password[0]
-          }}</small>
-        </label>
-
-        <small v-if="passwordErrors?.non_field_errors" class="text-error">{{
-          passwordErrors.non_field_errors[0]
-        }}</small>
-        <ui-button type="submit" :disabled="isChangingPassword">
-          <loading-icon v-if="isChangingPassword" />
-          Update password
-        </ui-button>
-      </form>
-
-      <form v-else class="password-form" @submit.prevent="handleRecoveryRequest">
-        <p class="text-muted">No worries. We will send a secure reset link to your email.</p>
-        <div class="form-item">
-          <label class="form-label"> Account email </label>
-          <ui-input
-            v-model="recoveryEmail"
-            :class="{ 'field-invalid': passwordErrors?.email }"
-            type="email"
-            autocomplete="email"
-            required
-          />
-          <small v-if="passwordErrors?.email" class="text-error">{{
-            passwordErrors.email[0]
-          }}</small>
-        </div>
-
-        <ui-button type="submit" :disabled="isRecoveringPassword">
-          <LoadingIcon v-if="isRecoveringPassword" />
-          Send reset link
-        </ui-button>
-      </form>
-    </ui-modal>
   </section>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
-import UiPasswordField from '@/components/UiPasswordField.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import PhoneField from '@/components/shared/PhoneField.vue'
+import { useNotification } from '@/composables/useNotification'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import {
-  useChangePassword,
-  useForgotPassword,
-  useProfile,
-  useUpdateProfile,
-} from '@/queries/accounts'
-import UiModal from '@/components/UiModal.vue'
+import { useProfile, useUpdateProfile } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
-
-interface PasswordErrors {
-  current_password?: string[]
-  email?: string[]
-  new_password?: string[]
-  confirm_password?: string[]
-  non_field_errors?: string[]
-}
-
-type ProfileErrors = Record<FormField, string[]>
-
-type PasswordMode = 'recovery' | 'manual'
+import ChangePasswordModal from '../components/modals/ChangePasswordModal.vue'
+import { parseError } from '@/api'
 
 type TouchField = 'full_name' | 'phone' | 'city' | 'username'
-
-type FormField = TouchField
 
 interface ProfileForm {
   username: string
@@ -261,20 +140,7 @@ interface ProfileForm {
   city: string
 }
 
-interface TouchedFields {
-  full_name: boolean
-  username: boolean
-  phone: boolean
-  city: boolean
-}
-
-interface PasswordForm {
-  current_password: string
-  new_password: string
-  confirm_password: string
-}
-
-const { data: user, isLoading } = useProfile()
+const { data: user, isLoading, isLoadingError } = useProfile()
 
 const form = computed<ProfileForm>(() => ({
   username: user.value?.username ?? '',
@@ -283,19 +149,20 @@ const form = computed<ProfileForm>(() => ({
   city: user.value?.city ?? '',
 }))
 
-const updateProfileErrors = ref<ProfileErrors[] | null>(null)
-const touched = ref<TouchedFields>({ full_name: false, username: false, phone: false, city: false })
-const isPasswordModalOpen = ref(false)
-const passwordMode = ref<PasswordMode>('manual')
-const recoveryEmail = computed(() => user.value?.email ?? '')
-const passwordErrors = ref<PasswordErrors | null>(null)
-const passwordMessage = ref('')
-const passwordMessageType = ref<'success' | 'error'>('success')
-const passwordForm = ref<PasswordForm>({
-  current_password: '',
-  new_password: '',
-  confirm_password: '',
+const formErrors = ref<Record<keyof ProfileForm, string>>({
+  full_name: '',
+  city: '',
+  phone: '',
+  username: '',
 })
+
+const touched = ref<Record<TouchField, boolean>>({
+  full_name: false,
+  username: false,
+  phone: false,
+  city: false,
+})
+
 const router = useRouter()
 const { showNotification, hideNotification } = useNotification()
 
@@ -326,12 +193,16 @@ const validateCity = (value: string): string => {
   return ''
 }
 
-const clientErrors = computed(() => ({
-  full_name: validateFullName(form.value.full_name),
-  username: validateUsername(form.value.username),
-  phone: validatePhone(form.value.phone),
-  city: validateCity(form.value.city),
-}))
+const validateForm = (data: ProfileForm): Record<keyof ProfileForm, string> => {
+  const errors: Record<keyof ProfileForm, string> = {
+    full_name: validateFullName(data.full_name),
+    city: validateCity(data.city),
+    phone: validatePhone(data.phone),
+    username: validateUsername(data.username),
+  }
+
+  return errors
+}
 
 const touchField = (field: TouchField): void => {
   touched.value[field] = true
@@ -341,43 +212,22 @@ const touchAllFields = (): void => {
   touched.value = { full_name: true, username: true, phone: true, city: true }
 }
 
-const getFieldError = (field: FormField): string => {
-  if (updateProfileErrors.value?.[field]?.[0]) {
-    return updateProfileErrors.value[field]![0]
-  }
-  if (!touched.value[field]) {
-    return ''
-  }
-  return clientErrors.value[field] || ''
-}
-
-const hasClientErrors = (): boolean => Object.values(clientErrors.value).some(Boolean)
-
-const resetPasswordState = () => {
-  passwordErrors.value = {}
-  passwordMessage.value = ''
-  passwordForm.value = {
-    current_password: '',
-    new_password: '',
-    confirm_password: '',
-  }
-}
-
-const setPasswordMode = (mode: PasswordMode) => {
-  passwordMode.value = mode
-  passwordErrors.value = {}
-  passwordMessage.value = ''
-}
-
-const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
+const {
+  mutate: updateProfile,
+  isPending: isUpdatingProfile,
+  error: updateProfileError,
+} = useUpdateProfile()
+const error = computed(() => parseError(updateProfileError.value))
 
 const handleSubmit = () => {
-  updateProfileErrors.value = null
   touchAllFields()
   hideNotification()
 
-  if (hasClientErrors()) {
-    showNotification('Please fix highlighted fields before saving.', 'error')
+  const validationErrors = validateForm(form.value)
+  const hasClientErrors = Object.values(validationErrors).some(Boolean)
+
+  if (hasClientErrors) {
+    formErrors.value = validationErrors
     return
   }
 
@@ -390,64 +240,12 @@ const handleSubmit = () => {
       },
       onError: (err) => {
         if (err.response) {
-          updateProfileErrors.value = err.response.data as ProfileErrors[]
+          Object.entries(err.response.data.details).forEach(([key, messages]) => {
+            formErrors.value[key as keyof ProfileForm] = messages[0] ?? ''
+          })
           showNotification('Validation error. Please check your data.', 'error')
         } else {
           showNotification('Server connection error.', 'error')
-        }
-      },
-    },
-  )
-}
-
-const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword()
-const { mutate: forgotPassword, isPending: isRecoveringPassword } = useForgotPassword()
-
-const handlePasswordChange = () => {
-  passwordErrors.value = {}
-  passwordMessage.value = ''
-
-  changePassword(
-    { body: passwordForm.value },
-    {
-      onSuccess: () => {
-        resetPasswordState()
-        passwordMessageType.value = 'success'
-        passwordMessage.value = 'Password changed successfully.'
-        showNotification('Password updated successfully.', 'success')
-      },
-      onError: (err) => {
-        passwordMessageType.value = 'error'
-        if (err.response) {
-          passwordErrors.value = err.response.data as PasswordErrors
-          passwordMessage.value = 'Please fix password form errors.'
-        } else {
-          passwordMessage.value = 'Server connection error.'
-        }
-      },
-    },
-  )
-}
-
-const handleRecoveryRequest = () => {
-  passwordErrors.value = {}
-  passwordMessage.value = ''
-
-  forgotPassword(
-    { body: { email: recoveryEmail.value } },
-    {
-      onSuccess: (data) => {
-        passwordMessageType.value = 'success'
-        passwordMessage.value = data?.message || 'Password reset email sent successfully.'
-        showNotification('Reset link sent. Check your email.', 'success')
-      },
-      onError: (err) => {
-        passwordMessageType.value = 'error'
-        if (err.response) {
-          passwordErrors.value = err.response.data as PasswordErrors
-          passwordMessage.value = 'Could not send reset email.'
-        } else {
-          passwordMessage.value = 'Server connection error.'
         }
       },
     },
@@ -518,27 +316,6 @@ const goBackToProfile = () => {
   border-color: var(--brand-500);
   color: var(--brand-700);
   background: rgba(20, 184, 166, 0.08);
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  display: grid;
-  place-items: center;
-  z-index: 70;
-  padding: 1rem;
-}
-
-.modal-card {
-  width: min(100%, 580px);
-  border-radius: 18px;
-  border: 1px solid var(--line-soft);
-  background: #fff;
-  box-shadow: var(--shadow-lg);
-  padding: 1.1rem;
-  display: grid;
-  gap: 0.9rem;
 }
 
 .password-head {

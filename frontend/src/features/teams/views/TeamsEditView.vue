@@ -25,12 +25,10 @@
       </template>
     </ui-card>
 
-    <ui-card v-if="teamInfoError" class="state-card text-error">{{ teamInfoError }}</ui-card>
-
     <div class="workspace-grid">
-      <team-edit-form :loading="isLoadingTeamInfo" :team="team" />
+      <team-edit-form :is-error="isError" :loading="isLoadingTeamInfo" :team="team" />
 
-      <team-manage-members :loading="isLoadingTeamInfo" :team="team" />
+      <team-manage-members :is-error="isError" :loading="isLoadingTeamInfo" :team="team" />
     </div>
   </section>
 </template>
@@ -53,7 +51,7 @@ const router = useRouter()
 const { data: user } = useProfile()
 
 const teamId = computed(() => Number(route.params.id))
-const { data: team, isLoading: isLoadingTeamInfo, error: teamInfoError } = useTeamInfo(teamId.value)
+const { data: team, isLoading: isLoadingTeamInfo, isError } = useTeamInfo({ id: teamId.value })
 
 watchEffect(() => {
   if (user.value && team.value) {

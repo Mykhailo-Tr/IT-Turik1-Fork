@@ -37,7 +37,6 @@ const router = createRouter({
     {
       path: '/forgot-password',
       component: ForgotPassword,
-      meta: { requiresGuest: true },
     },
     {
       path: '/reset-password/:uid/:token',
