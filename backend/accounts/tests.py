@@ -372,7 +372,7 @@ class PasswordResetFlowTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('non_field_errors', response.data)
+        self.assertIn('message', response.data)
 
 
 class ChangePasswordFlowTests(APITestCase):
@@ -442,7 +442,7 @@ class ChangePasswordFlowTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('non_field_errors', response.data)
+        self.assertIn('message', response.data)
 
 
 class UserRoleBehaviorTests(APITestCase):

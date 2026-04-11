@@ -30,7 +30,7 @@ def _extract_validation_details(normalized_data):
         details = {
             key: value
             for key, value in normalized_data.items()
-            if key not in {'detail', 'message', 'status', 'error', 'non_field_errors'}
+            if key not in {'detail', 'message', 'status', 'error', 'message'}
         }
         return details or None
 
@@ -48,7 +48,7 @@ def _normalize_data(data):
 def _extract_message(normalized_data, status_code):
     if isinstance(normalized_data, dict):
         return (
-            _extract_first_string(normalized_data.get('non_field_errors'))
+            _extract_first_string(normalized_data.get('message'))
             or _extract_first_string(normalized_data.get('detail'))
             or _default_message_for_status(status_code)
         )
