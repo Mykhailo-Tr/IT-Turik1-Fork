@@ -27,10 +27,14 @@ def custom_exception_handler(exc, context):
 
 def _extract_validation_details(normalized_data):
     if isinstance(normalized_data, dict):
+        fields = normalized_data.get('fields')
+        if isinstance(fields, dict):
+            return fields or None
+
         details = {
             key: value
             for key, value in normalized_data.items()
-            if key not in {'detail', 'message', 'status', 'error', 'non_field_errors'}
+            if key not in {'detail', 'message', 'status', 'error', 'non_field_errors', 'fields'}
         }
         return details or None
 
@@ -50,6 +54,8 @@ def _extract_message(normalized_data, status_code):
         return (
             _extract_first_string(normalized_data.get('non_field_errors'))
             or _extract_first_string(normalized_data.get('detail'))
+            or _extract_first_string(normalized_data.get('message'))
+            or _extract_first_string(normalized_data.get('fields'))
             or _default_message_for_status(status_code)
         )
     if isinstance(normalized_data, list):

@@ -138,6 +138,38 @@ class GoogleAuthViewTests(APITestCase):
         self.assertEqual(user.role, 'team')
         self.assertTrue(user.needs_onboarding)
 
+    def test_profile_update_invalid_redeem_code_uses_new_error_format(self):
+        user = User.objects.create(
+            username='google-invalid-code',
+            email='google-invalid-code@example.com',
+            needs_onboarding=True,
+            is_active=True,
+            role='team',
+        )
+        user.set_unusable_password()
+        user.save(update_fields=['password'])
+
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(
+            self.profile_url,
+            {
+                'username': 'google-invalid-code-updated',
+                'role': 'jury',
+                'redeem_code': 'NOT-VALID-CODE',
+                'password': 'StrongerPass123!',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(set(response.data.keys()), {'code', 'message', 'details'})
+        self.assertEqual(response.data['code'], 'validation_error')
+        self.assertEqual(response.data['message'], 'Activation code is invalid.')
+        self.assertEqual(
+            response.data['details'],
+            {'redeem_code': ['Activation code is invalid.']},
+        )
+
     def test_profile_update_requires_password_for_google_onboarding(self):
         user = User.objects.create(
             username='google-no-password',
