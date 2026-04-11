@@ -1,13 +1,13 @@
 from django.urls import path
 
-from .views import (
+from ..views import (
     TeamDetailView,
     TeamLeaveView,
     TeamListCreateView,
     TeamMemberManageView,
 )
-from .urls.invitations import urlpatterns as invitation_urls
-from .urls.join_requests import urlpatterns as join_request_urls
+from .invitations import urlpatterns as invitation_urls
+from .join_requests import urlpatterns as join_request_urls
 
 urlpatterns = [
     path('', TeamListCreateView.as_view(), name='teams'),
