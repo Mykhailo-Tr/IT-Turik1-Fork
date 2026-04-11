@@ -129,14 +129,14 @@ class TeamMemberManageView(APIView):
 
         user = get_object_or_404(User, id=user_id)
         if user.id == team.captain_id:
-            raise ValidationError({'non_field_errors': ['Captain is already on the team.']})
+            raise ValidationError({'message': ['Captain is already on the team.']})
 
         if TeamMember.objects.filter(team=team, user=user).exists():
-            raise ValidationError({'non_field_errors': ['User is already a team member.']})
+            raise ValidationError({'message': ['User is already a team member.']})
 
         invitation, created = invite_user_to_team(team=team, user=user, invited_by=request.user)
         if not invitation:
-            raise ValidationError({'non_field_errors': ['Unable to invite this user.']})
+            raise ValidationError({'message': ['Unable to invite this user.']})
 
         team.refresh_from_db()
         serializer = TeamSerializer(team, context={'request': request})
@@ -148,7 +148,7 @@ class TeamMemberManageView(APIView):
             raise PermissionDenied('Only captain can manage members.')
 
         if team.captain_id == user_id:
-            raise ValidationError({'non_field_errors': ['Captain cannot be removed from team.']})
+            raise ValidationError({'message': ['Captain cannot be removed from team.']})
 
         deleted_count, _ = TeamMember.objects.filter(team=team, user_id=user_id).delete()
         if deleted_count == 0:
@@ -171,12 +171,12 @@ class TeamLeaveView(APIView):
 
         if team.captain_id == request.user.id:
             raise ValidationError(
-                {'non_field_errors': ['Captain cannot leave the team. Transfer captain role or delete the team.']}
+                {'message': ['Captain cannot leave the team. Transfer captain role or delete the team.']}
             )
 
         deleted_count, _ = TeamMember.objects.filter(team=team, user=request.user).delete()
         if deleted_count == 0:
-            raise ValidationError({'non_field_errors': ['You are not a team member of this team.']})
+            raise ValidationError({'message': ['You are not a team member of this team.']})
 
         clear_invitation_states_for_member(team=team, user=request.user)
         clear_join_request_states_for_member(team=team, user=request.user)
@@ -208,7 +208,7 @@ class TeamInvitationRespondView(APIView):
         )
 
         if invitation.status != TeamInvitation.STATUS_INVITED:
-            raise ValidationError({'non_field_errors': ['This invitation is already processed.']})
+            raise ValidationError({'message': ['This invitation is already processed.']})
 
         now = timezone.now()
 
@@ -252,17 +252,17 @@ class TeamJoinRequestCreateView(APIView):
     def post(self, request, pk):
         team = self._get_team(pk)
         if not team.is_public:
-            raise ValidationError({'non_field_errors': ['Join requests are available only for public teams.']})
+            raise ValidationError({'message': ['Join requests are available only for public teams.']})
 
         if is_team_member(team, request.user):
-            raise ValidationError({'non_field_errors': ['You are already in this team.']})
+            raise ValidationError({'message': ['You are already in this team.']})
 
         if TeamInvitation.objects.filter(
             team=team,
             user=request.user,
             status=TeamInvitation.STATUS_INVITED,
         ).exists():
-            raise ValidationError({'non_field_errors': ['You already have an invitation to this team.']})
+            raise ValidationError({'message': ['You already have an invitation to this team.']})
 
         join_request, created = TeamJoinRequest.objects.get_or_create(
             team=team,
@@ -296,7 +296,7 @@ class TeamJoinRequestReviewView(APIView):
 
         join_request = get_object_or_404(TeamJoinRequest, id=request_id, team=team)
         if join_request.status != TeamJoinRequest.STATUS_PENDING:
-            raise ValidationError({'non_field_errors': ['This join request is already processed.']})
+            raise ValidationError({'message': ['This join request is already processed.']})
 
         now = timezone.now()
         join_request.status = self.new_status

@@ -59,8 +59,8 @@ class TournamentTeamRegistrationSerializer(serializers.Serializer):
 
         if not tournament.can_accept_teams():
             if not tournament.is_registration_open():
-                raise ValidationError({'non_field_errors': ['Registration is not open for this tournament.']})
-            raise ValidationError({'non_field_errors': ['This tournament has reached the maximum number of teams.']})
+                raise ValidationError({'message': ['Registration is not open for this tournament.']})
+            raise ValidationError({'message': ['This tournament has reached the maximum number of teams.']})
 
         if request and request.user.id != team.captain_id:
             raise ValidationError({'team_id': ['You must be the captain of the team to register it.']})
