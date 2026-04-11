@@ -17,7 +17,7 @@
               <ui-skeleton variant="rect" width="108px" height="30px" />
             </template>
 
-            <span class="meta-pill">Total teams: {{ teams?.length }}</span>
+            <span class="meta-pill">Total teams: {{ teams?.length ?? '0' }}</span>
           </ui-skeleton-loader>
         </div>
       </template>
@@ -25,17 +25,15 @@
 
     <team-invatations />
 
-    <team-my-teams :teams="teams ?? []" />
+    <team-my-teams />
 
-    <teams-other-teams :teams="teams ?? []" />
+    <teams-other-teams />
   </section>
 </template>
 
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
-import { watch } from 'vue'
 import TeamInvatations from '../components/teamsView/TeamInvatations.vue'
 import TeamMyTeams from '../components/teamsView/TeamMyTeams.vue'
 import TeamsOtherTeams from '../components/teamsView/TeamsOtherTeams.vue'
@@ -43,18 +41,7 @@ import { useTeams } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 
-const { showNotification } = useNotification()
-
-const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useTeams()
-
-watch(teamsError, (err) => {
-  if (err) {
-    showNotification(
-      err.response ? 'Unable to load teams.' : 'Unable to connect to server.',
-      'error',
-    )
-  }
-})
+const { data: teams, isLoading: isLoadingTeams } = useTeams()
 </script>
 
 <style scoped>

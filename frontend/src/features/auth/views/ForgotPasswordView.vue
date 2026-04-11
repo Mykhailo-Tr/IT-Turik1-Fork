@@ -1,68 +1,65 @@
 <template>
   <section class="page-shell centered">
     <ui-card class="forgot-card">
-      <p class="section-eyebrow">Password Recovery</p>
+      <template #header>
+        <p class="section-eyebrow">Password Recovery</p>
+      </template>
+
       <h1 class="section-title">Forgot your password?</h1>
       <p class="section-subtitle">
         Enter your account email and we will send you a password reset link.
       </p>
 
-      <p v-if="statusMessage" :class="['notice', statusType]">{{ statusMessage }}</p>
-
       <form class="forgot-form" @submit.prevent="handleSubmit">
-        <label class="form-label">
-          Email
+        <div class="form-item">
+          <label class="form-label"> Email </label>
           <ui-input
             v-model="email"
             type="email"
+            :is-invalid="!!error?.details.email"
             autocomplete="email"
             placeholder="name@mail.com"
             required
           />
-          <small v-if="errors.email" class="text-error">{{ errors.email[0] }}</small>
-        </label>
+          <small v-if="error?.details.email" class="text-error">{{ error.details.email[0] }}</small>
+        </div>
 
         <ui-button :disabled="isLoading" type="submit">
-          {{ isLoading ? 'Sending...' : 'Send reset link' }}
+          Send reset link
+          <loading-icon v-if="isLoading" />
         </ui-button>
       </form>
-
-      <p class="auth-link">
-        Remembered your password?
-        <router-link to="/login">Back to sign in</router-link>
-      </p>
     </ui-card>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useForgotPassword } from '@/queries/accounts'
+import { parseError } from '@/api'
+import { useNotification } from '@/composables/useNotification'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
 
+const { showNotification } = useNotification()
 const email = ref('')
-const errors = ref<{ email?: string }>({})
-const statusMessage = ref('')
-const statusType = ref('success')
 
-const { mutate: forgotPassword, isPending: isLoading } = useForgotPassword()
+const {
+  mutate: forgotPassword,
+  isPending: isLoading,
+  error: forgotPasswordError,
+} = useForgotPassword()
+const error = computed(() => parseError(forgotPasswordError.value))
 
 const handleSubmit = () => {
   forgotPassword(
     { body: { email: email.value } },
     {
-      onSuccess: (data) => {
-        statusType.value = 'success'
-        statusMessage.value = data?.message || 'Password reset email sent successfully.'
-      },
-      onError: (err) => {
-        statusType.value = 'error'
-        statusMessage.value = err.response
-          ? ((err.response.data as string) ?? 'Please check your email and try again.')
-          : 'Server connection error.'
+      onSuccess: () => {
+        showNotification('Password reset email sent successfully.', 'success')
       },
     },
   )
@@ -73,6 +70,12 @@ const handleSubmit = () => {
 .forgot-card {
   width: min(100%, 520px);
   padding: 2rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .forgot-form {

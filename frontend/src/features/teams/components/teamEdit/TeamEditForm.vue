@@ -79,7 +79,7 @@
       </label>
 
       <div class="form-actions full-width">
-        <ui-button type="submit" :disabled="isSavingChanges || props.loading">
+        <ui-button type="submit" :disabled="isSavingChanges || props.loading || props.isError">
           <loading-icon v-if="isSavingChanges" />
           Save changes
         </ui-button>
@@ -95,7 +95,7 @@
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { ref } from 'vue'
@@ -107,6 +107,7 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 interface Props {
   team?: GetTeamInfoResponse
   loading: boolean
+  isError?: boolean
 }
 
 const props = defineProps<Props>()

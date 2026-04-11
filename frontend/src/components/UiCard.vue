@@ -4,15 +4,29 @@
       <slot name="header" />
     </header>
 
-    <section v-if="$slots.default">
-      <slot />
-    </section>
+    <Transition name="error-fade" role="alert">
+      <slot name="error" v-if="props.isError" />
+    </Transition>
+
+    <template v-if="!props.isError">
+      <section v-if="$slots.default">
+        <slot />
+      </section>
+    </template>
 
     <footer v-if="$slots.footer">
       <slot name="footer" />
     </footer>
   </article>
 </template>
+
+<script setup lang="ts">
+interface Props {
+  isError?: boolean
+}
+
+const props = defineProps<Props>()
+</script>
 
 <style scoped>
 .card {
@@ -23,5 +37,21 @@
   flex-direction: column;
   gap: 0.3rem;
   background: rgba(255, 255, 255, 0.85);
+}
+
+.error-fade-enter-active {
+  transition: opacity 0.2s ease;
+}
+
+.error-fade-leave-active {
+  transition: opacity 0.1s ease;
+}
+
+.error-fade-enter-from {
+  opacity: 0;
+}
+
+.error-fade-leave-to {
+  opacity: 0;
 }
 </style>

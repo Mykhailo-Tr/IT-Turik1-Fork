@@ -33,11 +33,11 @@ export interface ResetPasswordResponse {
   message: string
 }
 
-export interface ValidatePasswordArgs {
+export interface ValidateResetLinkArgs {
   uid: string
   token: string
 }
-export type ValidatePasswordResponse = ResetPasswordResponse
+export type ValidateResetLinkResponse = ResetPasswordResponse
 
 export interface ChangePasswordBody {
   current_password: string

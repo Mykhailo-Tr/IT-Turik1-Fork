@@ -24,6 +24,16 @@ describe('UiInput', () => {
     expect(input).toHaveValue('New value')
   })
 
+  it('applies invalid prop correctly', async () => {
+    const screen = await render(UiInput, {
+      props: { modelValue: '', isInvalid: true },
+      attrs: { placeholder: 'Type here', disabled: true },
+    })
+
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('invalid')
+  })
+
   it('forwards native input attributes', async () => {
     const screen = await render(UiInput, {
       props: { modelValue: '' },

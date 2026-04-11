@@ -35,7 +35,7 @@ const containerHeight = computed(() => props.minHeight)
 }
 
 .skeleton-fade-enter-active {
-  transition: opacity 0.4s ease;
+  transition: opacity 0.2s ease;
 }
 
 .skeleton-fade-leave-active {

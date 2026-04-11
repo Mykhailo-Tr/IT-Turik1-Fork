@@ -7,7 +7,11 @@ import type {
   AddMemberArgs,
   ChangeTeamVisibilityArgs,
   ChangeTeamVisibilityResponse,
+  CreateTeamArgs,
+  CreateTeamResponse,
   DeleteTeamArgs,
+  GetInvitationsResponse,
+  GetTeamInfoArgs,
   GetTeamInfoResponse,
   GetTeamsResponse,
   LeaveTeamArgs,
@@ -18,135 +22,188 @@ import type {
   SendJoinRequestArgs,
   UpdateTeamInfoArgs,
 } from '@/api/teams/types'
+import type { ApiError } from '@/api'
+import type { MutationConfig, QueryConfig } from '../types'
 
-export const useTeams = () => {
-  return useQuery<GetTeamsResponse, AxiosError>({
+export const useTeams = (config?: QueryConfig<GetTeamsResponse>) => {
+  return useQuery<GetTeamsResponse, AxiosError<ApiError>>({
     queryKey: teamKeys.allTeams(),
     queryFn: $api.teams.getTeams,
+    ...config,
   })
 }
 
-export const useTeamInfo = (id: TeamId) => {
-  return useQuery<GetTeamInfoResponse, AxiosError>({
-    queryKey: teamKeys.team(id),
-    queryFn: () => $api.teams.getTeamInfo({ id }),
+export const useTeamInfo = (
+  payload: GetTeamInfoArgs,
+  config?: QueryConfig<GetTeamInfoResponse>,
+) => {
+  return useQuery<GetTeamInfoResponse, AxiosError<ApiError>>({
+    queryKey: teamKeys.team(payload.id),
+    queryFn: () => $api.teams.getTeamInfo({ id: payload.id }),
+    ...config,
   })
 }
 
-export const useInvitations = () => {
-  return useQuery({
+export const useInvitations = (config?: QueryConfig<GetInvitationsResponse>) => {
+  return useQuery<GetInvitationsResponse, AxiosError<ApiError>>({
     queryKey: ['invitations'],
     queryFn: $api.teams.getInvitations,
+    ...config,
   })
 }
 
-export const useCreateTeam = () => {
+export const useCreateTeam = (
+  config?: MutationConfig<
+    CreateTeamResponse,
+    AxiosError<ApiError<keyof CreateTeamArgs['body']>>,
+    CreateTeamArgs
+  >,
+) => {
   const queryClient = useQueryClient()
-  return useMutation({
+  return useMutation<
+    CreateTeamResponse,
+    AxiosError<ApiError<keyof CreateTeamArgs['body']>>,
+    CreateTeamArgs
+  >({
     mutationFn: $api.teams.createTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teamKeys.allTeams() })
     },
+    ...config,
   })
 }
 
-export const useRespondToInvitation = () => {
+export const useRespondToInvitation = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, RespondToInvitationArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, RespondToInvitationArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, RespondToInvitationArgs>({
     mutationFn: $api.teams.respondToInvitation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invitations'] })
       queryClient.invalidateQueries({ queryKey: teamKeys.allTeams() })
     },
+    ...config,
   })
 }
 
-export const useSendJoinRequest = () => {
+export const useSendJoinRequest = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, SendJoinRequestArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, SendJoinRequestArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, SendJoinRequestArgs>({
     mutationFn: $api.teams.sendJoinRequest,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teamKeys.allTeams() })
     },
+    ...config,
   })
 }
 
-export const useDeleteTeam = () => {
+export const useDeleteTeam = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, DeleteTeamArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, DeleteTeamArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, DeleteTeamArgs>({
     mutationFn: $api.teams.deleteTeam,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teamKeys.allTeams() })
     },
+    ...config,
   })
 }
 
-export const useLeaveTeam = () => {
+export const useLeaveTeam = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, LeaveTeamArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, LeaveTeamArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, LeaveTeamArgs>({
     mutationFn: $api.teams.leave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: teamKeys.allTeams() })
     },
+    ...config,
   })
 }
 
-export const useManageJoinRequest = () => {
+export const useManageJoinRequest = (
+  config?: MutationConfig<GetTeamInfoResponse, AxiosError<ApiError>, ManageJoinRequestArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<GetTeamInfoResponse, AxiosError, ManageJoinRequestArgs>({
+  return useMutation<GetTeamInfoResponse, AxiosError<ApiError>, ManageJoinRequestArgs>({
     mutationFn: $api.teams.manageJoinRequest,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
     },
+    ...config,
   })
 }
 
-export const useResendInvitation = () => {
+export const useResendInvitation = (
+  config?: MutationConfig<GetTeamInfoResponse, AxiosError<ApiError>, ResendInvitationArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<GetTeamInfoResponse, AxiosError, ResendInvitationArgs>({
+  return useMutation<GetTeamInfoResponse, AxiosError<ApiError>, ResendInvitationArgs>({
     mutationFn: $api.teams.resendInvitation,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
     },
+    ...config,
   })
 }
 
-export const useChangeTeamVisibility = () => {
+export const useChangeTeamVisibility = (
+  config?: MutationConfig<
+    ChangeTeamVisibilityResponse,
+    AxiosError<ApiError>,
+    ChangeTeamVisibilityArgs
+  >,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<ChangeTeamVisibilityResponse, AxiosError, ChangeTeamVisibilityArgs>({
+  return useMutation<ChangeTeamVisibilityResponse, AxiosError<ApiError>, ChangeTeamVisibilityArgs>({
     mutationFn: $api.teams.changeTeamVisibility,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
     },
+    ...config,
   })
 }
 
-export const useUpdateTeamInfo = () => {
+export const useUpdateTeamInfo = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, UpdateTeamInfoArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, UpdateTeamInfoArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, UpdateTeamInfoArgs>({
     mutationFn: $api.teams.updateInfo,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
     },
+    ...config,
   })
 }
 
-export const useRemoveMember = () => {
+export const useRemoveMember = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, RemoveMemberArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, RemoveMemberArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, RemoveMemberArgs>({
     mutationFn: $api.teams.removeMember,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
     },
+    ...config,
   })
 }
 
-export const useAddMember = () => {
+export const useAddMember = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, AddMemberArgs>,
+) => {
   const queryClient = useQueryClient()
-  return useMutation<unknown, AxiosError, AddMemberArgs>({
+  return useMutation<unknown, AxiosError<ApiError>, AddMemberArgs>({
     mutationFn: $api.teams.addMember,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
     },
+    ...config,
   })
 }

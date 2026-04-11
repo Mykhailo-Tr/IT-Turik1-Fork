@@ -63,4 +63,13 @@ describe('UiPasswordField', () => {
     const input = screen.getByRole('textbox')
     expect(input).toHaveAttribute('placeholder', 'Enter password')
   })
+
+  it('passes through invalid prop to the input', async () => {
+    const screen = await render(UiPasswordField, {
+      props: { modelValue: '', isInvalid: true },
+    })
+
+    const input = screen.getByRole('textbox')
+    expect(input).toHaveClass('invalid')
+  })
 })

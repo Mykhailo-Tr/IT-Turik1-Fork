@@ -13,14 +13,28 @@
         <div class="form-grid">
           <div class="form-item">
             <label class="form-label"> Username </label>
-            <ui-input v-model="form.username" placeholder="johndoe" required />
-            <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
+            <ui-input
+              v-model="form.username"
+              :is-invalid="!!error?.details.username"
+              placeholder="johndoe"
+              required
+            />
+            <small v-if="error?.details.username" class="text-error">{{
+              error?.details.username[0]
+            }}</small>
           </div>
 
           <div class="form-item">
             <label class="form-label"> Email </label>
-            <ui-input v-model="form.email" placeholder="name@mail.com" required />
-            <small v-if="errors?.email" class="text-error">{{ errors.email[0] }}</small>
+            <ui-input
+              v-model="form.email"
+              :is-invalid="!!error?.details.email"
+              placeholder="name@mail.com"
+              required
+            />
+            <small v-if="error?.details.email" class="text-error">{{
+              error?.details.email[0]
+            }}</small>
           </div>
 
           <div class="form-item">
@@ -28,10 +42,13 @@
             <ui-password-field
               v-model="form.password"
               autocomplete="new-password"
+              :is-invalid="!!error?.details.password"
               placeholder="********"
               required
             />
-            <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
+            <small v-if="error?.details.password" class="text-error">{{
+              error?.details.password[0]
+            }}</small>
           </div>
 
           <div class="form-item">
@@ -53,16 +70,26 @@
           <label class="form-label full-width"> Redeem code </label>
           <ui-input
             v-model="form.redeem_code"
+            :is-invalid="!!error?.details.redeem_code"
             placeholder="Enter one-time activation code"
             required
           />
-          <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+          <small v-if="error?.details.redeem_code" class="text-error">{{
+            error?.details.redeem_code[0]
+          }}</small>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.9rem">
           <div class="form-item">
             <label class="form-label full-width"> Full name </label>
-            <ui-input v-model="form.full_name" placeholder="John Doe" />
+            <ui-input
+              v-model="form.full_name"
+              :is-invalid="!!error?.details.full_name"
+              placeholder="John Doe"
+            />
+            <small v-if="error?.details.full_name" class="text-error">{{
+              error?.details.full_name[0]
+            }}</small>
           </div>
 
           <div class="form-grid">
@@ -70,14 +97,21 @@
               <label class="form-label"> Phone </label>
               <PhoneField
                 v-model="form.phone"
-                :error="errors?.phone?.[0]"
+                :error="error?.details.username?.[0]"
                 placeholder="Enter phone number"
               />
             </div>
 
             <div class="form-item">
               <label class="form-label"> City </label>
-              <ui-input v-model="form.city" placeholder="Kyiv" />
+              <ui-input
+                v-model="form.city"
+                :is-invalid="!!error?.details.city"
+                placeholder="Kyiv"
+              />
+              <small v-if="error?.details.city" class="text-error">{{
+                error?.details.city[0]
+              }}</small>
             </div>
           </div>
         </div>
@@ -85,7 +119,6 @@
         <ui-button type="submit" class="submit-btn" :disabled="isLoading">
           {{ isLoading ? 'Creating account...' : 'Create account' }}
         </ui-button>
-        <p v-if="errors?.form" class="text-error text-center">{{ errors.form[0] }}</p>
 
         <GoogleAuthButton divider-label="or sign up with" @success="saveTokensAndRedirect" />
 
@@ -101,20 +134,34 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-
-import GoogleAuthButton from '@/features/shared/components/auth/GoogleAuthButton.vue'
+import GoogleAuthButton from '@/components/shared/GoogleAuthButton.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
-import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
+import PhoneField from '@/components/shared/PhoneField.vue'
 import type { RegisterResponse } from '@/api/accounts/types'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useRegister } from '@/queries/accounts'
+import type { UserRole } from '@/api/dbTypes'
+import { useNotification } from '@/composables/useNotification'
+import { useUserStore } from '@/stores/user'
+import { parseError } from '@/api'
 
 const router = useRouter()
 
-const form = ref({
+interface Form {
+  username: string
+  full_name: string
+  email: string
+  password: string
+  role: UserRole
+  redeem_code: string
+  phone: string
+  city: string
+}
+
+const form = ref<Form>({
   username: '',
   email: '',
   password: '',
@@ -137,42 +184,23 @@ watch(
   },
 )
 
-interface Errors {
-  username?: string[]
-  email?: string[]
-  password?: string[]
-  redeem_code?: string[]
-  phone?: string[]
-  form?: string[]
-}
-
-const errors = ref<Errors | null>(null)
+const { showNotification } = useNotification()
+const storage = useUserStore()
 
 const saveTokensAndRedirect = (data: RegisterResponse) => {
-  localStorage.setItem('access', data.access)
-  localStorage.setItem('refresh', data.refresh)
-  if (data.onboarding_required) {
-    localStorage.setItem('needs_onboarding', '1')
-    router.push('/complete-profile')
-    return
-  }
-
-  localStorage.removeItem('needs_onboarding')
+  storage.setTokens(data)
   router.push('/')
 }
 
-const { mutate: register, isPending: isLoading, isSuccess } = useRegister()
+const { mutate: register, isPending: isLoading, isSuccess, error: registerError } = useRegister()
+const error = computed(() => parseError(registerError.value))
 
 const handleRegister = () => {
-  errors.value = null
-
   register(
     { body: form.value },
     {
       onError: (err) => {
-        errors.value = err.response
-          ? err.response.data || 'Something went wrong.'
-          : { form: ['Server connection error.'] }
+        showNotification(parseError(err)?.message, 'error')
       },
     },
   )

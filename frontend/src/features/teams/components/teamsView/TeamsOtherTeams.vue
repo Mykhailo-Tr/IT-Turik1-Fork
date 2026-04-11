@@ -1,5 +1,11 @@
 <template>
-  <ui-card>
+  <ui-card :isError="isLoadingError">
+    <template #error>
+      <div style="display: flex; height: 200px; justify-content: center; align-items: center">
+        <p>Error while fetching invitations (code: {{ error?.code }})</p>
+      </div>
+    </template>
+
     <template #header>
       <div class="section-head">
         <h2>Other teams</h2>
@@ -8,7 +14,7 @@
             <ui-skeleton variant="rect" width="80px" />
           </template>
 
-          <span class="text-muted">{{ otherTeams?.length }} available</span>
+          <span class="text-muted">{{ otherTeams?.length ?? 0 }} available</span>
         </ui-skeleton-loader>
       </div>
     </template>
@@ -107,7 +113,7 @@
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import type { TeamId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
@@ -116,11 +122,13 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useProfile } from '@/queries/accounts'
+import { parseError } from '@/api'
 
 const OTHER_TEAMS_PER_PAGE = 8
 
 const { data: user } = useProfile()
-const { data: teams, isLoading: isLoadingTeams } = useTeams()
+const { data: teams, isLoading: isLoadingTeams, isLoadingError, error: teamsError } = useTeams()
+const error = computed(() => parseError(teamsError.value))
 
 const { showNotification } = useNotification()
 

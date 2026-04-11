@@ -39,6 +39,22 @@ describe('UiCard', () => {
     expect(withoutFooter.locator.getByText('Footer text')).not.toBeInTheDocument()
   })
 
+  it('renders an error only when the error slot is provided', async () => {
+    const screen = render(UiCard, {
+      props: { isError: true },
+      slots: {
+        content: 'Text content',
+        error: 'Some error',
+      },
+    })
+
+    const error = screen.getByRole('alert')
+    expect(error).toBeInTheDocument()
+    expect(error).toHaveTextContent('Some error')
+
+    expect(screen.locator.getByText('Text content')).not.toBeInTheDocument()
+  })
+
   it('renders all slots together', async () => {
     const screen = render(UiCard, {
       slots: {

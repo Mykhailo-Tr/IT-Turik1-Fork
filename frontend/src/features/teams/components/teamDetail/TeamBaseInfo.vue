@@ -1,8 +1,14 @@
 <template>
-  <ui-card>
+  <ui-card :is-error="props.loadingError">
+    <template #error>
+      <div style="display: flex; justify-content: center; align-items: center; height: 502px">
+        <p>Failed to fetch team info</p>
+      </div>
+    </template>
+
     <template #header>
       <div class="panel-head">
-        <h2>Team profile</h2>
+        <h2>Team Info</h2>
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <ui-skeleton variant="rect" width="150px" />
@@ -134,7 +140,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { computed } from 'vue'
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import { useLeaveTeam, useSendJoinRequest } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
@@ -143,6 +149,7 @@ import type { GetTeamInfoResponse } from '@/api/teams/types'
 interface Props {
   team?: GetTeamInfoResponse
   loading: boolean
+  loadingError?: boolean
   isCaptain: boolean
 }
 

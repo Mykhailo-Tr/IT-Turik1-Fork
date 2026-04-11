@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { renderGoogleButton, type GoogleCredentialResponse } from '@/features/shared/lib/googleAuth'
+import { renderGoogleButton, type GoogleCredentialResponse } from '@/lib/googleAuth'
 import { useGoogleLogin } from '@/queries/accounts'
 
 interface Props {

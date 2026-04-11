@@ -1,6 +1,7 @@
 <template>
   <div class="phone-field">
     <VueTelInput
+      v-bind="$attrs"
       v-model="phoneUiValue"
       mode="international"
       :auto-default-country="true"
@@ -9,7 +10,6 @@
       :valid-characters-only="true"
       class="phone-input"
     />
-    <small v-if="error" class="text-error">{{ error }}</small>
   </div>
 </template>
 
@@ -19,7 +19,6 @@ import { VueTelInput } from 'vue-tel-input'
 
 interface Props {
   modelValue?: string
-  error?: string
   placeholder?: string
 }
 

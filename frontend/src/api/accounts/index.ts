@@ -1,4 +1,4 @@
-import apiClient from '../apiClient'
+import { apiClient } from '../apiClient'
 import type {
   ForgotPasswordResponse,
   CreateRoleCodesResponse,
@@ -13,14 +13,14 @@ import type {
   UpdateProfileArgs,
   ForgotPasswordArgs,
   ResetPasswordArgs,
-  ValidatePasswordArgs,
+  ValidateResetLinkArgs,
   ChangePasswordArgs,
   LoginArgs,
   GoogleLoginArgs,
   RegisterArgs,
   GetRoleCodesArgs,
   CreateRoleCodesArgs,
-  ValidatePasswordResponse,
+  ValidateResetLinkResponse,
   ActivateAccountArgs,
 } from './types'
 
@@ -63,8 +63,8 @@ export const accountsService = {
     return data
   },
 
-  async validatePassword(args: ValidatePasswordArgs) {
-    const { data } = await apiClient.get<ValidatePasswordResponse>(
+  async validatePassword(args: ValidateResetLinkArgs) {
+    const { data } = await apiClient.get<ValidateResetLinkResponse>(
       `${prefix}/password-reset/${args.uid}/${args.token}/`,
     )
     return data

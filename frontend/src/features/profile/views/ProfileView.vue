@@ -1,6 +1,12 @@
 <template>
   <section class="page-shell">
-    <ui-card>
+    <ui-card :is-error="isLoadingError">
+      <template #error>
+        <div style="display: flex; height: 436px; justify-content: center; align-items: center">
+          <p>Error while fetching profile info (code: {{ error?.code }})</p>
+        </div>
+      </template>
+
       <template #header>
         <div class="head">
           <div>
@@ -136,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
@@ -146,9 +152,11 @@ import { useProfile } from '@/queries/accounts'
 import { useUserStore } from '@/stores/user'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
+import { parseError } from '@/api'
 
 const store = useUserStore()
-const { data: user, isLoading } = useProfile()
+const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
+const error = computed(() => parseError(profileError.value))
 
 const router = useRouter()
 const isDeleting = ref(false)

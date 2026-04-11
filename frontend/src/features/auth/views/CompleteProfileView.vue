@@ -7,8 +7,6 @@
         Choose your role and review your account details before continuing.
       </p>
 
-      <p v-if="message" :class="['notice', messageType]">{{ message }}</p>
-
       <form class="form-grid" @submit.prevent="handleSubmit">
         <div class="form-item">
           <label class="form-label"> Username </label>
@@ -51,35 +49,30 @@
               required
             />
             <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
-            <small v-else class="field-help">
-              Use at least 8 characters, including upper/lowercase letters, a number, and a special
-              character.
-            </small>
           </div>
         </div>
 
         <div class="form-item">
           <label class="form-label full-width"> Full name </label>
           <ui-input v-model="form.full_name" />
+          <small v-if="errors?.full_name" class="text-error">{{ errors.full_name[0] }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> Phone </label>
-          <PhoneField
-            v-model="form.phone"
-            :error="errors?.phone?.[0]"
-            placeholder="Enter phone number"
-          />
+          <PhoneField v-model="form.phone" placeholder="Enter phone number" />
+          <small v-if="errors?.phone" class="text-error">{{ errors.phone[0] }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> City </label>
           <ui-input v-model="form.city" />
+          <small v-if="errors?.city" class="text-error">{{ errors.city[0] }}</small>
         </div>
 
         <ui-button class="submit-btn" :disabled="isUpdatingProfile" type="submit">
-          <loading-icon v-if="isUpdatingProfile" />
           Complete registration
+          <loading-icon v-if="isUpdatingProfile" />
         </ui-button>
       </form>
     </ui-card>
@@ -90,7 +83,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import PhoneField from '@/features/shared/components/forms/PhoneField.vue'
+import PhoneField from '@/components/shared/PhoneField.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
@@ -98,24 +91,30 @@ import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useProfile, useUpdateProfile } from '@/queries/accounts'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
+import { useNotification } from '@/composables/useNotification'
+import type { UserRole } from '@/api/dbTypes'
 
-interface Errors {
-  username?: string[]
-  role?: string[]
-  redeem_code?: string[]
-  password?: string[]
-  phone?: string[]
-  form?: string[]
+interface Form {
+  username: string
+  role: UserRole
+  redeem_code: string
+  password: string
+  full_name: string
+  phone: string
+  city: string
 }
 
 const router = useRouter()
-const message = ref('')
-const messageType = ref('success')
-const errors = ref<Errors | null>(null)
-
+const { showNotification } = useNotification()
 const { data: user } = useProfile()
 
-const form = reactive({
+type Errors = Partial<Record<keyof Form, string[]>>
+const errors = ref<Partial<Errors>>({})
+const resetErrors = () => {
+  errors.value = {}
+}
+
+const form = reactive<Form>({
   username: user.value?.username ?? '',
   role: user.value?.role ?? 'team',
   redeem_code: '',
@@ -150,13 +149,11 @@ const getPasswordError = (password: string) => {
 const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
 
 const handleSubmit = async () => {
-  message.value = ''
+  resetErrors()
 
   const passwordError = getPasswordError(form.password)
   if (passwordError) {
     errors.value = { password: [passwordError] }
-    messageType.value = 'error'
-    message.value = 'Please fix form errors and try again.'
     return
   }
 
@@ -165,16 +162,16 @@ const handleSubmit = async () => {
     {
       onSuccess: () => {
         localStorage.removeItem('needs_onboarding')
-        messageType.value = 'success'
-        message.value = 'Profile completed successfully.'
         router.push('/')
       },
       onError: (err) => {
-        errors.value = err.response?.data as Errors
-        messageType.value = 'error'
-        message.value = err.response
-          ? 'Please fix form errors and try again.'
-          : 'Server connection error.'
+        if (err.response) {
+          Object.entries(err.response.data.details).forEach(([key, messages]) => {
+            errors.value[key as keyof Errors] = messages
+          })
+        } else {
+          showNotification('Network error. Try again later', 'error')
+        }
       },
     },
   )
