@@ -4,6 +4,7 @@ from ..views import (
     TeamJoinRequestAcceptView,
     TeamJoinRequestCreateView,
     TeamJoinRequestDeclineView,
+    TeamJoinRequestListByTeamView,
 )
 
 urlpatterns = [
@@ -18,4 +19,5 @@ urlpatterns = [
         TeamJoinRequestDeclineView.as_view(),
         name='team_join_request_decline',
     ),
+    path('<int:pk>/join-requests-list/', TeamJoinRequestListByTeamView.as_view(), name='team_join_requests_list'),
 ]

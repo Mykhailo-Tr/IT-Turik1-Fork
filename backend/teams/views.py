@@ -15,6 +15,8 @@ from .serializers import (
     clear_invitation_states_for_member,
     clear_join_request_states_for_member,
     TeamInvitationInboxSerializer,
+    TeamInvitationSerializer,
+    TeamJoinRequestSerializer,
     TeamMemberSerializer,
     TeamSerializer,
     invite_user_to_team,
@@ -316,4 +318,50 @@ class TeamJoinRequestAcceptView(TeamJoinRequestReviewView):
 
 class TeamJoinRequestDeclineView(TeamJoinRequestReviewView):
     new_status = TeamJoinRequest.STATUS_DECLINED
+
+
+class TeamInvitationListByTeamView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TeamInvitationSerializer
+
+    def get_queryset(self):
+        team_id = self.kwargs.get('pk')
+        team = get_object_or_404(get_team_queryset(), pk=team_id)
+        
+        # Only captain or admin can see invitations
+        if team.captain_id != self.request.user.id and not is_platform_admin(self.request.user):
+            raise PermissionDenied('Only captain or admin can view team invitations.')
+        
+        # Exclude invitations for users already in the team
+        member_ids = {member.id for member in team.members.all()}
+        member_ids.add(team.captain_id)
+        
+        return (
+            TeamInvitation.objects
+            .filter(team=team)
+            .exclude(user_id__in=member_ids)
+            .select_related('user', 'invited_by')
+            .order_by('-created_at')
+        )
+
+
+class TeamJoinRequestListByTeamView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = TeamJoinRequestSerializer
+
+    def get_queryset(self):
+        team_id = self.kwargs.get('pk')
+        team = get_object_or_404(get_team_queryset(), pk=team_id)
+        
+        # Only captain or admin can see join requests
+        if team.captain_id != self.request.user.id and not is_platform_admin(self.request.user):
+            raise PermissionDenied('Only captain or admin can view team join requests.')
+        
+        return (
+            TeamJoinRequest.objects
+            .filter(team=team)
+            .select_related('user', 'reviewed_by')
+            .order_by('-created_at')
+        )
+
 

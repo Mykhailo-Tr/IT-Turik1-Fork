@@ -4,6 +4,7 @@ from ..views import (
     TeamInvitationAcceptView,
     TeamInvitationDeclineView,
     TeamInvitationListView,
+    TeamInvitationListByTeamView,
 )
 
 urlpatterns = [
@@ -18,4 +19,5 @@ urlpatterns = [
         TeamInvitationDeclineView.as_view(),
         name='team_invitation_decline',
     ),
+    path('<int:pk>/invitations/', TeamInvitationListByTeamView.as_view(), name='team_invitations_by_team'),
 ]
