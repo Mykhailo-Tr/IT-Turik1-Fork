@@ -8,7 +8,11 @@
     Delete account
   </ui-button>
 
-  <ui-modal v-model="isDeleteModalOpen" title="Delete account">
+  <ui-modal v-model="isDeleteModalOpen">
+    <template #title>
+      <h3>Delete account</h3>
+    </template>
+
     <p class="modal-text">
       This action cannot be undone. Enter
       <ui-badge variant="red">{{ expectedDeleteText }}</ui-badge>

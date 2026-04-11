@@ -28,10 +28,6 @@ function handleInput(event: Event) {
   cursor: not-allowed;
 }
 
-.input[type='radio']:focus {
-  box-shadow: none;
-}
-
 .input:focus {
   outline: none;
   border-color: var(--brand-500);

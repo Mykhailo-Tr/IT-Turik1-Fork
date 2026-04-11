@@ -1,34 +1,44 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="modelValue" class="modal-backdrop" @click.self="handleBackdropClick">
-        <div
+      <div
+        v-if="modelValue"
+        class="modal-backdrop"
+        data-testid="modal-backdrop"
+        @click.self="handleBackdropClick"
+      >
+        <ui-card
           class="modal-card"
           role="dialog"
           aria-modal="true"
-          :aria-labelledby="props.title"
           :style="{ width: `min(100%, ${maxWidth})` }"
         >
-          <!-- Header -->
-          <div v-if="$slots.title || title" class="modal-header">
-            <slot name="title">
-              <h3 :id="props.title" class="modal-title">{{ title }}</h3>
-            </slot>
-            <ui-button variant="outline" size="sm" @click="close" aria-label="Close">
-              <CrossIcon />
-            </ui-button>
-          </div>
+          <template #header>
+            <div class="modal-header">
+              <slot v-if="$slots.title" class="modal-title" name="title" />
 
-          <!-- Body -->
+              <ui-button
+                style="margin-left: auto"
+                variant="outline"
+                size="sm"
+                @click="close"
+                aria-label="Close"
+              >
+                <CrossIcon />
+              </ui-button>
+            </div>
+          </template>
+
           <div class="modal-body">
             <slot />
           </div>
 
-          <!-- Footer -->
-          <div v-if="$slots.footer" class="modal-footer">
-            <slot name="footer" />
-          </div>
-        </div>
+          <template #footer>
+            <div v-if="$slots.footer" class="modal-footer">
+              <slot name="footer" />
+            </div>
+          </template>
+        </ui-card>
       </div>
     </Transition>
   </Teleport>
@@ -37,20 +47,16 @@
 <script setup lang="ts">
 import CrossIcon from '@/icons/CrossIcon.vue'
 import UiButton from './UiButton.vue'
+import { onMounted, onUnmounted } from 'vue'
+import UiCard from './UiCard.vue'
 
-const props = defineProps({
-  modelValue: {
-    type: Boolean,
-    default: false,
-  },
-  title: {
-    type: String,
-    default: '',
-  },
-  maxWidth: {
-    type: String,
-    default: '520px',
-  },
+interface Props {
+  modelValue: boolean
+  maxWidth?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  maxWidth: '520px',
 })
 
 const emit = defineEmits(['update:modelValue', 'close'])
@@ -63,6 +69,20 @@ function close() {
 function handleBackdropClick() {
   close()
 }
+
+function handleEscapeKey(e: KeyboardEvent) {
+  if (e.key === 'Escape' && props.modelValue) {
+    close()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleEscapeKey)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleEscapeKey)
+})
 </script>
 
 <style scoped>
@@ -79,13 +99,6 @@ function handleBackdropClick() {
 
 .modal-card {
   background: #fff;
-  border-radius: 16px;
-  border: 1px solid var(--line-soft, #e2e8f0);
-  box-shadow: var(
-    --shadow-lg,
-    0 4px 6px -1px rgba(0, 0, 0, 0.07),
-    0 20px 40px -8px rgba(15, 23, 42, 0.18)
-  );
   overflow: hidden;
 }
 
@@ -94,15 +107,6 @@ function handleBackdropClick() {
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem 0;
-}
-
-.modal-title {
-  margin: 0;
-  font-family: var(--font-display, inherit);
-  font-size: 1.05rem;
-  font-weight: 650;
-  color: #0f172a;
-  letter-spacing: -0.01em;
 }
 
 .modal-close {

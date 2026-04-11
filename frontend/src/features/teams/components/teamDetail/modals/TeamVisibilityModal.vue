@@ -10,10 +10,13 @@
 
   <ui-modal
     v-model="isVisibilityModalOpen"
-    title="Change team visibility"
     :close-on-backdrop="!visibilityLoading"
     :show-close="!visibilityLoading"
   >
+    <template #title>
+      <h3>Change team visibility</h3>
+    </template>
+
     <p class="modal-text">
       Select the new visibility for <ui-badge variant="green">{{ team?.name }}</ui-badge
       ><br />

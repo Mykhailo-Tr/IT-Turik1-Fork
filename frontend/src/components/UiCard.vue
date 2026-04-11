@@ -1,20 +1,18 @@
 <template>
-  <div class="card">
+  <article class="card">
     <header v-if="$slots.header">
       <slot name="header" />
     </header>
 
-    <div v-if="$slots.default">
+    <section v-if="$slots.default">
       <slot />
-    </div>
+    </section>
 
     <footer v-if="$slots.footer">
       <slot name="footer" />
     </footer>
-  </div>
+  </article>
 </template>
-
-<script setup lang="ts"></script>
 
 <style scoped>
 .card {

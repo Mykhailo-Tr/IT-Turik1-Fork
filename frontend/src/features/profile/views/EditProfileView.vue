@@ -115,7 +115,11 @@
       </form>
     </ui-card>
 
-    <ui-modal v-model="isPasswordModalOpen" title="Change Password" @close="resetPasswordState">
+    <ui-modal v-model="isPasswordModalOpen" @close="resetPasswordState">
+      <template #title>
+        <h3>Change Password</h3>
+      </template>
+
       <div class="mode-switch">
         <ui-button
           variant="outline-accent"
