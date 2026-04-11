@@ -444,7 +444,12 @@ class TeamApiTests(APITestCase):
         leave_response = self.client.post(reverse('team_leave', kwargs={'pk': team['id']}), {}, format='json')
 
         self.assertEqual(leave_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('captain cannot leave', leave_response.data['detail'].lower())
+        error_text = str(leave_response.data.get('message', '')).lower()
+        if not error_text and isinstance(leave_response.data.get('details'), dict):
+            detail_messages = leave_response.data['details'].get('detail', [])
+            if detail_messages:
+                error_text = str(detail_messages[0]).lower()
+        self.assertIn('captain cannot leave', error_text)
         self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.captain).exists())
 
     def test_non_member_cannot_leave_team(self):
@@ -454,7 +459,12 @@ class TeamApiTests(APITestCase):
         leave_response = self.client.post(reverse('team_leave', kwargs={'pk': team['id']}), {}, format='json')
 
         self.assertEqual(leave_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('not a team member', leave_response.data['detail'].lower())
+        error_text = str(leave_response.data.get('message', '')).lower()
+        if not error_text and isinstance(leave_response.data.get('details'), dict):
+            detail_messages = leave_response.data['details'].get('detail', [])
+            if detail_messages:
+                error_text = str(detail_messages[0]).lower()
+        self.assertIn('not a team member', error_text)
 
     def test_private_team_not_visible_to_non_members(self):
         team = self._create_team({'name': 'Private Team', 'email': 'private@example.com', 'is_public': False})

@@ -133,7 +133,8 @@ class GoogleAuthViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('redeem_code', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('redeem_code', response.data['details'])
         user.refresh_from_db()
         self.assertEqual(user.role, 'team')
         self.assertTrue(user.needs_onboarding)
@@ -160,7 +161,8 @@ class GoogleAuthViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('password', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('password', response.data['details'])
         user.refresh_from_db()
         self.assertTrue(user.needs_onboarding)
         self.assertFalse(user.has_usable_password())
@@ -219,7 +221,8 @@ class GoogleAuthViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('password', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('password', response.data['details'])
         user.refresh_from_db()
         self.assertFalse(user.has_usable_password())
         self.assertTrue(user.needs_onboarding)
@@ -267,14 +270,16 @@ class PasswordResetFlowTests(APITestCase):
         response = self.client.post(self.request_url, {'email': 'missing@example.com'}, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('email', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('email', response.data['details'])
         self.assertEqual(len(mail.outbox), 0)
 
     def test_password_reset_request_rejects_invalid_email_format(self):
         response = self.client.post(self.request_url, {'email': 'invalid-email'}, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('email', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('email', response.data['details'])
         self.assertEqual(len(mail.outbox), 0)
 
     def test_password_reset_confirm_get_rejects_invalid_or_expired_link(self):
@@ -350,7 +355,8 @@ class PasswordResetFlowTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('confirm_password', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('confirm_password', response.data['details'])
 
     def test_password_reset_confirm_post_rejects_weak_password(self):
         user = User.objects.create_user(
@@ -414,7 +420,8 @@ class ChangePasswordFlowTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('current_password', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('current_password', response.data['details'])
 
     def test_change_password_rejects_mismatch(self):
         response = self.client.post(
@@ -428,7 +435,8 @@ class ChangePasswordFlowTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('confirm_password', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('confirm_password', response.data['details'])
 
     def test_change_password_rejects_weak_new_password(self):
         response = self.client.post(
@@ -528,7 +536,8 @@ class RoleBasedRegistrationTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('redeem_code', response.data)
+        self.assertIn('details', response.data)
+        self.assertIn('redeem_code', response.data['details'])
 
     def test_restricted_role_registration_consumes_code_once(self):
         code = RoleActivationCode.objects.create(code='JURYCODE1234', role='jury')
@@ -562,7 +571,8 @@ class RoleBasedRegistrationTests(APITestCase):
             format='json',
         )
         self.assertEqual(second_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('redeem_code', second_response.data)
+        self.assertIn('details', second_response.data)
+        self.assertIn('redeem_code', second_response.data['details'])
 
     def test_admin_role_registration_elevates_to_superuser(self):
         RoleActivationCode.objects.create(code='ADMINCODE123', role='admin')
@@ -622,4 +632,5 @@ class RoleBasedRegistrationTests(APITestCase):
             format='json',
         )
         self.assertEqual(overflow_response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('role', overflow_response.data)
+        self.assertIn('details', overflow_response.data)
+        self.assertIn('role', overflow_response.data['details'])
