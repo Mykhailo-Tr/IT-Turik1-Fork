@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -8,6 +9,8 @@ from .models import Tournament, TournamentTeam
 class TournamentReadSerializer(serializers.ModelSerializer):
     registered_teams_count = serializers.SerializerMethodField()
     is_registration_open = serializers.SerializerMethodField()
+    can_register = serializers.SerializerMethodField()
+    is_creator = serializers.SerializerMethodField()
     created_by_id = serializers.IntegerField(source='created_by.id', read_only=True)
 
     class Meta:
@@ -28,13 +31,59 @@ class TournamentReadSerializer(serializers.ModelSerializer):
             'created_at',
             'registered_teams_count',
             'is_registration_open',
+            'can_register',
+            'is_creator',
         )
+
+    def _request_user(self):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+        return request.user
 
     def get_registered_teams_count(self, obj):
         return obj.registered_teams_count
 
     def get_is_registration_open(self, obj):
         return obj.is_registration_open()
+
+    def get_can_register(self, obj):
+        return obj.can_accept_teams()
+
+    def get_is_creator(self, obj):
+        user = self._request_user()
+        if not user:
+            return False
+        return obj.created_by_id == user.id
+
+
+class TournamentWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tournament
+        fields = (
+            'title',
+            'description',
+            'registration_start',
+            'registration_end',
+            'start_date',
+            'end_date',
+            'max_teams',
+            'min_teams',
+            'rounds_count',
+        )
+
+    def validate(self, attrs):
+        instance = self.instance or Tournament()
+        for field, value in attrs.items():
+            setattr(instance, field, value)
+        try:
+            instance.clean()
+        except DjangoValidationError as exc:
+            raise ValidationError(exc.message_dict)
+        return attrs
+
+    def to_representation(self, instance):
+        return TournamentReadSerializer(instance, context=self.context).data
 
 
 class TournamentTeamRegistrationSerializer(serializers.Serializer):
