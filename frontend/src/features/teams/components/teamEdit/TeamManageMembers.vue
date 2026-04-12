@@ -49,7 +49,7 @@
       </template>
 
       <div class="member-list">
-        <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`">
+        <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
           <template #header>
             <div style="display: flex; justify-content: space-between; gap: 10px">
               <p class="member-name">{{ member.username }}</p>
@@ -120,7 +120,6 @@
       <h3>Invite user</h3>
 
       <div class="form-item">
-        <label class="form-label"> Select user </label>
         <ui-skeleton-loader :loading="isLoadingUsers">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45.6px" width="100%" />
@@ -281,6 +280,11 @@ const addMember = () => {
   gap: 0.35rem;
 }
 
+.member-row {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
 .member-list {
   display: grid;
   gap: 0.55rem;
@@ -293,7 +297,6 @@ const addMember = () => {
 
 .member-name {
   font-weight: 700;
-  color: var(--ink-900);
 }
 
 .member-email {
@@ -314,12 +317,5 @@ const addMember = () => {
 .add-member-box h3 {
   margin: 0;
   font-size: 1rem;
-}
-
-@media (max-width: 760px) {
-  .member-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
 }
 </style>

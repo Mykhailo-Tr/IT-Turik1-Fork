@@ -22,7 +22,7 @@
     <ui-skeleton-loader :loading="isLoadingTeams">
       <template #skeleton>
         <div class="team-grid">
-          <ui-card v-for="i in 2" :key="i" style="display: flex; flex-direction: column; gap: 10px">
+          <ui-card class="team-item" v-for="i in 2" :key="i">
             <template #header>
               <ui-skeleton variant="rect" width="120px" />
             </template>
@@ -67,7 +67,7 @@
             <div class="actions">
               <ui-button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 v-if="team.can_request_to_join"
                 style="width: 100%"
                 :disabled="loadingIds.has(team.id)"
@@ -76,7 +76,7 @@
                 <loading-icon v-if="loadingIds.has(team.id)" />
                 Request to join
               </ui-button>
-              <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}`"
+              <ui-button asLink variant="secondary" size="sm" :to="`/teams/${team.id}`"
                 >Open workspace</ui-button
               >
             </div>
@@ -88,7 +88,7 @@
     <div v-if="otherPages > 1" class="pagination">
       <ui-button
         size="sm"
-        variant="outline"
+        variant="secondary"
         class="btn-soft"
         :disabled="otherPage === 1"
         @click="otherPage -= 1"
@@ -99,7 +99,7 @@
       <span>Page {{ otherPage }} / {{ otherPages }}</span>
       <ui-button
         size="sm"
-        variant="outline"
+        variant="secondary"
         :disabled="otherPage === otherPages"
         @click="otherPage += 1"
         type="button"
@@ -176,10 +176,6 @@ const sendJoinRequest = (teamId: TeamId) => {
 </script>
 
 <style scoped>
-.teams-card {
-  padding: 1.2rem;
-}
-
 .section-head {
   display: flex;
   align-items: center;
@@ -200,6 +196,7 @@ const sendJoinRequest = (teamId: TeamId) => {
 
 .team-item {
   padding: 0.95rem;
+  background: var(--muted);
 }
 
 .team-meta {

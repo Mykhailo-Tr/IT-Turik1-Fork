@@ -77,7 +77,7 @@
     <template #footer>
       <ui-button
         size="sm"
-        variant="outline"
+        variant="secondary"
         type="button"
         :disabled="visibilityLoading"
         @click="toggleVisibilityModal"
@@ -200,7 +200,7 @@ const confirmChangeVisibility = async () => {
 .visibility-option-content p {
   margin: 0.2rem 0 0;
   font-size: 0.84rem;
-  color: var(--ink-600);
+  color: var(--color-gray-600);
 }
 
 .visibility-option-header {
@@ -212,7 +212,7 @@ const confirmChangeVisibility = async () => {
 .visibility-option-icon {
   width: 1rem;
   height: 1rem;
-  color: var(--ink-600);
+  color: var(--color-gray-600);
 }
 
 .danger-zone-icon {

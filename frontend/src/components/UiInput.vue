@@ -27,14 +27,20 @@ function handleInput(event: Event) {
 
 <style scoped>
 .input {
-  border: 1px solid var(--line-strong);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
   border-radius: 12px;
   padding: 0.75rem 0.85rem;
   font: inherit;
-  background: #fff;
+  background: var(--input);
+  color: var(--foreground);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .input:disabled {
@@ -42,17 +48,11 @@ function handleInput(event: Event) {
 }
 
 .invalid {
-  border-color: rgba(220, 38, 38, 0.7);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 12%, transparent);
 }
 
 .input[type='radio']:focus {
   box-shadow: none;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
 }
 </style>

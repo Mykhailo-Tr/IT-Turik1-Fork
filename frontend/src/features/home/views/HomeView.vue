@@ -58,7 +58,7 @@
         </ui-skeleton-loader>
       </ui-card>
 
-      <ui-card class="info-card accent" :is-error="isLoadingError">
+      <ui-card class="info-card" :is-error="isLoadingError">
         <template #error>
           <div
             style="
@@ -110,6 +110,7 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { useProfile } from '@/queries/accounts'
 import { parseError } from '@/api'
+import UiBadge from '@/components/UiBadge.vue'
 
 const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
 const error = computed(() => parseError(profileError.value))
@@ -177,12 +178,9 @@ h1 {
   font-family: var(--font-display);
 }
 
-.info-card p {
-  color: var(--ink-700);
-}
-
-.accent {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(237, 254, 255, 0.95));
+.info-card p,
+li {
+  color: var(--muted-foreground);
 }
 
 ul {

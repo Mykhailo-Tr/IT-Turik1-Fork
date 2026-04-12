@@ -5,7 +5,7 @@
         <p class="section-eyebrow">Teams</p>
         <h1 class="section-title">Create new team</h1>
         <p class="section-subtitle">Create a team and optionally add initial members.</p>
-        <ui-button asLink class="back-link" variant="outline" size="sm" to="/teams"
+        <ui-button asLink class="back-link" variant="secondary" size="sm" to="/teams"
           >Back to teams list</ui-button
         >
       </template>
@@ -258,7 +258,6 @@ const handleFormSubmit = () => {
 }
 
 .visibility-label {
-  color: var(--ink-800);
   font-size: 0.86rem;
   user-select: none;
 }

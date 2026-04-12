@@ -22,7 +22,7 @@
     <ui-skeleton-loader :loading="isLoadingTeams">
       <template #skeleton>
         <div class="team-grid">
-          <ui-card v-for="i in 2" :key="i" style="display: flex; flex-direction: column; gap: 10px">
+          <ui-card class="team-item" v-for="i in 2" :key="i">
             <template #header>
               <div class="team-header">
                 <ui-skeleton variant="rect" width="100%" />
@@ -50,7 +50,7 @@
           <template #header>
             <div class="team-header">
               <h3>{{ team.name }}</h3>
-              <ui-badge v-if="isCaptain(team)" variant="blue">Captain</ui-badge>
+              <ui-badge v-if="isCaptain(team)" variant="green">Captain</ui-badge>
             </div>
           </template>
 
@@ -65,7 +65,7 @@
           </p>
 
           <template #footer>
-            <ui-button asLink variant="outline" size="sm" :to="`/teams/${team.id}`"
+            <ui-button asLink variant="secondary" size="sm" :to="`/teams/${team.id}`"
               >Open workspace</ui-button
             >
           </template>
@@ -74,11 +74,11 @@
     </ui-skeleton-loader>
 
     <div v-if="myPages > 1" class="pagination">
-      <ui-button size="sm" variant="outline" :disabled="myPage === 1" @click="myPage -= 1">
+      <ui-button size="sm" variant="secondary" :disabled="myPage === 1" @click="myPage -= 1">
         Prev
       </ui-button>
       <span>Page {{ myPage }} / {{ myPages }}</span>
-      <ui-button size="sm" variant="outline" :disabled="myPage === myPages" @click="myPage += 1">
+      <ui-button size="sm" variant="secondary" :disabled="myPage === myPages" @click="myPage += 1">
         Next
       </ui-button>
     </div>
@@ -123,10 +123,6 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
 </script>
 
 <style scoped>
-.teams-card {
-  padding: 1.2rem;
-}
-
 .section-head {
   display: flex;
   align-items: center;
@@ -147,6 +143,8 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
 
 .team-item {
   padding: 0.95rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .team-header {

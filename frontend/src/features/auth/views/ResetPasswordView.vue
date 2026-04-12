@@ -124,7 +124,6 @@ const handleReset = () => {
 
 @media (max-width: 640px) {
   .reset-card {
-    padding: 1.3rem;
     border-radius: 18px;
   }
 }

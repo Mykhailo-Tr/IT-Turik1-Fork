@@ -1,5 +1,5 @@
 <template>
-  <div :style="{ minHeight: containerHeight }">
+  <div>
     <Transition name="skeleton-fade" mode="out-in">
       <div v-if="loading" key="skeleton" class="skeleton-slot">
         <slot name="skeleton" />
@@ -13,19 +13,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
 interface Props {
   loading: boolean
-  minHeight?: string
   minWidth?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   loading: true,
 })
-
-const containerHeight = computed(() => props.minHeight)
 </script>
 
 <style scoped>

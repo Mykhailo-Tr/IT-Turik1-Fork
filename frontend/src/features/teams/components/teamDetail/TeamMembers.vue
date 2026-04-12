@@ -42,11 +42,7 @@
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <div class="member-list">
-              <ui-card
-                v-for="i in 2"
-                :key="i"
-                style="display: flex; flex-direction: column; gap: 10px"
-              >
+              <ui-card v-for="i in 2" :key="i" class="card-item">
                 <template #header>
                   <div style="display: flex; justify-content: space-between; gap: 10px">
                     <ui-skeleton variant="rect" width="100%" />
@@ -60,7 +56,11 @@
           </template>
 
           <div class="member-list">
-            <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`">
+            <ui-card
+              class="card-item"
+              v-for="member in filteredMembers"
+              :key="`member-${member.id}`"
+            >
               <template #header>
                 <div style="display: flex; justify-content: space-between">
                   <p class="member-name">{{ member.username }}</p>
@@ -98,7 +98,7 @@
               </header>
 
               <div class="member-list">
-                <ui-card v-for="i in 2" :key="i">
+                <ui-card v-for="i in 2" :key="i" class="card-item">
                   <div style="display: flex; flex-direction: column; gap: 5px">
                     <ui-skeleton variant="rect" width="200px" />
                     <ui-skeleton variant="rect" width="200px" />
@@ -122,6 +122,7 @@
             </header>
 
             <ui-card
+              class="card-item"
               v-for="joinRequest in filteredPendingJoinRequests"
               :key="`join-request-${joinRequest.id}`"
             >
@@ -146,7 +147,7 @@
                         Accept
                       </ui-button>
                       <ui-button
-                        variant="outline"
+                        variant="secondary"
                         size="sm"
                         :disabled="loadingJoinRequestIds.has(joinRequest.id)"
                         @click="reviewJoinRequest(joinRequest.id, 'decline')"
@@ -191,6 +192,7 @@
             <ui-card
               v-for="invitation in filteredPendingInvitations"
               :key="`invitation-pending-${invitation.id}`"
+              class="card-item"
             >
               <template #header>
                 <div style="display: flex; justify-content: space-between">
@@ -212,6 +214,7 @@
             <ui-card
               v-for="invitation in filteredDeclinedInvitations"
               :key="`invitation-declined-${invitation.id}`"
+              class="card-item"
             >
               <template #header>
                 <div style="display: flex; justify-content: space-between">
@@ -231,7 +234,7 @@
               <template #footer>
                 <div class="row-actions">
                   <ui-button
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     :disabled="loadingInvitationIds.has(invitation.id)"
                     @click="resendInvitation(invitation.user.id)"
@@ -449,7 +452,6 @@ const resendInvitation = (userId: UserId) => {
 
 <style scoped>
 .panel {
-  padding: 1.2rem;
   border: 1px solid var(--line-soft);
   height: 100%;
 }
@@ -472,6 +474,11 @@ const resendInvitation = (userId: UserId) => {
   display: flex;
   flex-direction: column;
   margin-bottom: 12px;
+}
+
+.card-item {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .members-sections {
@@ -514,7 +521,6 @@ const resendInvitation = (userId: UserId) => {
 
 .member-name {
   font-weight: 700;
-  color: var(--ink-900);
 }
 
 .member-email {

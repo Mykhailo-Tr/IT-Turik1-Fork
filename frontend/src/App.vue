@@ -16,7 +16,7 @@
       >
         <span>{{ notification.message }}</span>
         <ui-button
-          variant="outline-accent"
+          variant="ghost"
           size="sm"
           type="button"
           class="app-notice-close"
@@ -39,6 +39,19 @@ import UiButton from './components/UiButton.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 
 const { notification, hideNotification } = useNotification()
+
+const applyTheme = () => {
+  const html = document.documentElement
+  const currentTheme = localStorage.getItem('theme') ?? 'light'
+
+  if (currentTheme === 'dark') {
+    html.classList.add('dark')
+  } else {
+    html.classList.remove('dark')
+  }
+}
+
+applyTheme()
 </script>
 
 <style scoped>
@@ -54,7 +67,7 @@ const { notification, hideNotification } = useNotification()
   position: fixed;
   border-radius: 999px;
   filter: blur(40px);
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -77,6 +90,8 @@ const { notification, hideNotification } = useNotification()
 .page-content {
   width: min(1100px, 100% - 2rem);
   margin: 1.6rem auto 2.4rem;
+  position: relative;
+  z-index: 9;
 }
 
 .app-notice {

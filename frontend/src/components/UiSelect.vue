@@ -1,7 +1,7 @@
 <template>
   <div class="select-wrapper" :class="{ open: isOpen }" ref="wrapperRef">
     <ui-button
-      variant="outline-accent"
+      variant="ghost"
       class="select-trigger"
       :disabled="isLoading"
       @click="toggleOpen"
@@ -310,7 +310,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-chevron {
   flex-shrink: 0;
-  color: #9ca3af;
+  color: color-mix(in srgb, var(--foreground) 42%, transparent);
   transition: transform 0.2s ease;
 }
 
@@ -330,8 +330,9 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   left: 0;
   right: 0;
   z-index: 50;
-  background: #fff;
-  border: 1px solid var(--line-strong);
+  background: var(--popover);
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
   border-radius: 12px;
   box-shadow: 0 8px 20px rgb(0 0 0 / 11%);
   overflow: hidden;
@@ -353,7 +354,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   width: 100%;
   box-sizing: border-box;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--line-strong);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
   border-radius: 8px;
   font: inherit;
   font-size: 0.875rem;
@@ -364,7 +365,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 }
 
 .select-search:focus {
-  border-color: var(--brand-500);
+  border-color: var(--primary);
 }
 
 .select-search:disabled {
@@ -372,7 +373,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 }
 
 .select-search::placeholder {
-  color: #9ca3af;
+  color: color-mix(in srgb, var(--foreground) 42%, transparent);
 }
 
 .select-list {
@@ -398,17 +399,17 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-option:hover,
 .select-option.focused {
-  background: #f3f4f6;
+  background: var(--muted);
 }
 
 .select-option.selected {
-  background: #f0fdf4;
-  color: #15803d;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: color-mix(in srgb, var(--primary) 88%, var(--foreground));
   font-weight: 500;
 }
 
 .select-option.selected.focused {
-  background: #dcfce7;
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 .select-error,
@@ -416,12 +417,12 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   padding: 0.75rem;
   text-align: center;
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: var(--muted-foreground);
 }
 
 .select-check {
   flex-shrink: 0;
-  color: #16a34a;
+  color: var(--primary);
 }
 
 .dropdown-enter-active,

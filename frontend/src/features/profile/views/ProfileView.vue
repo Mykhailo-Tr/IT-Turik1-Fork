@@ -69,7 +69,7 @@
             <strong class="item-value value-wrap">{{ user?.full_name || '-' }}</strong>
           </ui-skeleton-loader>
         </ui-card>
-        <ui-card class="item-text">
+        <ui-card class="field-card">
           <template #header>
             <span class="card-text-title">City</span>
           </template>
@@ -127,16 +127,16 @@
 
       <div class="actions">
         <ui-button :disabled="isLoading" @click="goToEditProfile"> Edit Profile </ui-button>
-        <ui-button variant="outline" :disabled="isLoading || isDeleting" @click="logout">
+        <ui-button variant="secondary" :disabled="isLoading || isDeleting" @click="logout">
           Log Out
         </ui-button>
       </div>
 
-      <div class="danger-zone">
+      <ui-card class="danger-zone">
         <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
 
         <delete-profile-modal />
-      </div>
+      </ui-card>
     </ui-card>
   </section>
 </template>
@@ -190,7 +190,6 @@ const formatDate = (date: Date) => {
 
 .meta {
   margin: 0;
-  color: var(--ink-500);
   font-size: 0.86rem;
 }
 
@@ -214,13 +213,15 @@ const formatDate = (date: Date) => {
 }
 
 .item-label {
-  color: var(--ink-500);
+  color: var(--color-gray-500);
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.2;
 }
 
 .field-card {
+  background: var(--muted);
+  color: var(--muted-foreground);
   gap: 0;
 }
 
@@ -260,13 +261,14 @@ const formatDate = (date: Date) => {
 
 .danger-zone {
   margin-top: 1.4rem;
-  border-top: 1px dashed var(--line-strong);
   padding-top: 1rem;
+  border: 1px solied var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
 .danger-text {
   margin: 0 0 0.6rem;
-  color: #991b1b;
+  color: color-mix(in srgb, var(--destructive) 80%, transparent);
   font-weight: 600;
 }
 

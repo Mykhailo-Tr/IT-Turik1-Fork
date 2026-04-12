@@ -30,13 +30,14 @@ const props = defineProps<Props>()
 
 <style scoped>
 .card {
-  border: 1px solid var(--line-soft);
+  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
   border-radius: 14px;
   padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  background: rgba(255, 255, 255, 0.85);
+  gap: 1rem;
+  background: var(--card);
+  color: var(--card-foreground);
 }
 
 .error-fade-enter-active {

@@ -13,7 +13,7 @@
 
       <template v-else>
         <div class="counts">
-          <ui-card v-for="role in restrictedRoles" :key="role">
+          <ui-card v-for="role in restrictedRoles" :key="role" class="statistic-card">
             <template #header>
               <span class="card-text-title">{{ role }}</span>
             </template>
@@ -78,11 +78,7 @@
         <ui-skeleton-loader :loading="isLoading">
           <template #skeleton>
             <div class="codes-list">
-              <ui-card
-                v-for="i in 3"
-                :key="i"
-                style="display: flex; flex-direction: column; gap: 8px"
-              >
+              <ui-card v-for="i in 3" :key="i" class="code-card">
                 <template #header>
                   <div class="code-head">
                     <ui-skeleton variant="rect" width="100%" />
@@ -111,13 +107,13 @@
             </div>
 
             <template v-else>
-              <ui-card v-for="code in codes" :key="code.id">
+              <ui-card v-for="code in codes" :key="code.id" class="code-card">
                 <template #header>
                   <div class="code-head">
                     <strong class="mono">{{ code.code }}</strong>
-                    <span :class="['status-pill', code.is_used ? 'used' : 'active']">
+                    <ui-badge :variant="code.is_used ? 'gray' : 'green'" class="status-pill">
                       {{ code.is_used ? 'Used' : 'Active' }}
-                    </span>
+                    </ui-badge>
                   </div>
                 </template>
 
@@ -153,6 +149,7 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useNotification } from '@/composables/useNotification'
 import { parseError } from '@/api'
+import UiBadge from '@/components/UiBadge.vue'
 
 interface Errors {
   role: string[]
@@ -261,6 +258,18 @@ const formatDateTime = (value: string | number | Date) => {
   height: fit-content;
 }
 
+.statistic-card,
+.code-card {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.code-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .filters {
   width: min(320px, 100%);
   margin-bottom: 1rem;
@@ -289,16 +298,6 @@ const formatDateTime = (value: string | number | Date) => {
   padding: 0.18rem 0.55rem;
   font-size: 0.75rem;
   font-weight: 700;
-}
-
-.status-pill.active {
-  background: rgba(22, 163, 74, 0.18);
-  color: #166534;
-}
-
-.status-pill.used {
-  background: rgba(148, 163, 184, 0.25);
-  color: #334155;
 }
 
 @media (max-width: 900px) {
