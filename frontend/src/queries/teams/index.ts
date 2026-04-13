@@ -159,7 +159,7 @@ export const useManageJoinRequest = (
   return useMutation<GetTeamInfoResponse, AxiosError<ApiError>, ManageJoinRequestArgs>({
     mutationFn: $api.teams.manageJoinRequest,
     onSuccess: (_, { teamId }) => {
-      queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
+      queryClient.invalidateQueries({ queryKey: teamKeys['join-requests'](teamId) })
     },
     ...config,
   })

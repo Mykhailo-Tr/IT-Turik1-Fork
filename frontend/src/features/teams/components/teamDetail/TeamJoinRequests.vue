@@ -52,8 +52,7 @@
 
           <template #footer>
             <div>
-              <ui-badge v-if="props.isCaptain" variant="green">Captain</ui-badge>
-              <template v-else>
+              <template>
                 <div class="row-actions">
                   <ui-button
                     size="sm"
@@ -88,13 +87,14 @@
 <script setup lang="ts">
 import type { JoinRequestId } from '@/api/dbTypes'
 import type { ManageJoinRequestAction } from '@/api/teams/types'
-import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { useNotification } from '@/composables/useNotification'
+import { teamKeys } from '@/queries/keys'
 import { useManageJoinRequest, useTeamJoinRequests } from '@/queries/teams'
+import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -105,8 +105,9 @@ interface Props {
 
 const route = useRoute()
 const props = defineProps<Props>()
-const { showNotification } = useNotification()
+const queryClient = useQueryClient()
 const teamId = Number(route.params.id)
+const { showNotification } = useNotification()
 const { data: joinRequest, isLoading, isLoadingError } = useTeamJoinRequests({ teamId })
 
 const matches = (parts: (string | undefined)[]) => {
@@ -133,6 +134,8 @@ const reviewJoinRequest = (id: JoinRequestId, action: ManageJoinRequestAction) =
       onSuccess: () => {
         const pastTense = { accept: 'accepted', decline: 'declined' }
         showNotification(`Join request ${pastTense[action]}`, 'success')
+
+        queryClient.invalidateQueries({ queryKey: [teamKeys.team(teamId)] })
       },
       onError: (err) => {
         showNotification(
