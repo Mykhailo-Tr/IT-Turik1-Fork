@@ -67,14 +67,29 @@
         @leave="router.push('/teams')"
       />
 
-      <team-members
-        :team="team"
-        :user="user"
-        :loading-error="isInfoLoadingError"
-        :loading="isInfoLoading || isProfileLoading"
-        :is-captain="isCaptain"
-        @update-team="(newTeamValue) => (team = newTeamValue)"
-      />
+      <ui-card class="panel">
+        <div style="display: flex; flex-direction: column; gap: 20px">
+          <ui-input
+            v-model="searchInput"
+            placeholder="Search by username or email"
+            :disabled="isInfoLoading || isInfoLoadingError"
+          />
+
+          <team-members
+            :team="team"
+            :user="user"
+            :search-filter="searchInput"
+            :loading-error="isInfoLoadingError"
+            :loading="isInfoLoading || isProfileLoading"
+            :is-captain="isCaptain"
+          />
+
+          <template v-if="isCaptain && !isInfoLoading">
+            <team-join-requests :search-filter="searchInput" :is-captain="isCaptain" />
+            <team-invitations :search-filter="searchInput" :is-captain="isCaptain" />
+          </template>
+        </div>
+      </ui-card>
     </div>
 
     <ui-skeleton-loader :loading="isInfoLoading">
@@ -95,7 +110,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import TeamBaseInfo from '../components/teamDetail/TeamBaseInfo.vue'
 import { useRoute, useRouter } from 'vue-router'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import TeamMembers from '../components/teamDetail/TeamMembers.vue'
 import { discordLink, telegramLink } from '../lib/team-links'
 import UiBadge from '@/components/UiBadge.vue'
@@ -104,10 +119,14 @@ import { useProfile } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import TeamManageZone from '../components/teamDetail/TeamManageZone.vue'
+import TeamJoinRequests from '../components/teamDetail/TeamJoinRequests.vue'
+import TeamInvitations from '../components/teamDetail/TeamInvitations.vue'
+import UiInput from '@/components/UiInput.vue'
 
 const router = useRouter()
 const route = useRoute()
 
+const searchInput = ref('')
 const { data: user, isLoading: isProfileLoading } = useProfile()
 const {
   data: team,

@@ -13,6 +13,10 @@ import type {
   GetInvitationsResponse,
   GetTeamInfoArgs,
   GetTeamInfoResponse,
+  GetTeamInvitationsArgs,
+  GetTeamInvitationsResponse,
+  GetTeamJoinRequestsArgs,
+  GetTeamJoinRequestsResponse,
   GetTeamsResponse,
   LeaveTeamArgs,
   ManageJoinRequestArgs,
@@ -44,10 +48,32 @@ export const useTeamInfo = (
   })
 }
 
+export const useTeamJoinRequests = (
+  payload: GetTeamJoinRequestsArgs,
+  config?: QueryConfig<GetTeamJoinRequestsResponse>,
+) => {
+  return useQuery<GetTeamJoinRequestsResponse, AxiosError<ApiError>>({
+    queryKey: teamKeys['join-requests'](payload.teamId),
+    queryFn: () => $api.teams.getTeamJoinRequests(payload),
+    ...config,
+  })
+}
+
 export const useInvitations = (config?: QueryConfig<GetInvitationsResponse>) => {
   return useQuery<GetInvitationsResponse, AxiosError<ApiError>>({
     queryKey: ['invitations'],
     queryFn: $api.teams.getInvitations,
+    ...config,
+  })
+}
+
+export const useTeamInvitations = (
+  payload: GetTeamInvitationsArgs,
+  config?: QueryConfig<GetTeamInvitationsResponse>,
+) => {
+  return useQuery<GetTeamInvitationsResponse, AxiosError<ApiError>>({
+    queryKey: teamKeys['team-invitations'](payload.teamId),
+    queryFn: () => $api.teams.getTeamInvitations(payload),
     ...config,
   })
 }
