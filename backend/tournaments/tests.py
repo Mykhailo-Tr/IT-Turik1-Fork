@@ -397,3 +397,342 @@ class TournamentStatusTransitionAPITests(APITestCase):
     def test_unauthenticated_fails(self):
         resp = self.client.post(self.url, {'status': 'registration'}, format='json')
         self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class TournamentCreateAPITests(APITestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='admin', email='admin@test.com', password='Pass1234!',
+            role='admin', is_staff=True, is_superuser=True,
+        )
+        self.organizer = User.objects.create_user(
+            username='organizer', email='organizer@test.com', password='Pass1234!',
+            role='organizer',
+        )
+        self.regular_user = User.objects.create_user(
+            username='regular', email='regular@test.com', password='Pass1234!',
+            role='team',
+        )
+        self.url = reverse('tournament_list_create')
+        now = timezone.now()
+        self.valid_data = {
+            'title': 'New Cup',
+            'description': 'A great tournament',
+            'registration_start': (now + timedelta(days=1)).isoformat(),
+            'registration_end': (now + timedelta(days=3)).isoformat(),
+            'start_date': (now + timedelta(days=5)).isoformat(),
+            'end_date': (now + timedelta(days=10)).isoformat(),
+            'max_teams': 16,
+            'min_teams': 4,
+            'rounds_count': 3,
+        }
+
+    def test_admin_can_create(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.post(self.url, self.valid_data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['title'], 'New Cup')
+        self.assertEqual(resp.data['created_by_id'], self.admin.id)
+        self.assertEqual(resp.data['status'], Tournament.STATUS_DRAFT)
+
+    def test_organizer_can_create(self):
+        self.client.force_authenticate(user=self.organizer)
+        resp = self.client.post(self.url, self.valid_data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(resp.data['created_by_id'], self.organizer.id)
+
+    def test_regular_user_cannot_create(self):
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.post(self.url, self.valid_data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_cannot_create(self):
+        resp = self.client.post(self.url, self.valid_data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_create_with_invalid_dates_fails(self):
+        self.client.force_authenticate(user=self.admin)
+        now = timezone.now()
+        data = {
+            'title': 'Bad',
+            'start_date': (now + timedelta(days=5)).isoformat(),
+            'end_date': (now + timedelta(days=3)).isoformat(),
+        }
+        resp = self.client.post(self.url, data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', resp.data.get('details', resp.data))
+
+    def test_create_with_min_teams_below_floor_fails(self):
+        self.client.force_authenticate(user=self.admin)
+        data = {**self.valid_data, 'min_teams': 1}
+        resp = self.client.post(self.url, data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('min_teams', resp.data.get('details', resp.data))
+
+    def test_create_returns_read_representation(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.post(self.url, self.valid_data, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        self.assertIn('registered_teams_count', resp.data)
+        self.assertIn('is_registration_open', resp.data)
+        self.assertIn('is_creator', resp.data)
+        self.assertTrue(resp.data['is_creator'])
+
+
+class TournamentListAPITests(APITestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='admin', email='admin@test.com', password='Pass1234!',
+            role='admin', is_staff=True, is_superuser=True,
+        )
+        self.regular_user = User.objects.create_user(
+            username='regular', email='regular@test.com', password='Pass1234!',
+            role='team',
+        )
+        self.url = reverse('tournament_list_create')
+
+        now = timezone.now()
+        self.draft = Tournament(title='Draft Cup', created_by=self.admin, status=Tournament.STATUS_DRAFT)
+        self.draft.save(skip_auto_status=True)
+
+        self.reg = Tournament(
+            title='Open Cup', created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            registration_start=now - timedelta(hours=1),
+            registration_end=now + timedelta(hours=5),
+            start_date=now + timedelta(days=2),
+            end_date=now + timedelta(days=5),
+        )
+        self.reg.save(skip_auto_status=True)
+
+        self.running = Tournament(
+            title='Running Cup', created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            start_date=now - timedelta(days=1),
+            end_date=now + timedelta(days=5),
+        )
+        self.running.save(skip_auto_status=True)
+
+    def test_admin_sees_drafts(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [t['title'] for t in resp.data]
+        self.assertIn('Draft Cup', titles)
+
+    def test_regular_user_does_not_see_draft(self):
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [t['title'] for t in resp.data]
+        self.assertNotIn('Draft Cup', titles)
+
+    def test_creator_sees_own_draft(self):
+        creator = User.objects.create_user(
+            username='creator', email='creator@test.com', password='Pass1234!',
+            role='organizer',
+        )
+        draft = Tournament(title='My Draft', created_by=creator, status=Tournament.STATUS_DRAFT)
+        draft.save(skip_auto_status=True)
+
+        self.client.force_authenticate(user=creator)
+        resp = self.client.get(self.url)
+        titles = [t['title'] for t in resp.data]
+        self.assertIn('My Draft', titles)
+
+    def test_filter_by_status(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.get(self.url, {'status': 'running'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(all(t['status'] == 'running' for t in resp.data))
+
+    def test_search_by_title(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.get(self.url, {'search': 'Open'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['title'], 'Open Cup')
+
+    def test_filter_registration_open(self):
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.get(self.url, {'registration_open': 'true'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(all(t['is_registration_open'] for t in resp.data))
+
+    def test_ordering_by_title(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.get(self.url, {'ordering': 'title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        titles = [t['title'] for t in resp.data]
+        self.assertEqual(titles, sorted(titles))
+
+    def test_unauthenticated_fails(self):
+        resp = self.client.get(self.url)
+        self.assertEqual(resp.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class TournamentRetrieveAPITests(APITestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='admin', email='admin@test.com', password='Pass1234!',
+            role='admin', is_staff=True, is_superuser=True,
+        )
+        self.regular_user = User.objects.create_user(
+            username='regular', email='regular@test.com', password='Pass1234!',
+            role='team',
+        )
+
+        self.draft = Tournament(title='Draft Cup', created_by=self.admin, status=Tournament.STATUS_DRAFT)
+        self.draft.save(skip_auto_status=True)
+
+        self.published = Tournament(
+            title='Published Cup', created_by=self.admin, status=Tournament.STATUS_REGISTRATION,
+            registration_start=timezone.now() - timedelta(hours=1),
+            registration_end=timezone.now() + timedelta(hours=5),
+            start_date=timezone.now() + timedelta(days=2),
+            end_date=timezone.now() + timedelta(days=5),
+        )
+        self.published.save(skip_auto_status=True)
+
+    def test_admin_can_retrieve_draft(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('tournament_detail', kwargs={'pk': self.draft.pk})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Draft Cup')
+
+    def test_regular_user_cannot_retrieve_draft(self):
+        self.client.force_authenticate(user=self.regular_user)
+        url = reverse('tournament_detail', kwargs={'pk': self.draft.pk})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_regular_user_can_retrieve_published(self):
+        self.client.force_authenticate(user=self.regular_user)
+        url = reverse('tournament_detail', kwargs={'pk': self.published.pk})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Published Cup')
+
+    def test_retrieve_has_computed_fields(self):
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('tournament_detail', kwargs={'pk': self.published.pk})
+        resp = self.client.get(url)
+        self.assertIn('registered_teams_count', resp.data)
+        self.assertIn('is_registration_open', resp.data)
+        self.assertIn('can_register', resp.data)
+        self.assertIn('is_creator', resp.data)
+        self.assertTrue(resp.data['is_creator'])
+
+    def test_is_creator_false_for_other_user(self):
+        self.client.force_authenticate(user=self.regular_user)
+        url = reverse('tournament_detail', kwargs={'pk': self.published.pk})
+        resp = self.client.get(url)
+        self.assertFalse(resp.data['is_creator'])
+
+
+class TournamentUpdateAPITests(APITestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='admin', email='admin@test.com', password='Pass1234!',
+            role='admin', is_staff=True, is_superuser=True,
+        )
+        self.organizer = User.objects.create_user(
+            username='organizer', email='organizer@test.com', password='Pass1234!',
+            role='organizer',
+        )
+        self.regular_user = User.objects.create_user(
+            username='regular', email='regular@test.com', password='Pass1234!',
+            role='team',
+        )
+
+        self.tournament = Tournament(
+            title='Cup', created_by=self.organizer,
+            status=Tournament.STATUS_REGISTRATION,
+            registration_start=timezone.now() - timedelta(hours=1),
+            registration_end=timezone.now() + timedelta(hours=5),
+            start_date=timezone.now() + timedelta(days=2),
+            end_date=timezone.now() + timedelta(days=5),
+        )
+        self.tournament.save(skip_auto_status=True)
+        self.url = reverse('tournament_detail', kwargs={'pk': self.tournament.pk})
+
+    def test_creator_can_update(self):
+        self.client.force_authenticate(user=self.organizer)
+        resp = self.client.patch(self.url, {'title': 'Updated Cup'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Updated Cup')
+
+    def test_admin_can_update(self):
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.patch(self.url, {'title': 'Admin Updated'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Admin Updated')
+
+    def test_other_user_cannot_update(self):
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.patch(self.url, {'title': 'Hacked'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_with_invalid_data_fails(self):
+        self.client.force_authenticate(user=self.organizer)
+        resp = self.client.patch(self.url, {'min_teams': 0}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_returns_read_representation(self):
+        self.client.force_authenticate(user=self.organizer)
+        resp = self.client.patch(self.url, {'title': 'Cup v2'}, format='json')
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('registered_teams_count', resp.data)
+        self.assertIn('is_creator', resp.data)
+
+
+class TournamentDeleteAPITests(APITestCase):
+
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username='admin', email='admin@test.com', password='Pass1234!',
+            role='admin', is_staff=True, is_superuser=True,
+        )
+        self.organizer = User.objects.create_user(
+            username='organizer', email='organizer@test.com', password='Pass1234!',
+            role='organizer',
+        )
+        self.regular_user = User.objects.create_user(
+            username='regular', email='regular@test.com', password='Pass1234!',
+            role='team',
+        )
+
+    def _make_tournament(self, **overrides):
+        defaults = {
+            'title': 'Cup',
+            'created_by': self.organizer,
+            'status': Tournament.STATUS_DRAFT,
+        }
+        defaults.update(overrides)
+        t = Tournament(**defaults)
+        t.save(skip_auto_status=True)
+        return t
+
+    def test_creator_can_delete(self):
+        t = self._make_tournament()
+        self.client.force_authenticate(user=self.organizer)
+        resp = self.client.delete(reverse('tournament_detail', kwargs={'pk': t.pk}))
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Tournament.objects.filter(pk=t.pk).exists())
+
+    def test_admin_can_delete(self):
+        t = self._make_tournament()
+        self.client.force_authenticate(user=self.admin)
+        resp = self.client.delete(reverse('tournament_detail', kwargs={'pk': t.pk}))
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_other_user_cannot_delete(self):
+        t = self._make_tournament(status=Tournament.STATUS_REGISTRATION)
+        self.client.force_authenticate(user=self.regular_user)
+        resp = self.client.delete(reverse('tournament_detail', kwargs={'pk': t.pk}))
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
