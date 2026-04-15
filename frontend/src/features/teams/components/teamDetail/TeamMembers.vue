@@ -22,11 +22,7 @@
         <ui-skeleton-loader :loading="props.loading">
           <template #skeleton>
             <div class="member-list">
-              <ui-card
-                v-for="i in 2"
-                :key="i"
-                style="display: flex; flex-direction: column; gap: 10px"
-              >
+              <ui-card v-for="i in 2" :key="i" class="card-item">
                 <template #header>
                   <div style="display: flex; justify-content: space-between; gap: 10px">
                     <ui-skeleton variant="rect" width="100%" />
@@ -40,7 +36,11 @@
           </template>
 
           <div class="member-list">
-            <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`">
+            <ui-card
+              class="card-item"
+              v-for="member in filteredMembers"
+              :key="`member-${member.id}`"
+            >
               <template #header>
                 <div style="display: flex; justify-content: space-between">
                   <p class="member-name">{{ member.username }}</p>
@@ -97,6 +97,31 @@ const filteredMembers = computed(() =>
 </script>
 
 <style scoped>
+.panel {
+  border: 1px solid var(--line-soft);
+  height: 100%;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+}
+
 .card-item {
   background-color: var(--muted);
   color: var(--muted-foreground);
@@ -140,7 +165,6 @@ const filteredMembers = computed(() =>
 
 .member-name {
   font-weight: 700;
-  color: var(--ink-900);
 }
 
 .member-email {

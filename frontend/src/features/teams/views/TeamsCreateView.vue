@@ -5,7 +5,7 @@
         <p class="section-eyebrow">Teams</p>
         <h1 class="section-title">Create new team</h1>
         <p class="section-subtitle">Create a team and optionally add initial members.</p>
-        <ui-button asLink class="back-link" variant="outline" size="sm" to="/teams"
+        <ui-button asLink class="back-link" variant="secondary" size="sm" to="/teams"
           >Back to teams list</ui-button
         >
       </template>
@@ -47,17 +47,11 @@
           <span>Team visibility</span>
           <div class="visibility-control">
             <span class="visibility-label">Private</span>
-            <button
-              type="button"
-              class="visibility-switch"
-              role="switch"
+            <ui-switch
+              v-model="form.is_public"
               :aria-checked="form.is_public ? 'true' : 'false'"
               :aria-label="`Team visibility: ${form.is_public ? 'Public' : 'Private'}`"
-              @click="toggleVisibility"
-              @keydown="onVisibilityKeydown"
-            >
-              <span class="switch-knob" :class="{ 'is-public': form.is_public }"></span>
-            </button>
+            />
             <span class="visibility-label">Public</span>
           </div>
           <small v-if="createTeamError?.details.is_public" class="text-error">{{
@@ -137,6 +131,7 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { useProfile, useUsers } from '@/queries/accounts'
 import UiSelect from '@/components/UiSelect.vue'
 import { parseError } from '@/api'
+import UiSwitch from '@/components/UiSwitch.vue'
 
 const router = useRouter()
 const { showNotification, hideNotification } = useNotification()
@@ -173,29 +168,6 @@ const createCandidateUsers = computed(() => {
     return [u.username, u.email, u.full_name || ''].join(' ').toLowerCase()
   })
 })
-
-const toggleVisibility = () => {
-  form.value.is_public = !form.value.is_public
-}
-
-const onVisibilityKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'ArrowLeft') {
-    event.preventDefault()
-    form.value.is_public = false
-    return
-  }
-
-  if (event.key === 'ArrowRight') {
-    event.preventDefault()
-    form.value.is_public = true
-    return
-  }
-
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault()
-    toggleVisibility()
-  }
-}
 
 const { data: users, isLoading: isLoadingUsers, error: usersError, isLoadingError } = useUsers()
 const getUsersError = computed(() => parseError(usersError.value))
@@ -258,42 +230,8 @@ const handleFormSubmit = () => {
 }
 
 .visibility-label {
-  color: var(--ink-800);
   font-size: 0.86rem;
   user-select: none;
-}
-
-.visibility-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  width: 3rem;
-  height: 1.7rem;
-  padding: 0.17rem;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: #fff;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.visibility-switch:focus-visible {
-  outline: 2px solid var(--brand-500);
-  outline-offset: 2px;
-}
-
-.switch-knob {
-  width: 1.2rem;
-  height: 1.2rem;
-  border-radius: 999px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  transform: translateX(0);
-  transition: transform 180ms ease;
-}
-
-.switch-knob.is-public {
-  transform: translateX(1.3rem);
 }
 
 @media (max-width: 760px) {

@@ -17,7 +17,7 @@
               <ui-skeleton variant="rect" width="108px" height="30px" />
             </template>
 
-            <span class="meta-pill">Total teams: {{ teams?.length ?? '0' }}</span>
+            <ui-badge>Total teams: {{ teams?.length ?? '0' }}</ui-badge>
           </ui-skeleton-loader>
         </div>
       </template>
@@ -40,6 +40,7 @@ import TeamsOtherTeams from '../components/teamsView/TeamsOtherTeams.vue'
 import { useTeams } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
+import UiBadge from '@/components/UiBadge.vue'
 
 const { data: teams, isLoading: isLoadingTeams } = useTeams()
 </script>
@@ -59,14 +60,5 @@ const { data: teams, isLoading: isLoadingTeams } = useTeams()
 .manage-link {
   display: inline-flex;
   text-decoration: none;
-}
-
-.meta-pill {
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 999px;
-  padding: 0.33rem 0.7rem;
-  font-size: 0.84rem;
-  color: var(--ink-700);
-  background: rgba(255, 255, 255, 0.8);
 }
 </style>

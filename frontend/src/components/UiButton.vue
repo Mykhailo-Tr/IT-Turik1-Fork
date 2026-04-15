@@ -14,7 +14,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
-export type Variant = 'default' | 'outline' | 'outline-accent' | 'ghost' | 'danger' | 'warning'
+export type Variant = 'default' | 'secondary' | 'ghost' | 'danger' | 'warning'
 
 export type Size = 'xs' | 'sm' | 'md' | 'lg'
 
@@ -32,9 +32,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const variants: Record<Variant, string> = {
-  default: 'default-btn',
-  outline: 'outline-btn',
-  'outline-accent': 'outline-accent-btn',
+  default: 'primary-btn',
+  secondary: 'secondary-btn',
   ghost: 'ghost-btn',
   danger: 'danger-btn',
   warning: 'warning-btn',
@@ -72,12 +71,13 @@ const sizeClass = computed(() => sizes[props.size])
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 0;
   gap: 0.4rem;
   font: inherit;
   font-weight: 700;
   border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.12);
-  color: black;
+  background: var(--secondary);
+  color: var(--secondary-foreground);
   cursor: pointer;
   outline: none;
   text-decoration: none;
@@ -90,11 +90,7 @@ const sizeClass = computed(() => sizes[props.size])
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
-}
-
-.btn:hover {
-  background: rgba(185, 185, 185, 0.15);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .btn:disabled {
@@ -102,55 +98,64 @@ const sizeClass = computed(() => sizes[props.size])
   cursor: not-allowed;
 }
 
-.default-btn {
+.primary-btn {
   border: none;
-  color: white;
-  background: linear-gradient(120deg, var(--brand-600), var(--brand-500));
+  color: var(--primary-foreground);
+  background: linear-gradient(120deg, var(--primary), var(--brand-500));
 }
 
-.default-btn:hover {
+.primary-btn:hover {
   border: none;
-  background: linear-gradient(120deg, var(--brand-600), var(--brand-500));
+  background: linear-gradient(120deg, var(--primary), var(--brand-500));
   opacity: 0.75;
 }
 
-.outline-btn,
-.outline-accent-btn {
-  border: 1px solid var(--line-strong);
+.secondary-btn {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
 }
 
-.outline-accent-btn:active,
-.outline-accent-btn:hover {
-  color: var(--brand-700);
-  background: rgba(20, 184, 165, 0.058);
+.secondary-btn:hover {
+  background: color-mix(in oklab, var(--secondary) 70%, transparent);
+}
+
+.ghost-btn {
+  border: 1px solid;
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.ghost-btn:hover {
+  background: color-mix(in oklab, var(--primary) 20%, transparent);
 }
 
 .danger-btn {
-  border: 1px solid #dc2626;
-  background: #fee2e2;
-  color: #991b1b;
+  border: 1px solid;
+  background: color-mix(in oklab, var(--destructive) 10%, transparent);
+  color: var(--destructive);
   border-radius: 12px;
 }
 
 .danger-btn:focus {
-  box-shadow: 0 0 0 3px rgb(148 13 13 / 18%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 20%, transparent);
 }
 
 .danger-btn:hover {
-  background: #f5cdcd;
+  background: color-mix(in oklab, var(--destructive) 20%, transparent);
 }
 
 .warning-btn {
-  border: 1px solid #d97706;
-  background: #fef3c7;
-  color: #92400e;
+  border: 1px solid;
+  background: color-mix(in oklab, var(--warning) 10%, transparent);
+  color: var(--warning);
 }
 
 .warning-btn:focus {
-  box-shadow: 0 0 0 3px rgb(148 118 13 / 18%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 20%, transparent);
 }
 
 .warning-btn:hover {
-  background: #ffea96;
+  background: color-mix(in oklab, var(--warning) 20%, transparent);
 }
 </style>

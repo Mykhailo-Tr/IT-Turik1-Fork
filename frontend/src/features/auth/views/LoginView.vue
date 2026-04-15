@@ -126,7 +126,6 @@ onMounted(() => queryClient.resetQueries({ queryKey: accountKeys.profile() }))
 
 @media (max-width: 640px) {
   .auth-card {
-    padding: 1.3rem;
     border-radius: 18px;
   }
 }

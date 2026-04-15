@@ -1,8 +1,10 @@
 <template>
   <nav class="main-nav">
     <div class="nav-container">
-      <router-link to="/" class="brand">TournamentOS</router-link>
-
+      <div style="display: flex; justify-content: center; align-items: center; gap: 10px">
+        <router-link to="/" class="brand">TournamentOS</router-link>
+        <switch-theme-button />
+      </div>
       <div class="nav-links">
         <template v-if="!user">
           <router-link to="/login" :class="navItemClass('login')">Login</router-link>
@@ -33,6 +35,7 @@ import { useRoute, useRouter } from 'vue-router'
 import UiButton from '../UiButton.vue'
 import { useUserStore } from '@/stores/user'
 import { useProfile } from '@/queries/accounts'
+import SwitchThemeButton from './SwitchThemeButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,8 +79,8 @@ const isSectionActive = (section: Section) => {
   right: 0;
   z-index: 10;
   backdrop-filter: blur(10px);
-  background: rgba(248, 250, 252, 0.8);
-  border-bottom: 1px solid var(--line-soft);
+  background: color-mix(in srgb, var(--background) 80%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
 }
 
 .brand {
@@ -85,7 +88,7 @@ const isSectionActive = (section: Section) => {
   font-size: 1.2rem;
   font-weight: 700;
   text-decoration: none;
-  color: var(--ink-900);
+  color: var(--foreground);
 }
 
 .nav-container {
@@ -107,8 +110,7 @@ const isSectionActive = (section: Section) => {
 }
 
 .nav-item {
-  border: 100%;
-  color: var(--ink-700);
+  color: var(--foreground);
   text-decoration: none;
   font-weight: 700;
   padding: 0.45rem 0.85rem;
@@ -123,16 +125,16 @@ const isSectionActive = (section: Section) => {
 }
 
 .nav-item:hover {
-  background: rgba(15, 23, 42, 0.06);
+  background: var(--secondary);
 }
 
 .nav-item.active {
-  background: rgba(15, 23, 42, 0.1);
-  color: var(--ink-900);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
 }
 
 .nav-cta {
-  color: white;
+  color: var(--primary-foreground);
   background: linear-gradient(120deg, var(--brand-700), var(--brand-500));
 }
 
@@ -141,7 +143,7 @@ const isSectionActive = (section: Section) => {
 }
 
 .nav-cta.active {
-  color: white;
+  color: var(--primary-foreground);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
 </style>

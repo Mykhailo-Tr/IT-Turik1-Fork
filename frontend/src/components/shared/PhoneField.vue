@@ -66,23 +66,53 @@ watch(phoneUiValue, (newValue) => {
 .phone-input {
   border-radius: 10px;
   width: 100%;
+  background: var(--input);
+  border-color: var(--border);
+  color: var(--foreground) !important;
+}
+
+.phone-input:focus-within {
+  outline: none;
+  border-color: transparent;
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 :deep(.vti) {
   border-radius: 12px;
-  border: 1px solid var(--line-strong);
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--input);
   box-shadow: none;
+}
+
+:deep(.vti__dropdown:hover) {
+  background-color: inherit;
+  border-radius: 12px;
+}
+
+:deep(.vti__dropdown-list) {
+  background: var(--popover) !important;
+  border-color: var(--border);
+}
+
+:deep(.vti__search_box_container) {
+  padding: 0.5rem;
 }
 
 :deep(.vti__input) {
   font: inherit;
   padding: 0.75rem 0.85rem;
   border-radius: 10px;
+  background: var(--input);
+  color: var(--foreground);
+  width: 100%;
+}
+
+:deep(.vti__dropdown-item.highlighted) {
+  background-color: var(--muted);
 }
 
 :deep(.vti:focus-within) {
-  border-color: var(--brand-500);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 </style>

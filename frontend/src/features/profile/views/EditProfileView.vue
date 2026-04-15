@@ -105,7 +105,7 @@
           </ui-button>
           <ChangePasswordModal :disabled="isLoadingError || isLoading" />
           <ui-button
-            variant="outline"
+            variant="secondary"
             :disabled="isUpdatingProfile || isLoadingError || isLoading"
             @click="goBackToProfile"
             >Cancel</ui-button
@@ -335,7 +335,7 @@ const goBackToProfile = () => {
 .icon-close {
   border: 1px solid var(--line-strong);
   background: #fff;
-  color: var(--ink-700);
+  color: var(--color-gray-700);
   width: 2.1rem;
   height: 2.1rem;
   border-radius: 10px;

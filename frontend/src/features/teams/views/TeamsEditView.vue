@@ -18,7 +18,11 @@
 
       <template #footer>
         <div class="hero-actions">
-          <ui-button asLink variant="outline" size="sm" :to="team ? `/teams/${team.id}` : '/teams'"
+          <ui-button
+            asLink
+            variant="secondary"
+            size="sm"
+            :to="team ? `/teams/${team.id}` : '/teams'"
             >Back to team</ui-button
           >
         </div>
@@ -65,12 +69,6 @@ watchEffect(() => {
 <style scoped>
 .teams-edit-page {
   gap: 1.2rem;
-}
-
-.hero-card,
-.state-card,
-.panel {
-  padding: 1.2rem;
 }
 
 .hero-card {

@@ -23,14 +23,15 @@
       v-model="deleteConfirmInput"
       :placeholder="expectedDeleteText"
       :disabled="isDeleting"
+      style="width: 100%"
     />
 
     <p v-if="deleteError">{{ deleteError }}</p>
 
     <template #footer>
       <ui-button
-        variant="outline"
         size="sm"
+        variant="secondary"
         :disabled="isDeleting"
         @click="isDeleteModalOpen = false"
       >
@@ -99,3 +100,9 @@ const handleDeleteAccount = async () => {
   })
 }
 </script>
+
+<style>
+.modal-text {
+  margin-bottom: 0.4rem;
+}
+</style>

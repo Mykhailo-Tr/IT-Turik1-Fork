@@ -85,7 +85,6 @@ const handleSubmit = () => {
 
 @media (max-width: 640px) {
   .forgot-card {
-    padding: 1.3rem;
     border-radius: 18px;
   }
 }

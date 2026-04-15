@@ -19,7 +19,7 @@
 
               <ui-button
                 style="margin-left: auto"
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 @click="close"
                 aria-label="Close"
@@ -29,7 +29,7 @@
             </div>
           </template>
 
-          <div class="modal-body">
+          <div>
             <slot />
           </div>
 
@@ -98,7 +98,8 @@ onUnmounted(() => {
 }
 
 .modal-card {
-  background: #fff;
+  background: var(--card);
+  color: var(--card-foreground);
   overflow: hidden;
 }
 
@@ -106,7 +107,6 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.25rem 1.5rem 0;
 }
 
 .modal-close {
@@ -118,7 +118,7 @@ onUnmounted(() => {
   border-radius: 7px;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: color-mix(in srgb, var(--foreground) 45%, transparent);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -126,16 +126,11 @@ onUnmounted(() => {
 }
 
 .modal-close:hover {
-  background: #f1f5f9;
-  color: #475569;
-}
-
-.modal-body {
-  padding: 1rem 1.5rem;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 72%, transparent);
 }
 
 .modal-footer {
-  padding: 0 1.5rem 1.25rem;
   display: flex;
   justify-content: flex-end;
   gap: 0.6rem;
