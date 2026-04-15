@@ -102,12 +102,6 @@ onMounted(() => queryClient.resetQueries({ queryKey: accountKeys.profile() }))
   gap: 0.9rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .feedback {
   margin: 0.6rem 0 0;
 }

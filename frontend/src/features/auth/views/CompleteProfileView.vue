@@ -190,12 +190,6 @@ const handleSubmit = async () => {
   gap: 0.9rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .full-width {
   grid-column: 1 / -1;
 }

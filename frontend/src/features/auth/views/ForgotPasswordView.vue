@@ -72,12 +72,6 @@ const handleSubmit = () => {
   padding: 2rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .forgot-form {
   display: grid;
   gap: 0.9rem;

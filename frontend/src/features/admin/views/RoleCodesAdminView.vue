@@ -248,12 +248,6 @@ const formatDateTime = (value: string | number | Date) => {
   margin-bottom: 1rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .generate-btn {
   height: fit-content;
 }
