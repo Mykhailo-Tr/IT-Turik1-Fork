@@ -83,7 +83,7 @@
           <loading-icon v-if="isSavingChanges" />
           Save changes
         </ui-button>
-        <ui-button asLink variant="outline" :to="`/teams/${team?.id}`" :disabled="props.loading"
+        <ui-button asLink variant="secondary" :to="`/teams/${team?.id}`" :disabled="props.loading"
           >Cancel</ui-button
         >
       </div>

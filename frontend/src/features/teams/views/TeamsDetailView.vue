@@ -52,7 +52,7 @@
 
       <template #footer>
         <div class="hero-actions">
-          <ui-button asLink variant="outline" size="sm" to="/teams">Back to teams</ui-button>
+          <ui-button asLink variant="secondary" size="sm" to="/teams">Back to teams</ui-button>
         </div>
       </template>
     </ui-card>
@@ -119,15 +119,6 @@ const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
 </script>
 
 <style scoped>
-.hero-card {
-  padding: 1.2rem;
-}
-
-.hero-card {
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.14), rgba(15, 23, 42, 0.03)), #fff;
-  border: 1px solid rgba(13, 148, 136, 0.22);
-}
-
 .hero-top {
   display: flex;
   justify-content: space-between;

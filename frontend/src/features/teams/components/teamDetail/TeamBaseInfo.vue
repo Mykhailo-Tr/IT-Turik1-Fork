@@ -236,17 +236,13 @@ const leaveTeam = () => {
   border: 1px solid var(--line-soft);
   border-radius: 12px;
   padding: 0.7rem;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .info-item span {
   display: block;
-  color: var(--ink-500);
   font-size: 0.8rem;
-}
-
-.info-item strong {
-  color: var(--ink-900);
 }
 
 .info-actions {
@@ -267,7 +263,7 @@ const leaveTeam = () => {
 .modal-text {
   margin: 0 0 0.75rem;
   font-size: 0.9rem;
-  color: var(--ink-700);
+  color: var(--color-gray-700);
   line-height: 1.55;
 }
 

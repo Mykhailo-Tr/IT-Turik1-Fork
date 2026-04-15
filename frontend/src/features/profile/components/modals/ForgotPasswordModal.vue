@@ -1,5 +1,5 @@
 <template>
-  <ui-button v-bind="$attrs" variant="outline" @click="isOpen = true">Forgot Password</ui-button>
+  <ui-button v-bind="$attrs" variant="secondary" @click="isOpen = true">Forgot Password</ui-button>
 
   <ui-modal v-model="isOpen">
     <template #title>

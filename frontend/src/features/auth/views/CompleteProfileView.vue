@@ -210,10 +210,6 @@ const handleSubmit = async () => {
 }
 
 @media (max-width: 760px) {
-  .complete-card {
-    padding: 1.3rem;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
   }

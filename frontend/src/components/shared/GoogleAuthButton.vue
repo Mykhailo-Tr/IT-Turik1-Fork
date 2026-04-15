@@ -4,7 +4,7 @@
       <span>{{ dividerLabel }}</span>
     </div>
     <div ref="googleButtonRef" class="google-slot"></div>
-    <p v-if="errorMessage" class="text-error text-center feedback">{{ errorMessage }}</p>
+    <p v-if="errorMessage" class="text-error feedback">{{ errorMessage }}</p>
   </div>
 </template>
 
@@ -72,7 +72,50 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.google-slot {
+  display: flex;
+  justify-content: center;
+
+  button {
+    background-color: var(--secondary);
+    color: var(--secondary-foreground);
+    border-color: var(--border);
+  }
+}
+
 .feedback {
   margin-top: 0.6rem;
+  text-align: center;
+}
+
+.divider-line {
+  width: 100%;
+  justify-content: space-between;
+  margin: 1.1rem 0 0.7rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.divider-line::before,
+.divider-line::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+}
+
+.divider-line::before {
+  margin-right: 0.6rem;
+}
+
+.divider-line::after {
+  margin-left: 0.6rem;
+}
+
+.divider-line span {
+  width: max-content;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
 }
 </style>

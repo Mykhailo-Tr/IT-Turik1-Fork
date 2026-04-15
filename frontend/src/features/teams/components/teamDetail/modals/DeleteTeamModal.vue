@@ -14,12 +14,17 @@
       to confirm.
     </p>
 
-    <ui-input v-model="deleteConfirmInput" :placeholder="props.team?.name" :disabled="isDeleting" />
+    <ui-input
+      v-model="deleteConfirmInput"
+      :placeholder="props.team?.name"
+      :disabled="isDeleting"
+      style="width: 100%"
+    />
 
     <p v-if="deleteError" class="text-error">{{ deleteError }}</p>
 
     <template #footer>
-      <ui-button variant="outline" size="sm" :disabled="isDeleting" @click="closeDeleteModal">
+      <ui-button variant="secondary" size="sm" :disabled="isDeleting" @click="closeDeleteModal">
         Cancel
       </ui-button>
 

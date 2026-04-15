@@ -237,7 +237,6 @@ const handleRegister = () => {
 
 @media (max-width: 760px) {
   .register-card {
-    padding: 1.3rem;
     border-radius: 18px;
   }
 

@@ -22,7 +22,7 @@
     <ui-skeleton-loader :loading="inboxLoading">
       <template #skeleton>
         <div class="team-grid">
-          <ui-card v-for="i in 2" :key="i" style="display: flex; flex-direction: column; gap: 10px">
+          <ui-card class="team-item" v-for="i in 2" :key="i">
             <template #header>
               <div class="team-meta">
                 <ui-skeleton variant="rect" width="100%" />
@@ -71,7 +71,7 @@
               </ui-button>
               <ui-button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 :disabled="loadingIds.has(invitation.id)"
                 @click="respondToInvitation(invitation.id, 'decline')"
               >
@@ -159,6 +159,8 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
 
 .team-item {
   padding: 0.95rem;
+  background: var(--muted);
+  color: var(--muted-foreground);
 }
 
 .team-meta {

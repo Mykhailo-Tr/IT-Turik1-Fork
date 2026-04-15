@@ -39,9 +39,9 @@ const variantClass = computed(() => `skeleton--${props.variant}`)
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(224, 224, 224, 0.7) 0%,
-    rgba(245, 245, 245, 0.9) 50%,
-    rgba(224, 224, 224, 0.7) 100%
+    color-mix(in srgb, var(--foreground) 10%, transparent) 0%,
+    color-mix(in srgb, var(--foreground) 16%, transparent) 50%,
+    color-mix(in srgb, var(--foreground) 10%, transparent) 100%
   );
   background-size: 200% 100%;
   border-radius: 4px;

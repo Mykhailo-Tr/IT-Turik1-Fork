@@ -5,7 +5,7 @@
         <h3>Edit team</h3>
         <p class="text-muted">Update team profile and manage members in edit workspace.</p>
       </div>
-      <ui-button asLink variant="outline" size="sm" :to="`/teams/${team?.id}/edit`"
+      <ui-button asLink variant="secondary" size="sm" :to="`/teams/${team?.id}/edit`"
         >Edit team</ui-button
       >
     </div>
@@ -91,10 +91,10 @@ const emit = defineEmits<{
   gap: 0.5rem;
   padding: 0.55rem 0.8rem;
   margin: 0.2rem 0 0;
-  background: rgba(220, 38, 38, 0.06);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
   border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: 8px;
-  color: #991b1b;
+  color: color-mix(in srgb, var(--destructive) 80%, transparent);
   font-size: 0.78rem;
   font-weight: 800;
   letter-spacing: 0.07em;
@@ -112,7 +112,7 @@ const emit = defineEmits<{
   border: 1px solid rgba(220, 38, 38, 0.22);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(254, 226, 226, 0.18);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
 .danger-zone-box .manage-row {
@@ -142,6 +142,6 @@ const emit = defineEmits<{
 }
 
 .manage-row.danger h3 {
-  color: #991b1b;
+  color: color-mix(in srgb, var(--destructive) 80%, transparent);
 }
 </style>

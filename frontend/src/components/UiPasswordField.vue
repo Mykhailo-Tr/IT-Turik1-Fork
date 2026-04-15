@@ -16,9 +16,8 @@
       :disabled="disabled"
       type="button"
       :class="['password-toggle', { invalid: isInvalid }]"
-      @click="isVisible = !isVisible"
     >
-      <EyeIcon class="toggle-icon" :is-crossed="isVisible" />
+      <EyeIcon class="toggle-icon" @click="isVisible = !isVisible" :is-crossed="isVisible" />
     </button>
   </div>
 </template>
@@ -68,6 +67,7 @@ const onInput = (e: Event) => {
   transform: translateY(-50%);
   background: none;
   border: none;
+  color: inherit;
   cursor: pointer;
   padding: 4px;
   display: flex;
@@ -75,11 +75,11 @@ const onInput = (e: Event) => {
 }
 
 .password-toggle.invalid {
-  color: rgba(220, 38, 38, 0.7);
+  color: var(--destructive);
 }
 
 .password-toggle.is-invalid .eye-icon {
-  color: rgba(220, 38, 38, 0.7) !important;
+  color: var(--destructive) !important;
 }
 
 .password-toggle:disabled {
