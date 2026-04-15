@@ -2,7 +2,7 @@
   <ui-button
     size="sm"
     variant="warning"
-    :disabled="visibilityLoading"
+    :disabled="isChangingVisibility"
     @click="toggleVisibilityModal"
   >
     Change visibility
@@ -10,8 +10,8 @@
 
   <ui-modal
     v-model="isVisibilityModalOpen"
-    :close-on-backdrop="!visibilityLoading"
-    :show-close="!visibilityLoading"
+    :close-on-backdrop="!isChangingVisibility"
+    :show-close="!isChangingVisibility"
   >
     <template #title>
       <h3>Change team visibility</h3>
@@ -30,7 +30,7 @@
           name="visibility"
           :value="true"
           :checked="selectedVisibility === true"
-          :disabled="visibilityLoading"
+          :disabled="isChangingVisibility"
           @change="selectedVisibility = true"
         />
         <div class="visibility-option-content">
@@ -48,7 +48,7 @@
           name="visibility"
           :value="false"
           :checked="selectedVisibility === false"
-          :disabled="visibilityLoading"
+          :disabled="isChangingVisibility"
           @change="selectedVisibility = false"
         />
         <div class="visibility-option-content">
@@ -72,14 +72,16 @@
       </span>
     </div>
 
-    <p v-if="visibilityError" class="text-error modal-error">{{ visibilityError }}</p>
+    <p v-if="changeVisibilityError?.message" class="text-error modal-error">
+      {{ changeVisibilityError.message }}
+    </p>
 
     <template #footer>
       <ui-button
         size="sm"
         variant="secondary"
         type="button"
-        :disabled="visibilityLoading"
+        :disabled="isChangingVisibility"
         @click="toggleVisibilityModal"
       >
         Cancel
@@ -88,11 +90,11 @@
         variant="warning"
         size="sm"
         type="button"
-        :disabled="visibilityLoading || selectedVisibility === team?.is_public"
+        :disabled="isChangingVisibility || selectedVisibility === team?.is_public"
         @click="confirmChangeVisibility"
       >
-        <loading-icon v-if="visibilityLoading" size="sm" />
-        {{ visibilityLoading ? 'Saving...' : 'Confirm change' }}
+        <loading-icon v-if="isChangingVisibility" size="sm" />
+        Confirm change
       </ui-button>
     </template>
   </ui-modal>
@@ -109,8 +111,9 @@ import EyeInCircle from '@/icons/EyeInCircle.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import LockIcon from '@/icons/LockIcon.vue'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useChangeTeamVisibility } from '@/queries/teams'
+import { parseError } from '@/api'
 
 interface Props {
   team?: GetTeamInfoResponse
@@ -124,20 +127,22 @@ const props = defineProps<Props>()
 const { showNotification, hideNotification } = useNotification()
 
 const selectedVisibility = ref(props.team?.is_public)
-const visibilityLoading = ref(false)
-const visibilityError = ref<string | null>(null)
 const isVisibilityModalOpen = ref(false)
 
 const toggleVisibilityModal = () => {
   isVisibilityModalOpen.value = !isVisibilityModalOpen.value
 }
 
-const { mutate: changeTeamVisibility } = useChangeTeamVisibility()
+const {
+  mutate: changeTeamVisibility,
+  isPending: isChangingVisibility,
+  error,
+} = useChangeTeamVisibility()
+const changeVisibilityError = computed(() => parseError(error.value))
 
 const confirmChangeVisibility = async () => {
-  if (!props.team || !selectedVisibility.value) return
+  if (!props.team?.id || selectedVisibility.value === undefined) return
 
-  visibilityLoading.value = true
   hideNotification()
 
   changeTeamVisibility(
