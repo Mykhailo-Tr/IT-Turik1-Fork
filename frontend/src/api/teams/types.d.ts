@@ -42,8 +42,20 @@ export type CreateTeamResponse = GetTeamInfoResponse
 // GetTeams
 export type GetTeamsResponse = GetTeamInfoResponse[]
 
+// GetTeamJoinRequests
+export type GetTeamJoinRequestsArgs = {
+  teamId: TeamId
+}
+export type GetTeamJoinRequestsResponse = JoinRequest[]
+
 // GetInvitations
 export type GetInvitationsResponse = Omit<Invitation, 'user'>[]
+
+// GetTeamInvitations
+export type GetTeamInvitationsArgs = {
+  teamId: TeamId
+}
+export type GetTeamInvitationsResponse = Invitation[]
 
 // RespondToInvitation
 export type RespondToInvitationAction = 'accept' | 'decline'

@@ -4,6 +4,8 @@ import type { TeamId, UserRole } from '@/api/dbTypes'
 export const teamKeys = {
   allTeams: () => ['teams'],
   team: (id: TeamId) => ['teams', id],
+  'join-requests': (id: TeamId) => ['team-join-requests', id],
+  'team-invitations': (id: TeamId) => ['team-invitations', id],
 }
 
 export const accountKeys = {

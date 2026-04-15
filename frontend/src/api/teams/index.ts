@@ -9,6 +9,10 @@ import type {
   GetInvitationsResponse,
   GetTeamInfoArgs,
   GetTeamInfoResponse,
+  GetTeamInvitationsArgs,
+  GetTeamInvitationsResponse,
+  GetTeamJoinRequestsResponse,
+  GetTeamJoinRequestsArgs,
   GetTeamsResponse,
   LeaveTeamArgs,
   ManageJoinRequestArgs,
@@ -38,8 +42,22 @@ export const teamsService = {
     return data
   },
 
+  async getTeamJoinRequests(args: GetTeamJoinRequestsArgs) {
+    const { data } = await apiClient.get<GetTeamJoinRequestsResponse>(
+      `${prefix}/${args.teamId}/join-requests-list`,
+    )
+    return data
+  },
+
   async getInvitations() {
     const { data } = await apiClient.get<GetInvitationsResponse>(`${prefix}/invitations/`)
+    return data
+  },
+
+  async getTeamInvitations(args: GetTeamInvitationsArgs) {
+    const { data } = await apiClient.get<GetTeamInvitationsResponse>(
+      `${prefix}/${args.teamId}/invitations`,
+    )
     return data
   },
 
