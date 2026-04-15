@@ -116,12 +116,6 @@ const filteredMembers = computed(() =>
   font-size: 1.15rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 12px;
-}
-
 .card-item {
   background-color: var(--muted);
   color: var(--muted-foreground);

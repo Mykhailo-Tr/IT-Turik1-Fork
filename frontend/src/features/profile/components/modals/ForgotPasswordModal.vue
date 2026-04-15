@@ -67,10 +67,4 @@ const handleRecoveryRequest = () => {
   display: grid;
   gap: 0.75rem;
 }
-
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
 </style>

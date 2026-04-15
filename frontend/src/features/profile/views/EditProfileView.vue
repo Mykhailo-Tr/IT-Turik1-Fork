@@ -294,12 +294,6 @@ const goBackToProfile = () => {
   gap: 1rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .actions {
   display: flex;
   gap: 0.6rem;

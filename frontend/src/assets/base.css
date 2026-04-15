@@ -162,6 +162,12 @@ a {
   font-weight: 600;
 }
 
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
 .notice {
   margin-top: 1rem;
   border-radius: 12px;

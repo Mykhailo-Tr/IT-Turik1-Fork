@@ -274,12 +274,6 @@ const addMember = () => {
   font-size: 1.15rem;
 }
 
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .member-row {
   background-color: var(--muted);
   color: var(--muted-foreground);

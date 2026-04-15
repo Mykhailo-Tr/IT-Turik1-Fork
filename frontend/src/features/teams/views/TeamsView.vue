@@ -1,5 +1,5 @@
 <template>
-  <section class="page-shell teams-page">
+  <section class="page-shell">
     <ui-card>
       <template #header>
         <p class="section-eyebrow">Teams</p>
@@ -46,10 +46,6 @@ const { data: teams, isLoading: isLoadingTeams } = useTeams()
 </script>
 
 <style scoped>
-.teams-page {
-  gap: 1.2rem;
-}
-
 .hero-actions {
   display: flex;
   gap: 0.6rem;

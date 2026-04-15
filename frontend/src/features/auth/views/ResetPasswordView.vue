@@ -96,12 +96,6 @@ const handleReset = () => {
 </script>
 
 <style scoped>
-.form-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
 .reset-card {
   width: min(100%, 520px);
   padding: 2rem;
