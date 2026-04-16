@@ -140,10 +140,6 @@ applyTheme()
 }
 
 @media (max-width: 680px) {
-  .app-shell {
-    --nav-offset: 122px;
-  }
-
   .nav-container {
     align-items: flex-start;
     flex-direction: column;

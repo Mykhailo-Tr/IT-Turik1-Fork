@@ -101,12 +101,12 @@ const sizeClass = computed(() => sizes[props.size])
 .primary-btn {
   border: none;
   color: var(--primary-foreground);
-  background: linear-gradient(120deg, var(--primary), var(--brand-500));
+  background: var(--primary);
 }
 
 .primary-btn:hover {
   border: none;
-  background: linear-gradient(120deg, var(--primary), var(--brand-500));
+  background: var(--primary);
   opacity: 0.75;
 }
 
