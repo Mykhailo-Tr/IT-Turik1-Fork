@@ -4,31 +4,28 @@
       <p class="section-eyebrow">Email Verification</p>
       <h1 class="section-title activate-title">Account activation</h1>
 
-      <p v-if="status === 'loading'" class="text-muted status">Checking your activation token...</p>
+      <p v-if="isPending" class="text-muted status">Checking your activation token...</p>
 
-      <div v-if="status === 'success'" class="notice success">
-        {{ message }}
+      <div v-if="isSuccess" class="notice success">
+        Account was successfully activated
         <router-link to="/login">Go to sign in</router-link>
-      </div>
-
-      <div v-if="status === 'error'" class="notice error">
-        {{ message }}
       </div>
     </ui-card>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import UiCard from '@/components/UiCard.vue'
 import { useActivateAccount } from '@/queries/accounts'
+import { useNotification } from '@/composables/useNotification'
+import { parseError } from '@/api'
 
 const route = useRoute()
-const status = ref('loading')
-const message = ref('')
+const { showNotification } = useNotification()
 
-const { mutate: activate } = useActivateAccount()
+const { mutate: activate, isPending, isSuccess } = useActivateAccount()
 
 onMounted(async () => {
   const { uid, token } = route.params
@@ -38,13 +35,9 @@ onMounted(async () => {
   activate(
     { uid: uid as string, token: token as string },
     {
-      onSuccess: () => {
-        status.value = 'success'
-        message.value = data.message
-      },
-      onError: () => {
-        status.value = 'error'
-        message.value = 'Server is unavailable'
+      onError: (error) => {
+        const parsedError = parseError(error)
+        showNotification(parsedError?.message, 'error')
       },
     },
   )
