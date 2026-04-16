@@ -23,8 +23,8 @@ const props = withDefaults(defineProps<Props>(), { variant: 'gray' })
 }
 
 .badge--green {
-  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border-color: color-mix(in srgb, #0d9488 40%, transparent);
+  background: color-mix(in srgb, #0d9488 10%, transparent);
   color: var(--primary);
 }
 

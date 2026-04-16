@@ -136,18 +136,16 @@ onUnmounted(() => {
   gap: 0.6rem;
 }
 
-.modal-enter-active {
-  transition: opacity 0.2s ease;
-}
+.modal-enter-active,
 .modal-leave-active {
-  transition: opacity 0.18s ease;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
 }
+
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
-}
-.modal-enter-from .modal-card {
-  transform: scale(0.98);
-  transition: transform 0.2s ease;
+  transform: translateY(4px);
 }
 </style>

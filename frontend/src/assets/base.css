@@ -214,8 +214,22 @@ a {
   line-height: 1.2;
 }
 
-@media (max-width: 760px) {
-  .page-shell.centered {
-    min-height: calc(100vh - 130px);
-  }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 999px;
+  border: 2px solid var(--background);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--secondary) var(--background);
 }
