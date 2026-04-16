@@ -305,7 +305,7 @@ watch([selectedHour, selectedMinute], () => {
 }
 
 .col-item:hover {
-  background: var(--accent);
+  background: color-mix(in srgb, var(--primary) 20%, transparent);
 }
 .col-item.active {
   background: var(--primary);
