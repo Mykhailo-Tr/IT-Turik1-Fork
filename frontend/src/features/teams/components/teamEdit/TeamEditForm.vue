@@ -2,7 +2,7 @@
   <ui-card class="panel form-panel">
     <header class="panel-head">
       <h2>Team profile settings</h2>
-      <span class="status-badge">Captain access</span>
+      <ui-badge variant="green">Captain access</ui-badge>
     </header>
 
     <form class="form-grid" @submit.prevent="handleSubmit">
@@ -103,6 +103,7 @@ import { useRouter } from 'vue-router'
 import { useUpdateTeamInfo } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
+import UiBadge from '@/components/UiBadge.vue'
 
 interface Props {
   team?: GetTeamInfoResponse
@@ -164,16 +165,6 @@ const handleSubmit = () => {
   margin: 0;
   font-family: var(--font-display);
   font-size: 1.15rem;
-}
-
-.status-badge {
-  border-radius: 999px;
-  border: 1px solid rgba(20, 184, 166, 0.45);
-  background: rgba(20, 184, 166, 0.15);
-  color: var(--brand-700);
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 0.2rem 0.55rem;
 }
 
 .lock-note {
