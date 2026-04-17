@@ -13,105 +13,96 @@
           <template #skeleton>
             <ui-skeleton variant="rect" width="150px" />
           </template>
-
-          <ui-badge v-if="props.isCaptain" variant="green">You are team captain</ui-badge>
         </ui-skeleton-loader>
       </div>
     </template>
 
-    <div class="info-grid">
-      <ui-card title="Name" class="info-item">
-        <template #header>
-          <span class="card-text-title">Name</span>
-        </template>
-
-        <ui-skeleton-loader :loading="props.loading">
-          <template #skeleton>
-            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+    <div>
+      <div class="info-grid">
+        <ui-card title="Name" class="info-item">
+          <template #header>
+            <span class="card-text-title">Name</span>
           </template>
 
-          <strong class="text-muted">{{ props.team?.name }}</strong>
-        </ui-skeleton-loader>
-      </ui-card>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+            </template>
 
-      <ui-card title="Email" class="info-item">
-        <template #header>
-          <span class="card-text-title">Email</span>
-        </template>
+            <strong class="text-muted">{{ props.team?.name }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
 
-        <ui-skeleton-loader :loading="props.loading">
-          <template #skeleton>
-            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+        <ui-card title="Email" class="info-item">
+          <template #header>
+            <span class="card-text-title">Email</span>
           </template>
 
-          <strong class="text-muted">{{ props.team?.email }}</strong>
-        </ui-skeleton-loader>
-      </ui-card>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+            </template>
 
-      <ui-card title="Organization" class="info-item">
-        <template #header>
-          <span class="card-text-title">Organization</span>
-        </template>
+            <strong class="text-muted">{{ props.team?.email }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
 
-        <ui-skeleton-loader :loading="props.loading">
-          <template #skeleton>
-            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+        <ui-card title="Organization" class="info-item">
+          <template #header>
+            <span class="card-text-title">Organization</span>
           </template>
 
-          <strong class="text-muted">{{ props.team?.organization || '-' }}</strong>
-        </ui-skeleton-loader>
-      </ui-card>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+            </template>
 
-      <ui-card title="Captain" class="info-item">
-        <template #header>
-          <span class="card-text-title">Captain</span>
-        </template>
+            <strong class="text-muted">{{ props.team?.organization || '-' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
 
-        <ui-skeleton-loader :loading="props.loading">
-          <template #skeleton>
-            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+        <ui-card title="Captain" class="info-item">
+          <template #header>
+            <span class="card-text-title">Captain</span>
           </template>
 
-          <strong class="text-muted">{{ captainName }}</strong>
-        </ui-skeleton-loader>
-      </ui-card>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+            </template>
 
-      <ui-card title="Members count" class="info-item">
-        <template #header>
-          <span class="card-text-title">Members count</span>
-        </template>
+            <strong class="text-muted">{{ captainName }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
 
-        <ui-skeleton-loader :loading="props.loading">
-          <template #skeleton>
-            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+        <ui-card title="Members count" class="info-item">
+          <template #header>
+            <span class="card-text-title">Members count</span>
           </template>
 
-          <strong class="text-muted">{{ props.team?.members.length }}</strong>
-        </ui-skeleton-loader>
-      </ui-card>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+            </template>
 
-      <ui-card title="Visibility" class="info-item">
-        <template #header>
-          <span class="card-text-title">Visibility</span>
-        </template>
+            <strong class="text-muted">{{ props.team?.members.length }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
 
-        <ui-skeleton-loader :loading="props.loading">
-          <template #skeleton>
-            <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+        <ui-card title="Visibility" class="info-item">
+          <template #header>
+            <span class="card-text-title">Visibility</span>
           </template>
 
-          <strong class="text-muted">{{ props.team?.is_public ? 'Public' : 'Private' }}</strong>
-        </ui-skeleton-loader>
-      </ui-card>
-    </div>
+          <ui-skeleton-loader :loading="props.loading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
+            </template>
 
-    <div v-if="!props.isCaptain" class="status-line">
-      <p v-if="props.team?.my_invitation_status" class="text-muted">
-        Your invitation status: <ui-badge>{{ props.team.my_invitation_status }}</ui-badge>
-      </p>
-      <p v-if="props.team?.my_join_request_status" class="text-muted">
-        Your join request status: <ui-badge>{{ props.team.my_join_request_status }}</ui-badge>
-      </p>
+            <strong class="text-muted">{{ props.team?.is_public ? 'Public' : 'Private' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
+      </div>
     </div>
 
     <template #footer>
@@ -135,7 +126,6 @@
 </template>
 
 <script setup lang="ts">
-import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
@@ -222,7 +212,6 @@ const leaveTeam = () => {
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
-  margin-bottom: 0.9rem;
 }
 
 .info-grid {
@@ -251,18 +240,9 @@ const leaveTeam = () => {
 }
 
 .info-actions {
-  margin-top: 0.75rem;
   display: flex;
   gap: 0.55rem;
   flex-wrap: wrap;
-}
-
-.status-line {
-  margin-top: 0.75rem;
-}
-
-.status-line p {
-  margin: 0.35rem 0 0;
 }
 
 .modal-text {

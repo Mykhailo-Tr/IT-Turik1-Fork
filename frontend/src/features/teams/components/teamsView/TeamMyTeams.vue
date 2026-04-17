@@ -54,15 +54,17 @@
             </div>
           </template>
 
-          <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
-          <p class="text-muted">Captain: {{ captainName(team) }}</p>
-          <p class="text-muted">Members: {{ team.members.length }}</p>
-          <p v-if="team.my_invitation_status" class="text-muted">
-            My invitation: {{ team.my_invitation_status }}
-          </p>
-          <p v-if="team.my_join_request_status" class="text-muted">
-            My join request: {{ team.my_join_request_status }}
-          </p>
+          <div>
+            <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
+            <p class="text-muted">Captain: {{ captainName(team) }}</p>
+            <p class="text-muted">Members: {{ team.members.length }}</p>
+            <p v-if="team.my_invitation_status" class="text-muted">
+              My invitation: {{ team.my_invitation_status }}
+            </p>
+            <p v-if="team.my_join_request_status" class="text-muted">
+              My join request: {{ team.my_join_request_status }}
+            </p>
+          </div>
 
           <template #footer>
             <ui-button asLink variant="secondary" size="sm" :to="`/teams/${team.id}`"
@@ -128,11 +130,6 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
-  margin-bottom: 0.8rem;
-}
-
-.section-head h2 {
-  margin: 0;
 }
 
 .team-grid {
@@ -154,12 +151,7 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
 }
 
 .team-header h3 {
-  margin: 0;
   font-family: var(--font-display);
-}
-
-.team-item p {
-  margin: 0;
 }
 
 .pagination {

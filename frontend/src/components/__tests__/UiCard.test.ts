@@ -64,10 +64,8 @@ describe('UiCard', () => {
       },
     })
 
-    const card = screen.getByRole('article')
-
-    expect(card.getByText('Header')).toBeInTheDocument()
-    expect(card.getByText('Body')).toBeInTheDocument()
-    expect(card.getByText('Footer')).toBeInTheDocument()
+    expect(screen.getByText('Header')).toBeInTheDocument()
+    expect(screen.getByText('Body')).toBeInTheDocument()
+    expect(screen.getByText('Footer')).toBeInTheDocument()
   })
 })

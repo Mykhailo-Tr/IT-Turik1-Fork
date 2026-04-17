@@ -2,38 +2,42 @@
   <section class="page-shell centered">
     <ui-card class="auth-card">
       <template #header>
-        <p class="section-eyebrow">Account Access</p>
-        <h1 class="section-title">Sign in to TournamentOS</h1>
-        <p class="section-subtitle">
-          Track your team, profile, and upcoming tournaments in one place.
-        </p>
+        <div>
+          <p class="section-eyebrow">Account Access</p>
+          <h1 class="section-title">Sign in to TournamentOS</h1>
+          <p class="section-subtitle">
+            Track your team, profile, and upcoming tournaments in one place.
+          </p>
+        </div>
       </template>
 
-      <form @submit.prevent="handleLogin" class="auth-form">
-        <div class="form-item">
-          <label class="form-label"> Username </label>
-          <ui-input v-model="form.username" autocomplete="username" required />
-        </div>
+      <div>
+        <form @submit.prevent="handleLogin" class="auth-form">
+          <div class="form-item">
+            <label class="form-label"> Username </label>
+            <ui-input v-model="form.username" autocomplete="username" required />
+          </div>
 
-        <div class="form-item">
-          <label class="form-label"> Password </label>
-          <ui-password-field v-model="form.password" autocomplete="current-password" />
-        </div>
+          <div class="form-item">
+            <label class="form-label"> Password </label>
+            <ui-password-field v-model="form.password" autocomplete="current-password" />
+          </div>
 
-        <p class="forgot-link">
-          <router-link to="/forgot-password">Forgot password?</router-link>
+          <p class="forgot-link">
+            <router-link to="/forgot-password">Forgot password?</router-link>
+          </p>
+
+          <ui-button type="submit" :disabled="isPending">
+            {{ isPending ? 'Signing in...' : 'Sign in' }}
+          </ui-button>
+        </form>
+
+        <p v-if="error" class="text-error feedback">
+          {{ error.message }}
         </p>
 
-        <ui-button type="submit" :disabled="isPending">
-          {{ isPending ? 'Signing in...' : 'Sign in' }}
-        </ui-button>
-      </form>
-
-      <p v-if="error" class="text-error feedback">
-        {{ error.message }}
-      </p>
-
-      <GoogleAuthButton divider-label="or continue with" @success="saveAndRedirect" />
+        <GoogleAuthButton divider-label="or continue with" @success="saveAndRedirect" />
+      </div>
 
       <template #footer>
         <p class="auth-link">

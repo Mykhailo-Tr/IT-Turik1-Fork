@@ -2,16 +2,16 @@
   <section class="page-shell">
     <ui-card>
       <template #header>
-        <p class="section-eyebrow">Admin</p>
-        <h1 class="section-title">Activation Codes</h1>
-        <p class="section-subtitle">
-          Generate and monitor one-time registration codes for restricted roles.
-        </p>
+        <div>
+          <p class="section-eyebrow">Admin</p>
+          <h1 class="section-title">Activation Codes</h1>
+          <p class="section-subtitle">
+            Generate and monitor one-time registration codes for restricted roles.
+          </p>
+        </div>
       </template>
 
-      <div v-if="forbidden" class="state-box error">You do not have access to this page.</div>
-
-      <template v-else>
+      <div>
         <div class="counts">
           <ui-card v-for="role in restrictedRoles" :key="role" class="statistic-card">
             <template #header>
@@ -23,7 +23,7 @@
                 <ui-skeleton variant="rect" width="100%" />
               </template>
 
-              <strong>{{ activeCounts?.[role] || 0 }}/10 active</strong>
+              <strong class="text-muted">{{ activeCounts?.[role] || 0 }}/10 active</strong>
             </ui-skeleton-loader>
           </ui-card>
         </div>
@@ -74,7 +74,9 @@
             />
           </div>
         </div>
+      </div>
 
+      <template #footer>
         <ui-skeleton-loader :loading="isLoading">
           <template #skeleton>
             <div class="codes-list">
@@ -117,18 +119,23 @@
                   </div>
                 </template>
 
-                <p><strong>Role:</strong> {{ code.role }}</p>
-                <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
-                <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
-                <template v-if="code.is_used">
-                  <p><strong>Used by:</strong> {{ code.used_by }}</p>
-                  <p>
-                    <strong>Used at:</strong>
-                    {{ code.used_at ? formatDateTime(code.used_at) : '-' }}
-                  </p>
-                </template>
+                <div class="code-card-content">
+                  <p><strong>Role:</strong> {{ code.role }}</p>
+                  <p><strong>Created:</strong> {{ formatDateTime(code.created_at) }}</p>
+                  <p><strong>Created by:</strong> {{ code.created_by_username || '-' }}</p>
+                  <template v-if="code.is_used">
+                    <p><strong>Used by:</strong> {{ code.used_by }}</p>
+                    <p>
+                      <strong>Used at:</strong>
+                      {{ code.used_at ? formatDateTime(code.used_at) : '-' }}
+                    </p>
+                  </template>
+                </div>
               </ui-card>
-              <p v-if="!codes.length" class="text-muted">No codes found for current filter.</p>
+
+              <p v-if="!codes.length" class="text-muted empty-error">
+                No codes found for current filter.
+              </p>
             </template>
           </div>
         </ui-skeleton-loader>
@@ -255,13 +262,12 @@ const formatDateTime = (value: string | number | Date) => {
 .statistic-card,
 .code-card {
   background: var(--muted);
-  color: var(--muted-foreground);
 }
 
-.code-card {
+.code-card-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .filters {
@@ -292,6 +298,10 @@ const formatDateTime = (value: string | number | Date) => {
   padding: 0.18rem 0.55rem;
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+.empty-error {
+  text-align: center;
 }
 
 @media (max-width: 900px) {

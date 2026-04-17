@@ -34,18 +34,14 @@
         <template #skeleton>
           <div class="team-invitations-list">
             <ui-card v-for="i in 2" :key="i" class="card-item">
-              <template #header>
+              <div style="display: flex; flex-direction: column; gap: 4px">
                 <div style="display: flex; justify-content: space-between; gap: 10px">
                   <ui-skeleton variant="rect" width="100%" />
                   <ui-skeleton variant="rect" width="70px" />
                 </div>
-              </template>
 
-              <ui-skeleton variant="rect" width="200px" />
-
-              <template #footer>
-                <ui-skeleton variant="rect" width="140px" height="2rem" />
-              </template>
+                <ui-skeleton variant="rect" width="200px" />
+              </div>
             </ui-card>
           </div>
         </template>
@@ -63,14 +59,14 @@
             :key="`invitation-pending-${invitation.id}`"
             class="card-item"
           >
-            <template #header>
+            <div>
               <div style="display: flex; justify-content: space-between">
                 <p class="team-invitations-name">{{ invitation.user.username }}</p>
                 <ui-badge class>invited</ui-badge>
               </div>
-            </template>
 
-            <p class="text-muted team-invitations-email">{{ invitation.user.email }}</p>
+              <p class="text-muted team-invitations-email">{{ invitation.user.email }}</p>
+            </div>
           </ui-card>
 
           <ui-card
@@ -227,12 +223,6 @@ const resendInvitation = (userId: UserId) => {
 
 .card-item {
   background-color: var(--muted);
-  color: var(--muted-foreground);
-}
-
-.team-invitations-name,
-.team-invitations-email {
-  margin: 0;
 }
 
 .team-invitations-name {

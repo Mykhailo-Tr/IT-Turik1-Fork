@@ -2,34 +2,35 @@
   <section class="page-shell teams-edit-page">
     <ui-card>
       <template #header>
-        <p class="section-eyebrow">Team workspace</p>
+        <div>
+          <p class="section-eyebrow">Team workspace</p>
 
-        <h1 class="section-title">
-          Edit
-          <ui-skeleton-loader style="display: inline-block" :loading="isLoadingTeamInfo">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="150px" />
-            </template>
+          <h1 class="section-title">
+            Edit
+            <ui-skeleton-loader style="display: inline-block" :loading="isLoadingTeamInfo">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="150px" />
+              </template>
 
-            <span>{{ team?.name || 'team' }}</span>
-          </ui-skeleton-loader>
-        </h1>
+              <span>{{ team?.name || 'team' }}</span>
+            </ui-skeleton-loader>
+          </h1>
+        </div>
       </template>
 
       <template #footer>
-        <div class="hero-actions">
-          <ui-button
-            asLink
-            variant="secondary"
-            size="sm"
-            :to="team ? `/teams/${team.id}` : '/teams'"
-            >Back to team</ui-button
-          >
-        </div>
+        <ui-button
+          asLink
+          variant="secondary"
+          size="sm"
+          class="back-btn"
+          :to="team ? `/teams/${team.id}` : '/teams'"
+          >Back to team</ui-button
+        >
       </template>
     </ui-card>
 
-    <div class="workspace-grid">
+    <div class="workspace-grid" v-if="team">
       <team-edit-form :is-error="isError" :loading="isLoadingTeamInfo" :team="team" />
 
       <team-manage-members :is-error="isError" :loading="isLoadingTeamInfo" :team="team" />
@@ -71,10 +72,8 @@ watchEffect(() => {
   gap: 1.2rem;
 }
 
-.hero-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
+.back-btn {
+  width: max-content;
 }
 
 .workspace-grid {

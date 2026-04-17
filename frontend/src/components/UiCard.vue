@@ -1,23 +1,17 @@
 <template>
-  <article class="card">
-    <header v-if="$slots.header">
-      <slot name="header" />
-    </header>
+  <div class="card">
+    <slot v-if="$slots.header" name="header" />
 
     <Transition name="error-fade" role="alert">
-      <slot name="error" v-if="props.isError" />
+      <div v-if="props.isError">
+        <slot name="error" />
+      </div>
     </Transition>
 
-    <template v-if="!props.isError">
-      <section v-if="$slots.default">
-        <slot />
-      </section>
-    </template>
+    <slot v-if="!props.isError && $slots.default" />
 
-    <footer v-if="$slots.footer">
-      <slot name="footer" />
-    </footer>
-  </article>
+    <slot v-if="$slots.footer" name="footer" />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -36,23 +30,17 @@ const props = defineProps<Props>()
   padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
   background: var(--card);
   color: var(--card-foreground);
 }
 
-.error-fade-enter-active {
-  transition: opacity 0.2s ease;
-}
-
+.error-fade-enter-active,
 .error-fade-leave-active {
-  transition: opacity 0.1s ease;
+  transition: opacity 0.15s ease;
 }
 
-.error-fade-enter-from {
-  opacity: 0;
-}
-
+.error-fade-enter-from,
 .error-fade-leave-to {
   opacity: 0;
 }

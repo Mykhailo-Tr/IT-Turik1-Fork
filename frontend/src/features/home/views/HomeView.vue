@@ -3,7 +3,7 @@
     <ui-card class="hero">
       <div>
         <p class="eyebrow">Dashboard</p>
-        <h1>
+        <h1 class="hero-title">
           Welcome back,
           <ui-skeleton-loader :loading="isLoading" style="display: inline-block">
             <template #skeleton>
@@ -110,7 +110,6 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { useProfile } from '@/queries/accounts'
 import { parseError } from '@/api'
-import UiBadge from '@/components/UiBadge.vue'
 
 const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
 const error = computed(() => parseError(profileError.value))
@@ -143,15 +142,8 @@ const teamNames = computed(() => (user.value?.teams || []).map((team) => team.na
   opacity: 0.85;
 }
 
-h1 {
-  margin: 0.45rem 0 0;
+.hero-title {
   font-family: var(--font-display);
-  font-size: clamp(1.4rem, 1.3vw + 1rem, 2rem);
-}
-
-.sub {
-  margin: 0.5rem 0 0;
-  opacity: 0.92;
 }
 
 .hero-actions {

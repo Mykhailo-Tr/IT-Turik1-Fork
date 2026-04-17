@@ -15,8 +15,6 @@ export interface GetTeamInfoArgs {
 }
 export type GetTeamInfoResponse = Omit<Team, 'captain'> & {
   captain_id: UserId
-  my_invitation_status: boolean
-  my_join_request_status: boolean
   is_member: boolean
   is_captain: boolean
   can_request_to_join: boolean

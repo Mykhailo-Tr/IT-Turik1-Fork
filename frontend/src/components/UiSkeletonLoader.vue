@@ -1,15 +1,11 @@
 <template>
-  <div>
-    <Transition name="skeleton-fade" mode="out-in">
-      <div v-if="loading" key="skeleton" class="skeleton-slot">
-        <slot name="skeleton" />
-      </div>
+  <Transition name="skeleton-fade" mode="out-in">
+    <div v-if="loading">
+      <slot name="skeleton" />
+    </div>
 
-      <div v-else key="content" class="content-slot">
-        <slot />
-      </div>
-    </Transition>
-  </div>
+    <slot v-else />
+  </Transition>
 </template>
 
 <script setup lang="ts">
@@ -24,11 +20,6 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style scoped>
-.skeleton-slot,
-.content-slot {
-  width: 100%;
-}
-
 .skeleton-fade-enter-active {
   transition: opacity 0.2s ease;
 }

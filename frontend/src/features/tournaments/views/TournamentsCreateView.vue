@@ -5,19 +5,29 @@
     </template>
 
     <form class="tournament-form" @submit.prevent="() => {}">
-      <div class="form-item name-field">
-        <label class="form-label">Team name</label>
-        <ui-input v-model="createForm.name" placeholder="Enter tournament name" required />
-      </div>
+      <label class="form-item name-field">
+        <span class="form-label">Team name</span>
+        <ui-input
+          id="teamName"
+          v-model="createForm.name"
+          placeholder="Enter tournament name"
+          required
+        />
+      </label>
 
-      <div class="form-item description-field">
-        <label class="form-label">Description</label>
-        <ui-text-area v-model="createForm.description" class="description-input" required />
-      </div>
+      <label class="form-item description-field">
+        <span class="form-label">Description</span>
+        <ui-text-area
+          id="desc"
+          v-model="createForm.description"
+          class="description-input"
+          required
+        />
+      </label>
 
       <div class="form-row settings-row">
-        <div class="form-item">
-          <label class="form-label">Rounds</label>
+        <label class="form-item">
+          <span class="form-label">Rounds</span>
           <ui-select
             v-model="createForm.rounds"
             :options="[
@@ -28,41 +38,44 @@
             ]"
             required
           />
-        </div>
-        <div class="form-item">
-          <label class="form-label">Max Teams</label>
+        </label>
+
+        <label class="form-item">
+          <span class="form-label">Max Teams</span>
           <ui-input
-            placeholder="2"
-            v-model="createForm.maxTeams"
+            id="maxTeams"
             type="number"
+            v-model="createForm.maxTeams"
             min="1"
             max="10"
             required
           />
-        </div>
+        </label>
       </div>
 
       <div class="schedule-column">
         <div class="date-time-group">
-          <div class="form-item date-part">
-            <label class="form-label">Start date</label>
+          <label class="form-item date-part">
+            <span class="form-label">Start date</span>
             <ui-date-picker v-model="createForm.startDate" required />
-          </div>
-          <div class="form-item time-part">
-            <label class="form-label form-time">Time</label>
+          </label>
+
+          <label class="form-item time-part">
+            <span class="form-label">Time</span>
             <ui-time-picker v-model="createForm.startTime" class="time-field" />
-          </div>
+          </label>
         </div>
 
         <div class="date-time-group">
-          <div class="form-item date-part">
-            <label class="form-label">End date</label>
+          <label class="form-item date-part">
+            <span class="form-label">End date</span>
             <ui-date-picker v-model="createForm.endDate" required />
-          </div>
-          <div class="form-item time-part">
-            <label class="form-label form-time">Time</label>
+          </label>
+
+          <label class="form-item time-part">
+            <span class="form-label">Time</span>
             <ui-time-picker v-model="createForm.endTime" class="time-field" />
-          </div>
+          </label>
         </div>
       </div>
 
@@ -110,7 +123,6 @@ const createForm = reactive<CreateForm>({
   grid-template-columns: 1fr 1fr;
   grid-template-rows: auto auto auto;
   gap: 1rem;
-  margin-bottom: 2rem;
 }
 
 .description-field {

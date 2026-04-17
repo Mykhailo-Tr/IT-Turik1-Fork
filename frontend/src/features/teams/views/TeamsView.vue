@@ -2,23 +2,28 @@
   <section class="page-shell">
     <ui-card>
       <template #header>
-        <p class="section-eyebrow">Teams</p>
-        <h1 class="section-title">Team directory</h1>
-        <p class="section-subtitle">
-          Open a team workspace to view details, edit info, and manage members.
-        </p>
+        <div>
+          <div class="top-header">
+            <p class="section-eyebrow">Teams</p>
+
+            <ui-skeleton-loader :loading="isLoadingTeams">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="108px" height="30px" />
+              </template>
+
+              <ui-badge>Total teams: {{ teams?.length ?? '0' }}</ui-badge>
+            </ui-skeleton-loader>
+          </div>
+          <h1>Team directory</h1>
+          <p class="section-subtitle">
+            Open a team workspace to view details, edit info, and manage members.
+          </p>
+        </div>
       </template>
 
       <template #footer>
         <div class="hero-actions">
           <ui-button asLink to="/teams/create" class="manage-link">Create new team</ui-button>
-          <ui-skeleton-loader :loading="isLoadingTeams">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="108px" height="30px" />
-            </template>
-
-            <ui-badge>Total teams: {{ teams?.length ?? '0' }}</ui-badge>
-          </ui-skeleton-loader>
         </div>
       </template>
     </ui-card>
@@ -46,6 +51,11 @@ const { data: teams, isLoading: isLoadingTeams } = useTeams()
 </script>
 
 <style scoped>
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 .hero-actions {
   display: flex;
   gap: 0.6rem;

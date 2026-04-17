@@ -7,107 +7,115 @@
       </div>
     </template>
 
-    <div class="search-wrapper">
-      <ui-input
-        v-model="searchInput"
-        class="search-input"
-        placeholder="Search tournament by name"
-        @keydown.enter="applySearch"
-      />
+    <div>
+      <div class="search-wrapper">
+        <ui-input
+          v-model="searchInput"
+          class="search-input"
+          placeholder="Search tournament by name"
+          @keydown.enter="applySearch"
+        />
 
-      <ui-button v-if="searchInput.length >= 2" @click="applySearch"><arrow-right /></ui-button>
-    </div>
-
-    <ui-skeleton-loader :loading="isLoading || isFetching">
-      <template #skeleton>
-        <div class="tournaments-grid">
-          <ui-card v-for="i in pageSize" :key="i" class="tournament-card">
-            <template #header>
-              <ui-skeleton variant="rect" width="70%" height="24px" />
-            </template>
-
-            <ui-skeleton variant="rect" class="tournaments-description" height="48px" />
-
-            <div class="tournaments-meta">
-              <div class="tournaments-date">
-                <ui-skeleton variant="rect" width="60px" />
-                <ui-skeleton variant="rect" width="130px" />
-              </div>
-
-              <ui-skeleton variant="rect" width="120px" height="28px" />
-            </div>
-
-            <ui-skeleton variant="rect" width="100%" height="36px" />
-          </ui-card>
-        </div>
-      </template>
-
-      <template v-if="pageItems.length">
-        <div class="tournaments-grid">
-          <ui-card v-for="tournament in pageItems" :key="tournament.id" class="tournament-card">
-            <template #header>
-              <h3>{{ tournament.title }}</h3>
-            </template>
-
-            <p class="tournaments-description">
-              {{ tournament.description }}
-            </p>
-
-            <div class="tournaments-meta">
-              <div class="tournaments-date">
-                <p>Start date:</p>
-
-                <p>
-                  {{
-                    tournament.startAt.toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })
-                  }}
-                </p>
-              </div>
-
-              <ui-badge variant="green">
-                {{ tournament.status }}
-              </ui-badge>
-            </div>
-
-            <ui-button size="sm" variant="secondary" class="tournaments-details-btn">
-              View details
-            </ui-button>
-          </ui-card>
-        </div>
-      </template>
-
-      <div v-else-if="!isLoading && !isFetching" class="empty-state">No tournaments found</div>
-
-      <div v-if="totalPages > 1" class="pagination">
-        <ui-button size="sm" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
-          Prev
-        </ui-button>
-
-        <ui-button
-          v-for="page in visiblePages"
-          :key="`${page}`"
-          size="sm"
-          class="pagination-btn"
-          :disabled="page === '...'"
-          :variant="page === currentPage ? 'default' : 'secondary'"
-          @click="typeof page === 'number' && goToPage(page)"
-        >
-          {{ page }}
-        </ui-button>
-
-        <ui-button
-          size="sm"
-          :disabled="currentPage === totalPages"
-          @click="goToPage(currentPage + 1)"
-        >
-          Next
-        </ui-button>
+        <ui-button v-if="searchInput.length >= 2" @click="applySearch"><arrow-right /></ui-button>
       </div>
-    </ui-skeleton-loader>
+
+      <ui-skeleton-loader :loading="isLoading || isFetching">
+        <template #skeleton>
+          <div class="tournaments-grid">
+            <ui-card v-for="i in pageSize" :key="i" class="tournament-card">
+              <template #header>
+                <ui-skeleton variant="rect" width="70%" height="24px" />
+              </template>
+
+              <ui-skeleton variant="rect" class="tournaments-description" height="48px" />
+
+              <div class="tournaments-meta">
+                <div class="tournaments-date">
+                  <ui-skeleton variant="rect" width="60px" />
+                  <ui-skeleton variant="rect" width="130px" />
+                </div>
+
+                <ui-skeleton variant="rect" width="120px" height="28px" />
+              </div>
+
+              <ui-skeleton variant="rect" width="100%" height="36px" />
+            </ui-card>
+          </div>
+        </template>
+
+        <div>
+          <template v-if="pageItems.length">
+            <div class="tournaments-grid">
+              <ui-card v-for="tournament in pageItems" :key="tournament.id" class="tournament-card">
+                <template #header>
+                  <h3>{{ tournament.title }}</h3>
+                </template>
+
+                <div>
+                  <p class="tournaments-description">
+                    {{ tournament.description }}
+                  </p>
+
+                  <div class="tournaments-meta">
+                    <div class="tournaments-date">
+                      <p>Start date:</p>
+
+                      <p>
+                        {{
+                          tournament.startAt.toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })
+                        }}
+                      </p>
+                    </div>
+
+                    <ui-badge variant="green">
+                      {{ tournament.status }}
+                    </ui-badge>
+                  </div>
+                </div>
+
+                <template #footer>
+                  <ui-button size="sm" variant="secondary" class="tournaments-details-btn">
+                    View details
+                  </ui-button>
+                </template>
+              </ui-card>
+            </div>
+          </template>
+
+          <div v-else-if="!isLoading && !isFetching" class="empty-state">No tournaments found</div>
+
+          <div v-if="totalPages > 1" class="pagination">
+            <ui-button size="sm" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
+              Prev
+            </ui-button>
+
+            <ui-button
+              v-for="page in visiblePages"
+              :key="`${page}`"
+              size="sm"
+              class="pagination-btn"
+              :disabled="page === '...'"
+              :variant="page === currentPage ? 'default' : 'secondary'"
+              @click="typeof page === 'number' && goToPage(page)"
+            >
+              {{ page }}
+            </ui-button>
+
+            <ui-button
+              size="sm"
+              :disabled="currentPage === totalPages"
+              @click="goToPage(currentPage + 1)"
+            >
+              Next
+            </ui-button>
+          </div>
+        </div>
+      </ui-skeleton-loader>
+    </div>
   </ui-card>
 </template>
 

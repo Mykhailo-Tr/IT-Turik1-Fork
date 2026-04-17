@@ -1,55 +1,61 @@
 <template>
   <ui-card v-if="isCaptain" class="manage-zone">
-    <div class="manage-row">
+    <div>
+      <div class="manage-row">
+        <div>
+          <h3>Edit team</h3>
+          <p class="text-muted">Update team profile and manage members in edit workspace.</p>
+        </div>
+        <ui-button asLink variant="secondary" size="sm" :to="`/teams/${team?.id}/edit`"
+          >Edit team</ui-button
+        >
+      </div>
+
       <div>
-        <h3>Edit team</h3>
-        <p class="text-muted">Update team profile and manage members in edit workspace.</p>
-      </div>
-      <ui-button asLink variant="secondary" size="sm" :to="`/teams/${team?.id}/edit`"
-        >Edit team</ui-button
-      >
-    </div>
-
-    <div class="danger-zone-header">
-      <danger-icon />
-      <span>Danger Zone</span>
-    </div>
-
-    <div class="danger-zone-box">
-      <div class="manage-row danger">
-        <div>
-          <h3>Change visibility</h3>
-          <p class="text-muted">
-            <ui-badge :variant="team?.is_public ? 'green' : 'red'">{{
-              team?.is_public ? 'Public' : 'Private'
-            }}</ui-badge>
-            -
-
-            {{
-              team?.is_public
-                ? 'Anyone can find and request to join this team.'
-                : 'Only invited members can see this team.'
-            }}
-          </p>
+        <div class="danger-zone-header">
+          <danger-icon />
+          <span>Danger Zone</span>
         </div>
 
-        <TeamVisibilityModal
-          :team="props.team"
-          @changed-team-visibility="(newTeamValue) => emit('updateTeam', newTeamValue)"
-        />
-      </div>
+        <div class="danger-zone-box">
+          <div class="manage-row danger">
+            <div>
+              <h3>Change visibility</h3>
+              <p class="text-muted">
+                <ui-badge :variant="team?.is_public ? 'green' : 'red'">{{
+                  team?.is_public ? 'Public' : 'Private'
+                }}</ui-badge>
+                -
 
-      <div class="manage-row danger">
-        <div>
-          <h3>Delete team</h3>
-          <p class="text-muted">This action permanently deletes the team and cannot be undone.</p>
+                {{
+                  team?.is_public
+                    ? 'Anyone can find and request to join this team.'
+                    : 'Only invited members can see this team.'
+                }}
+              </p>
+            </div>
+
+            <TeamVisibilityModal
+              :team="props.team"
+              @changed-team-visibility="(newTeamValue) => emit('updateTeam', newTeamValue)"
+            />
+          </div>
+
+          <div class="manage-row danger">
+            <div>
+              <h3>Delete team</h3>
+              <p class="text-muted">
+                This action permanently deletes the team and cannot be undone.
+              </p>
+            </div>
+
+            <DeleteTeamModal
+              :disabled="props.loading"
+              :team="props.team"
+              @deleted="router.push('/teams')"
+            />
+          </div>
         </div>
-
-        <DeleteTeamModal
-          :disabled="props.loading"
-          :team="props.team"
-          @deleted="router.push('/teams')"
-        />
       </div>
     </div>
   </ui-card>
@@ -80,11 +86,6 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
-.manage-zone {
-  border: 1px solid var(--line-soft);
-  overflow: hidden;
-}
-
 .danger-zone-header {
   display: flex;
   align-items: center;
@@ -92,7 +93,7 @@ const emit = defineEmits<{
   padding: 0.55rem 0.8rem;
   margin: 0.2rem 0 0;
   background: color-mix(in srgb, var(--destructive) 10%, transparent);
-  border: 1px solid rgba(220, 38, 38, 0.2);
+  border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
   border-radius: 8px;
   color: color-mix(in srgb, var(--destructive) 80%, transparent);
   font-size: 0.78rem;
@@ -109,15 +110,15 @@ const emit = defineEmits<{
 
 .danger-zone-box {
   margin-top: 0.6rem;
-  border: 1px solid rgba(220, 38, 38, 0.22);
+  border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
   border-radius: 10px;
   overflow: hidden;
   background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
-.danger-zone-box .manage-row {
+.danger-zone-box {
   padding: 1rem;
-  border-top: 1px solid rgba(220, 38, 38, 0.14);
+  border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
 }
 
 .manage-row {
@@ -125,20 +126,20 @@ const emit = defineEmits<{
   justify-content: space-between;
   align-items: center;
   gap: 0.9rem;
-  padding: 0 0 1rem 0;
+  margin-bottom: 1rem;
 }
 
-.manage-row + .manage-row {
-  border-top: 1px solid var(--line-soft);
+.manage-row:nth-of-type(2) {
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
 }
 
 .manage-row h3 {
-  margin: 0;
   font-size: 1rem;
 }
 
 .manage-row p {
-  margin: 0.3rem 0 0;
+  margin-top: 0.3rem;
 }
 
 .manage-row.danger h3 {

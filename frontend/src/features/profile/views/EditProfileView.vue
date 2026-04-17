@@ -2,14 +2,16 @@
   <section class="page-shell">
     <ui-card>
       <template #header>
-        <div class="head">
-          <div>
-            <p class="section-eyebrow">User Center</p>
-            <h1 class="section-title profile-title">Edit Profile</h1>
+        <div>
+          <div class="head">
+            <div>
+              <p class="section-eyebrow">User Center</p>
+              <h1 class="section-title profile-title">Edit Profile</h1>
+            </div>
           </div>
-        </div>
 
-        <p class="section-subtitle">Update your account details below and save your changes.</p>
+          <p class="section-subtitle">Update your account details below and save your changes.</p>
+        </div>
       </template>
 
       <form @submit.prevent="handleSubmit" class="profile-form">
