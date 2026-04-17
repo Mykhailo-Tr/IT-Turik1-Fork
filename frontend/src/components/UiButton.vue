@@ -3,7 +3,7 @@
     :is="props.asLink ? RouterLink : 'button'"
     :to="props.asLink ? props.to : undefined"
     :type="props.asLink ? undefined : 'button'"
-    :class="['btn', variantClass, sizeClass]"
+    :class="['btn', { 'btn-link': props.asLink }, variantClass, sizeClass]"
     v-bind="$attrs"
   >
     <slot />
@@ -87,6 +87,10 @@ const sizeClass = computed(() => sizes[props.size])
     border-color 0.2s ease,
     opacity 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.btn-link {
+  height: 2.4rem;
 }
 
 .btn:focus {

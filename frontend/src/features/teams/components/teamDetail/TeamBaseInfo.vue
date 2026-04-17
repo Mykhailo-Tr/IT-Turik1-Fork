@@ -30,7 +30,7 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ props.team?.name }}</strong>
+          <strong class="text-muted">{{ props.team?.name }}</strong>
         </ui-skeleton-loader>
       </ui-card>
 
@@ -44,7 +44,7 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ props.team?.email }}</strong>
+          <strong class="text-muted">{{ props.team?.email }}</strong>
         </ui-skeleton-loader>
       </ui-card>
 
@@ -58,7 +58,7 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ props.team?.organization || '-' }}</strong>
+          <strong class="text-muted">{{ props.team?.organization || '-' }}</strong>
         </ui-skeleton-loader>
       </ui-card>
 
@@ -72,7 +72,7 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ captainName }}</strong>
+          <strong class="text-muted">{{ captainName }}</strong>
         </ui-skeleton-loader>
       </ui-card>
 
@@ -86,7 +86,7 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ props.team?.members.length }}</strong>
+          <strong class="text-muted">{{ props.team?.members.length }}</strong>
         </ui-skeleton-loader>
       </ui-card>
 
@@ -100,7 +100,7 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ props.team?.is_public ? 'Public' : 'Private' }}</strong>
+          <strong class="text-muted">{{ props.team?.is_public ? 'Public' : 'Private' }}</strong>
         </ui-skeleton-loader>
       </ui-card>
     </div>
@@ -235,14 +235,19 @@ const leaveTeam = () => {
   flex-direction: column;
   border: 1px solid var(--line-soft);
   border-radius: 12px;
-  padding: 0.7rem;
+  gap: 0.3rem;
   background: var(--muted);
-  color: var(--muted-foreground);
 }
 
 .info-item span {
   display: block;
   font-size: 0.8rem;
+}
+
+.card-text-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .info-actions {

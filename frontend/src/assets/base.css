@@ -7,8 +7,10 @@
 
   --brand-700: #0f766e;
   --brand-600: #0d9488;
+  --brand-500: #14b8a6;
 
   --color-gray-600: lab(35.6337% -1.58697 -10.8425);
+  --color-gray-900: lab(8.11897% 0.811279 -12.254);
   --color-gray-950: lab(1.90334% 0.278696 -5.48866);
 
   --accent-strong: #c2410c;
@@ -29,9 +31,9 @@
   --card-foreground: var(--color-gray-900);
 
   --muted: rgb(255, 255, 255);
-  --muted-foreground: var(--color-gray-900);
+  --muted-foreground: lab(48.496% 0 0);
 
-  --border: var(--line-strong);
+  --border: #e5e5e5;
 
   --input: #f6f6f6;
   --ring: rgb(13, 148, 137, 30%);
@@ -57,12 +59,12 @@
   --foreground: rgba(255, 255, 255, 0.92);
 
   --card: rgb(32 32 32);
-  --card-foreground: rgba(221, 221, 221, 0.92);
+  --card-foreground: rgba(245, 245, 245, 0.92);
 
   --muted: rgb(37 37 37);
-  --muted-foreground: rgb(213 213 213);
+  --muted-foreground: rgb(177, 177, 177);
 
-  --border: rgba(255, 255, 255, 0.18);
+  --border: rgb(52, 52, 52);
 
   --input: rgb(44, 44, 44);
   --ring: rgba(20, 184, 166, 0.22);
@@ -87,6 +89,8 @@
 
 * {
   box-sizing: border-box;
+  border-color: var(--border);
+  outline-color: var(--ring);
 }
 
 html,
@@ -192,13 +196,6 @@ a {
   color: var(--brand-700);
   font-weight: 700;
   text-decoration: none;
-}
-
-.card-text-title {
-  color: var(--muted-foreground);
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.2;
 }
 
 ::-webkit-scrollbar {

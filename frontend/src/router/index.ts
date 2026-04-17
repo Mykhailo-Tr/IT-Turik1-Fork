@@ -16,6 +16,7 @@ import TeamsEdit from '@/features/teams/views/TeamsEditView.vue'
 import Teams from '@/features/teams/views/TeamsView.vue'
 import { useUserStore } from '@/stores/user'
 import TournamentsCreateView from '@/features/tournaments/views/TournamentsCreateView.vue'
+import TournamentsList from '@/features/tournaments/views/TournamentsList.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -92,6 +93,11 @@ const router = createRouter({
     {
       path: '/tournaments/create',
       component: TournamentsCreateView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tournaments',
+      component: TournamentsList,
       meta: { requiresAuth: true },
     },
   ],

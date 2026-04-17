@@ -27,7 +27,7 @@
               <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <strong class="item-value value-wrap">{{ user?.username || '-' }}</strong>
+            <strong class="card-content">{{ user?.username || '-' }}</strong>
           </ui-skeleton-loader>
         </ui-card>
         <ui-card class="field-card">
@@ -40,7 +40,7 @@
               <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <strong class="item-value value-wrap">{{ user?.email || '-' }}</strong>
+            <strong class="card-content">{{ user?.email || '-' }}</strong>
           </ui-skeleton-loader>
         </ui-card>
         <ui-card class="field-card">
@@ -66,7 +66,7 @@
               <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <strong class="item-value value-wrap">{{ user?.full_name || '-' }}</strong>
+            <strong class="card-content">{{ user?.full_name || '-' }}</strong>
           </ui-skeleton-loader>
         </ui-card>
         <ui-card class="field-card">
@@ -79,7 +79,7 @@
               <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <strong class="item-value value-wrap">{{ user?.city || '-' }}</strong>
+            <strong class="card-content">{{ user?.city || '-' }}</strong>
           </ui-skeleton-loader>
         </ui-card>
         <ui-card class="field-card">
@@ -92,7 +92,7 @@
               <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <strong class="item-value value-fixed">{{ user?.phone || '-' }}</strong>
+            <strong class="card-content">{{ user?.phone || '-' }}</strong>
           </ui-skeleton-loader>
         </ui-card>
         <ui-card class="field-card">
@@ -201,36 +201,19 @@ const formatDate = (date: Date) => {
   align-items: start;
 }
 
-.item {
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  padding: 0.7rem;
-  background: rgba(255, 255, 255, 0.85);
-  min-width: 0;
-  display: grid;
-  gap: 0.3rem;
-  align-content: start;
+.field-card {
+  background: var(--muted);
+  gap: 0;
 }
 
-.item-label {
-  color: var(--color-gray-500);
+.card-text-title {
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.2;
 }
 
-.field-card {
-  background: var(--muted);
+.card-content {
   color: var(--muted-foreground);
-  gap: 0;
-}
-
-.item-phone {
-  align-content: start;
-}
-
-.item-wide {
-  grid-column: 1 / -1;
 }
 
 .team-list {
