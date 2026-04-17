@@ -87,8 +87,6 @@ describe('UiSelect', () => {
     await options[1].click()
     await options[2].click()
 
-    console.log(screen.emitted('update:modelValue'))
-
     expect(screen.emitted('update:modelValue')).toStrictEqual([
       [['apple', 'banana']],
       [['apple', 'cherry']],

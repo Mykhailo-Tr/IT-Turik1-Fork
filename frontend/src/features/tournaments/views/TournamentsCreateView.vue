@@ -7,7 +7,7 @@
     <form class="tournament-form" @submit.prevent="() => {}">
       <div class="form-item name-field">
         <label class="form-label">Team name</label>
-        <ui-input v-model="createForm.name" required />
+        <ui-input v-model="createForm.name" placeholder="Enter tournament name" required />
       </div>
 
       <div class="form-item description-field">
@@ -31,7 +31,14 @@
         </div>
         <div class="form-item">
           <label class="form-label">Max Teams</label>
-          <ui-input v-model="createForm.maxTeams" type="number" min="1" max="10" required />
+          <ui-input
+            placeholder="2"
+            v-model="createForm.maxTeams"
+            type="number"
+            min="1"
+            max="10"
+            required
+          />
         </div>
       </div>
 
@@ -89,9 +96,9 @@ const createForm = reactive<CreateForm>({
   name: '',
   description: '',
   startDate: new Date(),
-  startTime: '',
+  startTime: '00:00',
   endDate: new Date(),
-  endTime: '',
+  endTime: '00:00',
   rounds: '1',
   maxTeams: '2',
 })
@@ -104,11 +111,6 @@ const createForm = reactive<CreateForm>({
   grid-template-rows: auto auto auto;
   gap: 1rem;
   margin-bottom: 2rem;
-}
-
-.name-field {
-  grid-column: 1;
-  grid-row: 1;
 }
 
 .description-field {

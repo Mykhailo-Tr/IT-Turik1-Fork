@@ -144,7 +144,6 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
 .team-item {
   padding: 0.95rem;
   background: var(--muted);
-  color: var(--muted-foreground);
 }
 
 .team-header {

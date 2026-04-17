@@ -1,6 +1,6 @@
 <template>
   <section class="page-shell teams-edit-page">
-    <ui-card class="hero-card">
+    <ui-card>
       <template #header>
         <p class="section-eyebrow">Team workspace</p>
 
@@ -69,11 +69,6 @@ watchEffect(() => {
 <style scoped>
 .teams-edit-page {
   gap: 1.2rem;
-}
-
-.hero-card {
-  background: linear-gradient(135deg, rgba(13, 148, 136, 0.14), rgba(15, 23, 42, 0.03)), #fff;
-  border: 1px solid rgba(13, 148, 136, 0.22);
 }
 
 .hero-actions {

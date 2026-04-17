@@ -27,8 +27,7 @@ function handleInput(event: Event) {
 
 <style scoped>
 .input {
-  width: 100%;
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0.75rem 0.85rem;
   font: inherit;

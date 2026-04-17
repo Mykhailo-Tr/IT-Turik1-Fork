@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from 'vitest-browser-vue'
-import { userEvent } from '@vitest/browser/context'
+import { userEvent } from 'vitest/browser'
 import TimePicker from '../UiTimePicker.vue'
 
 describe('TimePicker', () => {

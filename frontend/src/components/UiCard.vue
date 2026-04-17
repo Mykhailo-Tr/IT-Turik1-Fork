@@ -30,12 +30,13 @@ const props = defineProps<Props>()
 
 <style scoped>
 .card {
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border: 1px solid;
+  border-color: inherit;
   border-radius: 14px;
   padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   background: var(--card);
   color: var(--card-foreground);
 }

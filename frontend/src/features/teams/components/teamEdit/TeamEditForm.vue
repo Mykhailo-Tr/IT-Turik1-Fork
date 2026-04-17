@@ -6,8 +6,8 @@
     </header>
 
     <form class="form-grid" @submit.prevent="handleSubmit">
-      <label class="form-label">
-        Team name
+      <div class="form-item">
+        <label class="form-label"> Team name </label>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
@@ -15,10 +15,10 @@
 
           <ui-input v-model="form.name" required :disabled="isSavingChanges" style="width: 100%" />
         </ui-skeleton-loader>
-      </label>
+      </div>
 
-      <label class="form-label">
-        Team email
+      <div class="form-item">
+        <label class="form-label"> Team email </label>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
@@ -31,10 +31,10 @@
             :disabled="isSavingChanges"
             style="width: 100%"
         /></ui-skeleton-loader>
-      </label>
+      </div>
 
-      <label class="form-label">
-        Organization
+      <div class="form-item">
+        <label class="form-label"> Organization </label>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
@@ -42,10 +42,10 @@
 
           <ui-input v-model="form.organization" :disabled="isSavingChanges" style="width: 100%" />
         </ui-skeleton-loader>
-      </label>
+      </div>
 
-      <label class="form-label">
-        Telegram
+      <div class="form-item">
+        <label class="form-label"> Telegram </label>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
@@ -59,10 +59,10 @@
             style="width: 100%"
           />
         </ui-skeleton-loader>
-      </label>
+      </div>
 
-      <label class="form-label">
-        Discord
+      <div class="form-item">
+        <label class="form-label"> Discord </label>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
@@ -76,7 +76,7 @@
             style="width: 100%"
           />
         </ui-skeleton-loader>
-      </label>
+      </div>
 
       <div class="form-actions full-width">
         <ui-button type="submit" :disabled="isSavingChanges || props.loading || props.isError">
