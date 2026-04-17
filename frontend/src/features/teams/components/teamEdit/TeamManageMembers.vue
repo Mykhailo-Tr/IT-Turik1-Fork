@@ -50,22 +50,23 @@
 
       <div class="member-list">
         <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
-          <template #header>
+          <div>
             <div style="display: flex; justify-content: space-between; gap: 10px">
               <p class="member-name">{{ member.username }}</p>
               <div style="display: flex; align-items: center; gap: 5px">
                 <ui-badge v-if="member.id === team?.captain_id" variant="green">Captain</ui-badge>
               </div>
             </div>
-          </template>
 
-          <p class="text-muted member-email">{{ member.email }}</p>
+            <p class="text-muted member-email">{{ member.email }}</p>
+          </div>
 
           <template #footer>
             <ui-button
               v-if="member.id !== team?.captain_id"
               variant="danger"
               size="sm"
+              class="remove-member-btn"
               :disabled="kickLoadingIds.has(member.id)"
               @click="removeMember(member)"
             >
@@ -93,9 +94,11 @@
         </template>
 
         <div class="member-list">
-          <p v-if="!team?.invitations?.length" class="text-muted">No invitations yet.</p>
+          <p v-if="!isLoadingInvitations && !invitations?.length" class="text-muted">
+            No invitations yet.
+          </p>
           <ui-card
-            v-for="invitation in team?.invitations"
+            v-for="invitation in invitations"
             :key="`inv-${invitation.id}`"
             class="member-row"
           >
@@ -105,6 +108,9 @@
               <ui-badge v-if="invitation.status === 'declined'" variant="red">
                 {{ invitation.status }}
               </ui-badge>
+              <ui-badge v-if="invitation.status === 'accepted'" variant="green">{{
+                invitation.status
+              }}</ui-badge>
               <ui-badge v-else>{{ invitation.status }}</ui-badge>
             </div>
           </ui-card>
@@ -120,13 +126,11 @@
       <h3>Invite user</h3>
 
       <div class="form-item">
-        <ui-skeleton-loader :loading="isLoadingUsers">
-          <template #skeleton>
-            <ui-skeleton variant="rect" height="45.6px" width="100%" />
-          </template>
-
-          <ui-select :options="userOptions" v-model="addMemberSelection" style="width: 100%" />
-        </ui-skeleton-loader>
+        <ui-select
+          v-model="addMemberSelection"
+          :options="userOptions"
+          :isLoading="isLoadingUsers"
+        />
       </div>
 
       <p v-if="availableUsers?.length === 0" class="text-muted">No available users to add.</p>
@@ -149,7 +153,7 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import type { User, UserId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
-import { useAddMember, useRemoveMember } from '@/queries/teams'
+import { useAddMember, useRemoveMember, useTeamInvitations } from '@/queries/teams'
 import { useUsers } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
@@ -157,7 +161,7 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 export type Member = Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>
 
 interface Props {
-  team?: GetTeamInfoResponse
+  team: GetTeamInfoResponse
   loading: boolean
   isError?: boolean
 }
@@ -166,6 +170,9 @@ const props = defineProps<Props>()
 const { showNotification } = useNotification()
 
 const { data: users, isLoading: isLoadingUsers } = useUsers()
+const { data: invitations, isLoading: isLoadingInvitations } = useTeamInvitations({
+  teamId: props.team.id,
+})
 
 const memberSearch = ref('')
 const addMemberSelection = ref('')
@@ -298,6 +305,10 @@ const addMember = () => {
 }
 .member-note {
   margin-top: 0.8rem;
+}
+
+.remove-member-btn {
+  width: max-content;
 }
 
 .add-member-box {

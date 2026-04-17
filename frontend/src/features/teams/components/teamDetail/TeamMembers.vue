@@ -23,14 +23,14 @@
           <template #skeleton>
             <div class="member-list">
               <ui-card v-for="i in 2" :key="i" class="card-item">
-                <template #header>
+                <div style="display: flex; flex-direction: column; gap: 4px">
                   <div style="display: flex; justify-content: space-between; gap: 10px">
                     <ui-skeleton variant="rect" width="100%" />
                     <ui-skeleton variant="rect" width="100px" />
                   </div>
-                </template>
 
-                <ui-skeleton variant="rect" width="200px" />
+                  <ui-skeleton variant="rect" width="200px" />
+                </div>
               </ui-card>
             </div>
           </template>
@@ -41,7 +41,7 @@
               v-for="member in filteredMembers"
               :key="`member-${member.id}`"
             >
-              <template #header>
+              <div>
                 <div style="display: flex; justify-content: space-between">
                   <p class="member-name">{{ member.username }}</p>
 
@@ -50,8 +50,9 @@
                   >
                   <ui-badge v-else variant="gray">Member</ui-badge>
                 </div>
-              </template>
-              <p class="text-muted member-email">{{ member.email }}</p>
+
+                <p class="text-muted member-email">{{ member.email }}</p>
+              </div>
             </ui-card>
 
             <p v-if="filteredMembers?.length === 0" class="text-muted">
@@ -118,7 +119,6 @@ const filteredMembers = computed(() =>
 
 .card-item {
   background-color: var(--muted);
-  color: var(--muted-foreground);
 }
 
 .members-sections {

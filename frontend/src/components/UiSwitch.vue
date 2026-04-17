@@ -56,7 +56,7 @@ const onVisibilityKeydown = (event: KeyboardEvent) => {
   width: 3rem;
   height: 1.7rem;
   padding: 0.17rem;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--secondary);
   cursor: pointer;
@@ -78,8 +78,8 @@ const onVisibilityKeydown = (event: KeyboardEvent) => {
   width: 1.2rem;
   height: 1.2rem;
   border-radius: 999px;
-  border: 1px solid var(--secondary);
-  background: var(--border);
+  border: 1px solid var(white);
+  background: white;
   transform: translateX(0);
   transition: transform 180ms ease;
 }

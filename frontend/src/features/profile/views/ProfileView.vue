@@ -8,135 +8,150 @@
       </template>
 
       <template #header>
-        <div class="head">
-          <div>
+        <div>
+          <div class="top-header">
             <p class="section-eyebrow">User Center</p>
-            <h1 class="section-title profile-title">My profile</h1>
+            <p class="meta">
+              Joined: {{ user?.created_at ? formatDate(user?.created_at) : 'N/A' }}
+            </p>
           </div>
-          <p class="meta">Joined: {{ user?.created_at ? formatDate(user?.created_at) : 'N/A' }}</p>
+          <h1 class="section-title">My profile</h1>
         </div>
       </template>
 
-      <div class="details">
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">Username</span>
-          </template>
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
+      <div>
+        <div class="details">
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">Username</span>
             </template>
 
-            <strong class="card-content">{{ user?.username || '-' }}</strong>
-          </ui-skeleton-loader>
-        </ui-card>
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">Email</span>
-          </template>
-
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
-            </template>
-
-            <strong class="card-content">{{ user?.email || '-' }}</strong>
-          </ui-skeleton-loader>
-        </ui-card>
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">Role</span>
-          </template>
-
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
-            </template>
-
-            <ui-badge variant="green">{{ user?.role ?? '-' }}</ui-badge>
-          </ui-skeleton-loader>
-        </ui-card>
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">Full name</span>
-          </template>
-
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
-            </template>
-
-            <strong class="card-content">{{ user?.full_name || '-' }}</strong>
-          </ui-skeleton-loader>
-        </ui-card>
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">City</span>
-          </template>
-
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
-            </template>
-
-            <strong class="card-content">{{ user?.city || '-' }}</strong>
-          </ui-skeleton-loader>
-        </ui-card>
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">Phone</span>
-          </template>
-
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
-            </template>
-
-            <strong class="card-content">{{ user?.phone || '-' }}</strong>
-          </ui-skeleton-loader>
-        </ui-card>
-        <ui-card class="field-card">
-          <template #header>
-            <span class="card-text-title">Teams</span>
-          </template>
-
-          <div>
             <ui-skeleton-loader :loading="isLoading">
               <template #skeleton>
-                <div style="display: flex; flex-direction: column; gap: 4px">
-                  <ui-skeleton v-for="i in 2" :key="i" variant="rect" width="150px" />
-                </div>
+                <ui-skeleton variant="rect" width="100%" />
               </template>
 
-              <div class="team-list">
-                <router-link
-                  v-for="team in user?.teams || []"
-                  :key="team.id"
-                  :to="`/teams/${team.id}`"
-                  class="team-link"
-                >
-                  {{ team.name }}
-                </router-link>
-              </div>
-
-              <p v-if="!(user?.teams || []).length" class="text-muted">No teams yet.</p>
+              <strong class="card-content">{{ user?.username || '-' }}</strong>
             </ui-skeleton-loader>
+          </ui-card>
+
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">Email</span>
+            </template>
+
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="100%" />
+              </template>
+
+              <strong class="card-content">{{ user?.email || '-' }}</strong>
+            </ui-skeleton-loader>
+          </ui-card>
+
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">Role</span>
+            </template>
+
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="100%" />
+              </template>
+
+              <ui-badge variant="green">{{ user?.role ?? '-' }}</ui-badge>
+            </ui-skeleton-loader>
+          </ui-card>
+
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">Full name</span>
+            </template>
+
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="100%" />
+              </template>
+
+              <strong class="card-content">{{ user?.full_name || '-' }}</strong>
+            </ui-skeleton-loader>
+          </ui-card>
+
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">City</span>
+            </template>
+
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="100%" />
+              </template>
+
+              <strong class="card-content">{{ user?.city || '-' }}</strong>
+            </ui-skeleton-loader>
+          </ui-card>
+
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">Phone</span>
+            </template>
+
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="100%" />
+              </template>
+
+              <strong class="card-content">{{ user?.phone || '-' }}</strong>
+            </ui-skeleton-loader>
+          </ui-card>
+
+          <ui-card class="field-card">
+            <template #header>
+              <span class="card-text-title">Teams</span>
+            </template>
+
+            <div>
+              <ui-skeleton-loader :loading="isLoading">
+                <template #skeleton>
+                  <div style="display: flex; flex-direction: column; gap: 4px">
+                    <ui-skeleton v-for="i in 2" :key="i" variant="rect" width="150px" />
+                  </div>
+                </template>
+
+                <div class="team-list">
+                  <router-link
+                    v-for="team in user?.teams || []"
+                    :key="team.id"
+                    :to="`/teams/${team.id}`"
+                    class="team-link"
+                  >
+                    {{ team.name }}
+                  </router-link>
+                </div>
+
+                <p v-if="!(user?.teams || []).length" class="text-muted">No teams yet.</p>
+              </ui-skeleton-loader>
+            </div>
+          </ui-card>
+        </div>
+
+        <div class="actions">
+          <ui-button :disabled="isLoading" @click="goToEditProfile"> Edit Profile </ui-button>
+          <ui-button variant="secondary" :disabled="isLoading || isDeleting" @click="logout">
+            Log Out
+          </ui-button>
+        </div>
+      </div>
+
+      <template #footer>
+        <ui-card class="danger-zone">
+          <div>
+            <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
+
+            <delete-profile-modal />
           </div>
         </ui-card>
-      </div>
-
-      <div class="actions">
-        <ui-button :disabled="isLoading" @click="goToEditProfile"> Edit Profile </ui-button>
-        <ui-button variant="secondary" :disabled="isLoading || isDeleting" @click="logout">
-          Log Out
-        </ui-button>
-      </div>
-
-      <ui-card class="danger-zone">
-        <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
-
-        <delete-profile-modal />
-      </ui-card>
+      </template>
     </ui-card>
   </section>
 </template>
@@ -177,33 +192,27 @@ const formatDate = (date: Date) => {
 </script>
 
 <style scoped>
-.head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 1rem;
-}
-
-.profile-title {
-  margin-top: 0.2rem;
-}
-
 .meta {
   margin: 0;
   font-size: 0.86rem;
+}
+
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
-  margin-top: 1rem;
   align-items: start;
 }
 
 .field-card {
   background: var(--muted);
-  gap: 0;
+  gap: 5px;
 }
 
 .card-text-title {
@@ -245,7 +254,7 @@ const formatDate = (date: Date) => {
 .danger-zone {
   margin-top: 1.4rem;
   padding-top: 1rem;
-  border: 1px solied var(--destructive);
+  border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
   background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
@@ -253,16 +262,6 @@ const formatDate = (date: Date) => {
   margin: 0 0 0.6rem;
   color: color-mix(in srgb, var(--destructive) 80%, transparent);
   font-weight: 600;
-}
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  display: grid;
-  place-items: center;
-  z-index: 50;
-  padding: 1rem;
 }
 
 @media (max-width: 760px) {

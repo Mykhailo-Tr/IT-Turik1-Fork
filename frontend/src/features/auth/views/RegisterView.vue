@@ -6,7 +6,8 @@
       <p class="section-subtitle">Get access to tournaments, team tools, and profile management.</p>
 
       <div v-if="isSuccess" class="notice success">
-        Registration completed. Check <strong>{{ form.email }}</strong> to activate your account.
+        Registration completed. Check <strong>{{ form.values.email }}</strong> to activate your
+        account.
       </div>
 
       <form v-else @submit.prevent="handleRegister" class="register-form">
@@ -14,10 +15,11 @@
           <div class="form-item">
             <label class="form-label"> Username </label>
             <ui-input
-              v-model="form.username"
-              :is-invalid="!!error?.details.username"
+              v-model="form.values.username"
+              @blur="form.validateField('username')"
               placeholder="johndoe"
               required
+              :is-invalid="!!error?.details.username"
             />
             <small v-if="error?.details.username" class="text-error">{{
               error?.details.username[0]
@@ -27,7 +29,8 @@
           <div class="form-item">
             <label class="form-label"> Email </label>
             <ui-input
-              v-model="form.email"
+              v-model="form.values.email"
+              @blur="form.validateField('email')"
               :is-invalid="!!error?.details.email"
               placeholder="name@mail.com"
               required
@@ -40,11 +43,12 @@
           <div class="form-item">
             <label class="form-label"> Password </label>
             <ui-password-field
-              v-model="form.password"
+              v-model="form.values.password"
               autocomplete="new-password"
               :is-invalid="!!error?.details.password"
               placeholder="********"
               required
+              @blur="form.validateField('password')"
             />
             <small v-if="error?.details.password" class="text-error">{{
               error?.details.password[0]
@@ -54,13 +58,14 @@
           <div class="form-item">
             <label class="form-label"> Role </label>
             <ui-select
+              v-model="form.values.role"
+              @blur="form.validateField('role')"
               :options="[
                 { value: 'team', label: 'Team Member' },
                 { value: 'organizer', label: 'Organizer' },
                 { value: 'jury', label: 'Jury' },
                 { value: 'admin', label: 'Admin' },
               ]"
-              v-model="form.role"
               class="select-control"
             />
           </div>
@@ -69,7 +74,7 @@
         <div class="form-item" v-if="isRestrictedRole">
           <label class="form-label full-width"> Redeem code </label>
           <ui-input
-            v-model="form.redeem_code"
+            v-model="form.values.redeem_code"
             :is-invalid="!!error?.details.redeem_code"
             placeholder="Enter one-time activation code"
             required
@@ -79,11 +84,11 @@
           }}</small>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 0.9rem">
+        <div style="display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1rem">
           <div class="form-item">
             <label class="form-label full-width"> Full name </label>
             <ui-input
-              v-model="form.full_name"
+              v-model="form.values.full_name"
               :is-invalid="!!error?.details.full_name"
               placeholder="John Doe"
             />
@@ -96,7 +101,7 @@
             <div class="form-item">
               <label class="form-label"> Phone </label>
               <PhoneField
-                v-model="form.phone"
+                v-model="form.values.phone"
                 :error="error?.details.username?.[0]"
                 placeholder="Enter phone number"
               />
@@ -105,7 +110,7 @@
             <div class="form-item">
               <label class="form-label"> City </label>
               <ui-input
-                v-model="form.city"
+                v-model="form.values.city"
                 :is-invalid="!!error?.details.city"
                 placeholder="Kyiv"
               />
@@ -132,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import GoogleAuthButton from '@/components/shared/GoogleAuthButton.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
@@ -147,6 +152,8 @@ import type { UserRole } from '@/api/dbTypes'
 import { useNotification } from '@/composables/useNotification'
 import { useUserStore } from '@/stores/user'
 import { parseError } from '@/api'
+import { useForm } from '@/composables/useForm'
+import { RegisterSchema } from '@/schemas/auth.schema'
 
 const router = useRouter()
 
@@ -161,7 +168,7 @@ interface Form {
   city: string
 }
 
-const form = ref<Form>({
+const form = useForm<Form>(RegisterSchema, {
   username: '',
   email: '',
   password: '',
@@ -173,13 +180,13 @@ const form = ref<Form>({
 })
 
 const restrictedRoles = ['jury', 'organizer', 'admin']
-const isRestrictedRole = computed(() => restrictedRoles.includes(form.value.role))
+const isRestrictedRole = computed(() => restrictedRoles.includes(form.values.role))
 
 watch(
-  () => form.value.role,
+  () => form.values.role,
   (newRole) => {
     if (!restrictedRoles.includes(newRole)) {
-      form.value.redeem_code = ''
+      form.values.redeem_code = ''
     }
   },
 )
@@ -196,11 +203,14 @@ const { mutate: register, isPending: isLoading, isSuccess, error: registerError 
 const error = computed(() => parseError(registerError.value))
 
 const handleRegister = () => {
+  validate(form.value)
+
   register(
     { body: form.value },
     {
       onError: (err) => {
-        showNotification(parseError(err)?.message, 'error')
+        const parsedError = parseError(err)
+        showNotification(parsedError?.message, 'error')
       },
     },
   )

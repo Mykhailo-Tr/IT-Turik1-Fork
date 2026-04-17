@@ -144,11 +144,6 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
   align-items: center;
   justify-content: space-between;
   gap: 0.7rem;
-  margin-bottom: 0.8rem;
-}
-
-.section-head h2 {
-  margin: 0;
 }
 
 .team-grid {
@@ -171,12 +166,7 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
 }
 
 .team-meta h3 {
-  margin: 0;
   font-family: var(--font-display);
-}
-
-.team-item p {
-  margin: 0;
 }
 
 .row-actions {

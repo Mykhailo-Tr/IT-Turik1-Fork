@@ -1,15 +1,14 @@
 <template>
   <div class="time-wrapper" ref="wrapperRef">
     <input
+      v-bind="$attrs"
       ref="inputRef"
       type="text"
       inputmode="numeric"
       class="input"
       :class="{ invalid: isInvalid }"
       :value="modelValue"
-      :disabled="disabled"
       :aria-invalid="isInvalid || undefined"
-      :aria-label="ariaLabel"
       :aria-expanded="isOpen"
       aria-haspopup="listbox"
       placeholder="00:00"
@@ -85,8 +84,6 @@ import { ref, computed, nextTick, watch } from 'vue'
 interface Props {
   modelValue: string
   isInvalid?: boolean
-  disabled?: boolean
-  ariaLabel?: string
 }
 
 const props = defineProps<Props>()
@@ -160,6 +157,7 @@ function handleKeyDown(e: KeyboardEvent) {
       break
     case 'Enter':
     case 'Escape':
+      e.preventDefault()
       isOpen.value = false
       break
   }

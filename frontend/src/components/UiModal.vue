@@ -7,27 +7,20 @@
         data-testid="modal-backdrop"
         @click.self="handleBackdropClick"
       >
-        <ui-card
-          class="modal-card"
-          role="dialog"
-          aria-modal="true"
-          :style="{ width: `min(100%, ${maxWidth})` }"
-        >
-          <template #header>
-            <div class="modal-header">
-              <slot v-if="$slots.title" class="modal-title" name="title" />
+        <ui-card role="dialog" aria-modal="true" :style="{ width: `min(100%, ${maxWidth})` }">
+          <div class="modal-header">
+            <slot v-if="$slots.title" class="modal-title" name="title" />
 
-              <ui-button
-                style="margin-left: auto"
-                variant="secondary"
-                size="sm"
-                @click="close"
-                aria-label="Close"
-              >
-                <CrossIcon />
-              </ui-button>
-            </div>
-          </template>
+            <ui-button
+              style="margin-left: auto"
+              variant="secondary"
+              size="sm"
+              @click="close"
+              aria-label="Close"
+            >
+              <CrossIcon />
+            </ui-button>
+          </div>
 
           <div>
             <slot />
@@ -89,18 +82,12 @@ onUnmounted(() => {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: #00000073;
   backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   z-index: 50;
   padding: 1rem;
-}
-
-.modal-card {
-  background: var(--card);
-  color: var(--card-foreground);
-  overflow: hidden;
 }
 
 .modal-header {

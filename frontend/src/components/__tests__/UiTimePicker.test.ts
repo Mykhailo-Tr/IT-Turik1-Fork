@@ -112,10 +112,6 @@ describe('TimePicker', () => {
     const input = screen.getByPlaceholder('00:00')
 
     await userEvent.type(input, '9999')
-    expect(input).not.toHaveValue('99:99')
-
-    await input.clear()
-    await userEvent.type(input, '2570')
     expect(input).toHaveValue('23:59')
   })
 })

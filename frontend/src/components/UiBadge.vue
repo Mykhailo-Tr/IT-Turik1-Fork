@@ -31,7 +31,7 @@ const props = withDefaults(defineProps<Props>(), { variant: 'gray' })
 .badge--gray {
   border-color: color-mix(in srgb, var(--border) 40%, transparent);
   background: var(--secondary);
-  color: var(--secondary-foreground);
+  color: var(--muted-foreground);
 }
 
 .badge--red {

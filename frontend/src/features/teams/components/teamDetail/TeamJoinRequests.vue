@@ -23,8 +23,8 @@
 
               <template #footer>
                 <div class="row-actions">
-                  <ui-skeleton variant="rect" width="80px" />
-                  <ui-skeleton variant="rect" width="80px" />
+                  <ui-skeleton variant="rect" height="30px" width="80px" />
+                  <ui-skeleton variant="rect" height="30px" width="80px" />
                 </div>
               </template>
             </ui-card>
@@ -32,8 +32,6 @@
         </div>
       </template>
 
-      <!-- TODO: check in parent component -->
-      <!-- <div v-if="props.isCaptain" class="join-request-list"></div> -->
       <div class="join-requests-list">
         <header class="join-requests-subhead">
           <h3>Join Requests</h3>
@@ -52,26 +50,24 @@
 
           <template #footer>
             <div>
-              <template>
-                <div class="row-actions">
-                  <ui-button
-                    size="sm"
-                    :disabled="loadingJoinRequestIds.has(joinRequest.id)"
-                    @click="reviewJoinRequest(joinRequest.id, 'accept')"
-                  >
-                    <loading-icon v-if="loadingJoinRequestIds.has(joinRequest.id)" />
-                    Accept
-                  </ui-button>
-                  <ui-button
-                    variant="secondary"
-                    size="sm"
-                    :disabled="loadingJoinRequestIds.has(joinRequest.id)"
-                    @click="reviewJoinRequest(joinRequest.id, 'decline')"
-                  >
-                    Decline
-                  </ui-button>
-                </div>
-              </template>
+              <div class="row-actions">
+                <ui-button
+                  size="sm"
+                  :disabled="loadingJoinRequestIds.has(joinRequest.id)"
+                  @click="reviewJoinRequest(joinRequest.id, 'accept')"
+                >
+                  <loading-icon v-if="loadingJoinRequestIds.has(joinRequest.id)" />
+                  Accept
+                </ui-button>
+                <ui-button
+                  variant="secondary"
+                  size="sm"
+                  :disabled="loadingJoinRequestIds.has(joinRequest.id)"
+                  @click="reviewJoinRequest(joinRequest.id, 'decline')"
+                >
+                  Decline
+                </ui-button>
+              </div>
             </div>
           </template>
         </ui-card>
@@ -135,7 +131,7 @@ const reviewJoinRequest = (id: JoinRequestId, action: ManageJoinRequestAction) =
         const pastTense = { accept: 'accepted', decline: 'declined' }
         showNotification(`Join request ${pastTense[action]}`, 'success')
 
-        queryClient.invalidateQueries({ queryKey: [teamKeys.team(teamId)] })
+        queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
       },
       onError: (err) => {
         showNotification(
@@ -179,7 +175,6 @@ const reviewJoinRequest = (id: JoinRequestId, action: ManageJoinRequestAction) =
 
 .card-item {
   background-color: var(--muted);
-  color: var(--muted-foreground);
 }
 
 .join-request-name,

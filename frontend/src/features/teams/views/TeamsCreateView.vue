@@ -11,16 +11,16 @@
       </template>
 
       <form class="form-grid" @submit.prevent="handleFormSubmit">
-        <div class="form-item">
-          <label class="form-label"> Team name </label>
+        <label class="form-item">
+          <p class="form-label">Team name</p>
           <ui-input v-model="form.name" :is-invalid="!!createTeamError?.details.name" required />
           <small v-if="createTeamError?.details.name" class="text-error">{{
             createTeamError?.details.name[0]
           }}</small>
-        </div>
+        </label>
 
-        <div class="form-item">
-          <label class="form-label"> Team email </label>
+        <label class="form-item">
+          <p class="form-label">Team email</p>
           <ui-input
             v-model="form.email"
             :is-invalid="!!createTeamError?.details.email"
@@ -30,10 +30,10 @@
           <small v-if="createTeamError?.details.email" class="text-error">{{
             createTeamError?.details.email[0]
           }}</small>
-        </div>
+        </label>
 
-        <div class="form-item">
-          <label class="form-label"> Organization </label>
+        <label class="form-item">
+          <p class="form-label">Organization</p>
           <ui-input
             v-model="form.organization"
             :is-invalid="!!createTeamError?.details.organization"
@@ -41,7 +41,7 @@
           <small v-if="createTeamError?.details.organization" class="text-error">{{
             createTeamError?.details.organization[0]
           }}</small>
-        </div>
+        </label>
 
         <label class="form-label toggle-field">
           <span>Team visibility</span>
@@ -59,8 +59,8 @@
           }}</small>
         </label>
 
-        <div class="form-item">
-          <label class="form-label"> Telegram </label>
+        <label class="form-item">
+          <p class="form-label">Telegram</p>
           <ui-input
             v-model="form.contact_telegram"
             :is-invalid="!!createTeamError?.details.contact_telegram"
@@ -71,10 +71,10 @@
           <small v-if="createTeamError?.details.contact_telegram" class="text-error">{{
             createTeamError?.details.contact_telegram[0]
           }}</small>
-        </div>
+        </label>
 
-        <div class="form-item">
-          <label class="form-label"> Discord </label>
+        <label class="form-item">
+          <p class="form-label">Discord</p>
           <ui-input
             v-model="form.contact_discord"
             :is-invalid="!!createTeamError?.details.contact_discord"
@@ -85,10 +85,10 @@
           <small v-if="createTeamError?.details.contact_discord" class="text-error">{{
             createTeamError?.details.contact_discord[0]
           }}</small>
-        </div>
+        </label>
 
-        <div class="form-item">
-          <label class="form-label"> Add initial members </label>
+        <label class="form-item">
+          <p class="form-label">Add initial members</p>
 
           <ui-select
             v-model="form.member_ids"
@@ -107,7 +107,7 @@
           <small v-if="createTeamError?.details.member_ids" class="text-error">{{
             createTeamError?.details.member_ids[0]
           }}</small>
-        </div>
+        </label>
 
         <ui-button class="full-width" :disabled="isCreatingTeam" type="submit">
           <loading-icon v-if="isCreatingTeam" />
@@ -199,7 +199,6 @@ const handleFormSubmit = () => {
 
 .back-link {
   display: inline-block;
-  margin-bottom: 1rem;
 }
 
 .form-grid {
@@ -221,6 +220,10 @@ const handleFormSubmit = () => {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--input);
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
 }
 
 .visibility-label {
