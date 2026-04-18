@@ -2,16 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-vue'
 import UiDatePicker from '../UiDatePicker.vue'
+import { formatDate } from '../../lib/utils'
 
 const FIXED_DATE = new Date(2026, 3, 10)
 const FIXED_DATE_2 = new Date(2026, 3, 20)
 const locale: Intl.LocalesArgument = 'uk-UA'
-const fmt = (date: Date) =>
-  date.toLocaleDateString(locale, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
 
 const monthNames = Array.from({ length: 12 }, (_, i) =>
   new Intl.DateTimeFormat('uk-UA', { month: 'long' }).format(new Date(2026, i, 1)),
@@ -31,7 +26,7 @@ describe('UiDatePicker', () => {
       props: { modelValue: FIXED_DATE },
     })
 
-    expect(screen.getByText(fmt(FIXED_DATE))).toBeInTheDocument()
+    expect(screen.getByText(formatDate(FIXED_DATE))).toBeInTheDocument()
   })
 
   it('shows range placeholder when range mode has no value', async () => {
@@ -47,7 +42,9 @@ describe('UiDatePicker', () => {
       props: { range: true, modelValue: { start: FIXED_DATE, end: FIXED_DATE_2 } },
     })
 
-    expect(screen.getByText(`${fmt(FIXED_DATE)} – ${fmt(FIXED_DATE_2)}`)).toBeInTheDocument()
+    expect(
+      screen.getByText(`${formatDate(FIXED_DATE)} – ${formatDate(FIXED_DATE_2)}`),
+    ).toBeInTheDocument()
   })
 
   it('shows open-ended range when only start is selected', async () => {
@@ -55,7 +52,7 @@ describe('UiDatePicker', () => {
       props: { range: true, modelValue: { start: FIXED_DATE, end: null } },
     })
 
-    expect(screen.getByText(`${fmt(FIXED_DATE)} – ...`)).toBeInTheDocument()
+    expect(screen.getByText(`${formatDate(FIXED_DATE)} – ...`)).toBeInTheDocument()
   })
 
   it('opens the dropdown on trigger click', async () => {

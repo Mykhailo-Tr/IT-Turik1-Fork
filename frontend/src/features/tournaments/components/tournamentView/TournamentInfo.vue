@@ -57,7 +57,9 @@
     <div class="tournament-action">
       <ui-skeleton-loader :loading="isLoading">
         <template #skeleton>
-          <ui-skeleton variant="rect" height="48px" width="100%" />
+          <ui-button variant="ghost" class="tournament-action-btn">
+            <ui-skeleton variant="rect" width="100%" />
+          </ui-button>
         </template>
 
         <ui-button variant="ghost" class="tournament-action-btn">

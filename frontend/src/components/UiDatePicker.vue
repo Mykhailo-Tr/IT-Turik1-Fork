@@ -115,6 +115,7 @@ import ArrowRight from '@/icons/ArrowRight.vue'
 import ArrowLeft from '@/icons/ArrowLeft.vue'
 import CalendarIcon from '@/icons/CalendarIcon.vue'
 import ArrowDown from '@/icons/ArrowDown.vue'
+import { formatDate } from '@/lib/utils'
 
 export interface DateRange {
   start: Date | null
@@ -258,21 +259,14 @@ const normalizeDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.get
 // Computed
 
 const displayValue = computed(() => {
-  const fmt = (date: Date) =>
-    date.toLocaleDateString('uk-UA', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-
   if (props.range) {
     const start = props.modelValue?.start
     const end = props.modelValue?.end
     if (!start) return props.placeholder
-    return end ? `${fmt(start)} – ${fmt(end)}` : `${fmt(start)} – ...`
+    return end ? `${formatDate(start)} – ${formatDate(end)}` : `${formatDate(start)} – ...`
   }
 
-  return props.modelValue ? fmt(props.modelValue as Date) : props.placeholder
+  return props.modelValue ? formatDate(props.modelValue as Date) : props.placeholder
 })
 
 const calendarCells = computed(() => {

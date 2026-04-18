@@ -21,7 +21,7 @@
           variant="secondary"
           :class="['sections-btn', { active: currentSection === 'information' }]"
           @click="setActiveSection('information')"
-          >Inforamtion</ui-button
+          >Information</ui-button
         >
         <ui-button
           variant="secondary"
@@ -37,9 +37,9 @@
         >
         <ui-button
           variant="secondary"
-          :class="['sections-btn', { active: currentSection === 'shedule' }]"
-          @click="setActiveSection('shedule')"
-          >Shedule</ui-button
+          :class="['sections-btn', { active: currentSection === 'schedule' }]"
+          @click="setActiveSection('schedule')"
+          >Schedule</ui-button
         >
         <ui-button
           variant="secondary"
@@ -54,6 +54,8 @@
       <TournamentInfo :tournament-id="id" />
       <TournamentTeams :tournament-id="id" />
     </div>
+
+    <TournamentSchedule :tournament-id="id" v-if="currentSection === 'schedule'" />
   </section>
 </template>
 
@@ -64,8 +66,9 @@ import { useRoute } from 'vue-router'
 import TournamentInfo from '../components/tournamentView/TournamentInfo.vue'
 import TournamentTeams from '../components/tournamentView/TournamentTeams.vue'
 import { ref } from 'vue'
+import TournamentSchedule from '../components/tournamentView/TournamentSchedule.vue'
 
-type Sections = 'information' | 'shedule' | 'rounds' | 'submissions' | 'leaderboard'
+type Sections = 'information' | 'schedule' | 'rounds' | 'submissions' | 'leaderboard'
 
 const route = useRoute()
 const id = Number(route.params.id) ?? 1
@@ -85,6 +88,7 @@ const setActiveSection = (section: Sections) => {
 .sections {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .sections-btn.active {

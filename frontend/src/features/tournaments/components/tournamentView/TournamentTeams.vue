@@ -30,9 +30,7 @@
         <ui-skeleton-loader :loading="isTeamsLoading">
           <template #skeleton>
             <div style="display: flex; flex-direction: column; gap: 0.4rem">
-              <ui-skeleton variant="rect" height="48px" width="100%" />
-              <ui-skeleton variant="rect" height="48px" width="100%" />
-              <ui-skeleton variant="rect" height="48px" width="100%" />
+              <ui-skeleton v-for="i in 4" :key="i" variant="rect" height="48px" width="100%" />
             </div>
           </template>
 
