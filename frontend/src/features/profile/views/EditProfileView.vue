@@ -161,19 +161,6 @@ const form = useForm(EditProfileSchema, {
   city: '',
 })
 
-watch(
-  user,
-  (user) => {
-    if (!user) return
-
-    form.fields.value.username = user.username
-    form.fields.value.full_name = user.full_name ?? ''
-    form.fields.value.phone = user.phone
-    form.fields.value.city = user.city ?? ''
-  },
-  { immediate: true },
-)
-
 const router = useRouter()
 const { showNotification } = useNotification()
 
@@ -204,6 +191,21 @@ const handleSubmit = () => {
 const goBackToProfile = () => {
   router.push('/profile')
 }
+
+watch(
+  user,
+  (user) => {
+    if (!user) return
+
+    form.hydrate({
+      username: user.username ?? '',
+      full_name: user.full_name ?? '',
+      phone: user.phone ?? '',
+      city: user.city ?? '',
+    })
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
