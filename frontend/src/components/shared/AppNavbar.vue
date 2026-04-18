@@ -18,6 +18,9 @@
           <template v-else>
             <router-link to="/" :class="navItemClass('home')">Home</router-link>
             <router-link to="/teams" :class="navItemClass('teams')">Teams</router-link>
+            <router-link to="/tournaments" :class="navItemClass('tournaments')"
+              >Tournaments</router-link
+            >
             <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
             <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
               >Admin</router-link
@@ -76,6 +79,13 @@
               >Teams</router-link
             >
             <router-link
+              to="/tournaments"
+              :class="navItemClass('tournaments')"
+              @click="mobileMenuOpen = false"
+              class="mobile-nav-item"
+              >Tournaments</router-link
+            >
+            <router-link
               to="/profile"
               :class="navItemClass('profile')"
               @click="mobileMenuOpen = false"
@@ -121,7 +131,7 @@ const { data: user } = useProfile()
 
 const isAdmin = computed(() => user.value?.role === 'admin')
 
-type Section = 'home' | 'teams' | 'profile' | 'admin' | 'login' | 'register'
+type Section = 'home' | 'teams' | 'tournaments' | 'profile' | 'admin' | 'login' | 'register'
 
 const navItemClass = (section: Section, cta = false) => ({
   'nav-item': true,
@@ -318,7 +328,7 @@ const isSectionActive = (section: Section) => {
   border-radius: 999px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 817px) {
   .nav-links.desktop {
     display: none;
   }
