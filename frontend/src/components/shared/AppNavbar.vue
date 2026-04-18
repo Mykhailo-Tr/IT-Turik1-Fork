@@ -168,7 +168,6 @@ const isSectionActive = (section: Section) => {
   font-family: var(--font-display);
   font-size: 1.2rem;
   font-weight: 700;
-  text-decoration: none;
   color: var(--foreground);
 }
 
@@ -192,7 +191,6 @@ const isSectionActive = (section: Section) => {
 
 .nav-item {
   color: var(--foreground);
-  text-decoration: none;
   font-weight: 700;
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
@@ -288,7 +286,6 @@ const isSectionActive = (section: Section) => {
 
 .mobile-nav-item {
   color: var(--ink-700);
-  text-decoration: none;
   font-weight: 700;
   padding: 0.75rem 1rem;
   border-radius: 999px;

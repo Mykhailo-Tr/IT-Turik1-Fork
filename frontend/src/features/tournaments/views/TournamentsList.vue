@@ -48,7 +48,7 @@
             <div class="tournaments-grid">
               <ui-card v-for="tournament in pageItems" :key="tournament.id" class="tournament-card">
                 <template #header>
-                  <h3>{{ tournament.title }}</h3>
+                  <h3>{{ tournament.name }}</h3>
                 </template>
 
                 <div>
@@ -78,7 +78,13 @@
                 </div>
 
                 <template #footer>
-                  <ui-button size="sm" variant="secondary" class="tournaments-details-btn">
+                  <ui-button
+                    size="sm"
+                    asLink
+                    :to="`/tournaments/${tournament.id}`"
+                    variant="secondary"
+                    class="tournaments-details-btn"
+                  >
                     View details
                   </ui-button>
                 </template>
@@ -133,7 +139,7 @@ import ArrowRight from '@/icons/ArrowRight.vue'
 
 interface Data {
   id: number
-  title: string
+  name: string
   description: string
   status: string
   startAt: Date
@@ -157,7 +163,7 @@ const fetchItems = async (page: number, query?: string): Promise<Response> => {
 
   const allItems = Array.from({ length: totalMockedItems }, (_, i) => ({
     id: i + 1,
-    title: `Item ${i + 1}`,
+    name: `Item ${i + 1}`,
     description: `Item description ${i + 1}`,
     status: Math.random() > 0.5 ? 'Running' : 'Registration open',
     startAt: new Date(Date.now() + i * 86400000),
@@ -168,7 +174,7 @@ const fetchItems = async (page: number, query?: string): Promise<Response> => {
   if (query?.trim()) {
     const normalized = query.trim().toLowerCase()
 
-    filtered = allItems.filter((item) => item.title.toLowerCase().includes(normalized))
+    filtered = allItems.filter((item) => item.name.toLowerCase().includes(normalized))
   }
 
   const total = filtered.length
@@ -228,15 +234,11 @@ const applySearch = () => {
 }
 </script>
 
-<style>
+<style scoped>
 .tournaments-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.tournaments-title {
-  margin: 0;
 }
 
 .search-wrapper {
@@ -310,14 +312,12 @@ const applySearch = () => {
   color: var(--muted-foreground);
 }
 
-/* Tablet */
 @media (max-width: 1024px) {
   .tournaments-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-/* Mobile */
 @media (max-width: 768px) {
   .tournaments-grid {
     grid-template-columns: 1fr;

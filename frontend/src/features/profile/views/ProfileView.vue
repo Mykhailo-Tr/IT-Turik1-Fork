@@ -233,7 +233,6 @@ const formatDate = (date: Date) => {
 
 .team-link {
   color: var(--brand-700);
-  text-decoration: none;
   font-weight: 700;
   overflow-wrap: anywhere;
   word-break: break-word;

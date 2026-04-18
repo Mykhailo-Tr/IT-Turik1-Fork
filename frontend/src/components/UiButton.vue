@@ -80,7 +80,6 @@ const sizeClass = computed(() => sizes[props.size])
   color: var(--secondary-foreground);
   cursor: pointer;
   outline: none;
-  text-decoration: none;
   transition:
     background 0.2s ease,
     color 0.2s ease,
