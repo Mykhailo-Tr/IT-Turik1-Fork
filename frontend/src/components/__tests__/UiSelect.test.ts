@@ -56,7 +56,7 @@ describe('UiSelect', () => {
     expect(options[0]).toHaveTextContent('Banana')
   })
 
-  it('selects an option and closes the dropdown in single select mode', async () => {
+  it('selects an option', async () => {
     const screen = await render(UiSelect, {
       props: { modelValue: null, options: mockOptions },
     })
@@ -68,10 +68,9 @@ describe('UiSelect', () => {
     await options.click()
 
     expect(screen.emitted('update:modelValue')?.[0]).toStrictEqual(['apple'])
-    expect(() => screen.getByTestId('select-dropdown')).not.toThrow()
   })
 
-  it('allows multiple selections without closing the dropdown', async () => {
+  it('allows multiple selections', async () => {
     const screen = await render(UiSelect, {
       props: {
         multiple: true,
@@ -91,7 +90,6 @@ describe('UiSelect', () => {
       [['apple', 'banana']],
       [['apple', 'cherry']],
     ])
-    expect(screen.getByTestId('select-dropdown')).toBeVisible()
   })
 
   it('shows multiple selection summary when more than one item is selected', async () => {

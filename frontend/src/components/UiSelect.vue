@@ -56,7 +56,7 @@
             }"
             role="option"
             :aria-selected="isSelected(option)"
-            @click="selectOption(option)"
+            @click.prevent="selectOption(option)"
             @mouseenter="focusedIndex = index"
           >
             {{ option.label }}

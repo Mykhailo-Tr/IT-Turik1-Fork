@@ -4,7 +4,9 @@
       <slot name="skeleton" />
     </div>
 
-    <slot v-else />
+    <div v-else>
+      <slot />
+    </div>
   </Transition>
 </template>
 
