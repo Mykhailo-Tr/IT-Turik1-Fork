@@ -217,7 +217,6 @@ function handleDropdownKeydown(e: KeyboardEvent) {
 
   const move = (delta: number) => {
     e.preventDefault()
-    console.log(focusable, focusable[idx], focusable[idx + delta])
     const next = focusable[idx + delta]
     next?.focus()
   }
@@ -249,18 +248,18 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
   new Intl.DateTimeFormat('uk-UA', { month: 'long' }).format(new Date(2026, i, 1)),
 )
 
-const isSameDay = (d1: Date, d2: Date) =>
-  d1.getFullYear() === d2.getFullYear() &&
-  d1.getMonth() === d2.getMonth() &&
-  d1.getDate() === d2.getDate()
+const isSameDay = (date1: Date, date2: Date) =>
+  date1.getFullYear() === date2.getFullYear() &&
+  date1.getMonth() === date2.getMonth() &&
+  date1.getDate() === date2.getDate()
 
 const normalizeDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())
 
 // Computed
 
 const displayValue = computed(() => {
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('uk-UA', {
+  const fmt = (date: Date) =>
+    date.toLocaleDateString('uk-UA', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -372,13 +371,13 @@ function adjustMonth(step: number) {
   viewMonth.value = newDate.getMonth()
 }
 
-function selectMonth(m: number) {
-  viewMonth.value = m
+function selectMonth(month: number) {
+  viewMonth.value = month
   viewMode.value = 'days'
 }
 
-function selectYear(y: number) {
-  viewYear.value = y
+function selectYear(year: number) {
+  viewYear.value = year
   viewMode.value = 'days'
 }
 

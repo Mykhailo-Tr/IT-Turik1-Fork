@@ -9,7 +9,6 @@ export function useForm<T extends object>(schema: v.GenericSchema, initialValues
 
   function validate(): boolean {
     const result = v.safeParse(schema, fields.value)
-
     Object.keys(errors.value).forEach((key) => delete errors.value[key])
 
     if (!result.success) {

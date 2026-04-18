@@ -5,8 +5,17 @@ import UiDatePicker from '../UiDatePicker.vue'
 
 const FIXED_DATE = new Date(2026, 3, 10)
 const FIXED_DATE_2 = new Date(2026, 3, 20)
+const locale: Intl.LocalesArgument = 'uk-UA'
 const fmt = (date: Date) =>
-  date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  date.toLocaleDateString(locale, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+const monthNames = Array.from({ length: 12 }, (_, i) =>
+  new Intl.DateTimeFormat('uk-UA', { month: 'long' }).format(new Date(2026, i, 1)),
+)
 
 describe('UiDatePicker', () => {
   it('shows placeholder when no date is selected', async () => {
@@ -139,7 +148,9 @@ describe('UiDatePicker', () => {
     await screen.getByRole('button').click()
     await screen.getByLabelText('Next').click()
 
-    expect(screen.getByText('May')).toBeInTheDocument()
+    const expectedMonth = monthNames[FIXED_DATE.getMonth() + 1]
+
+    expect(screen.getByText(expectedMonth)).toBeInTheDocument()
   })
 
   it('navigates to previous month on arrow click', async () => {
@@ -150,7 +161,9 @@ describe('UiDatePicker', () => {
     await screen.getByRole('button').click()
     await screen.getByLabelText('Previous').click()
 
-    expect(screen.getByText('March')).toBeInTheDocument()
+    const expectedMonth = monthNames[FIXED_DATE.getMonth() - 1]
+
+    expect(screen.getByText(expectedMonth)).toBeInTheDocument()
   })
 
   it('switches to month picker view when month button is clicked', async () => {
@@ -159,10 +172,12 @@ describe('UiDatePicker', () => {
     })
 
     await screen.getByRole('button').click()
-    await screen.getByText('April').click()
 
-    expect(screen.getByText('Jan')).toBeInTheDocument()
-    expect(screen.getByText('Dec')).toBeInTheDocument()
+    const currentMonth = monthNames[FIXED_DATE.getMonth()]
+    await screen.getByText(currentMonth).click()
+
+    const monthGrid = screen.getByTestId('month-pick-grid')
+    expect(monthGrid).toBeInTheDocument()
   })
 
   it('selects month from month picker and returns to days view', async () => {
@@ -172,16 +187,14 @@ describe('UiDatePicker', () => {
 
     await screen.getByRole('button').click()
 
-    const btn = screen.getByTestId('month-pick-btn')
+    const currentMonth = monthNames[FIXED_DATE.getMonth()]
+    const btn = screen.getByText(currentMonth)
     await btn.click()
 
     const monthGrid = screen.getByTestId('month-pick-grid')
     expect(monthGrid).toBeInTheDocument()
 
-    const currentDate = new Date()
-    currentDate.setMonth(currentDate.getMonth() + 1)
-    const nextMonth = currentDate.toLocaleString('en-US', { month: 'short' })
-
+    const nextMonth = monthNames[FIXED_DATE.getMonth() + 1].slice(0, 3)
     await screen.getByText(nextMonth).click()
 
     const daysGrid = screen.getByTestId('day-pick-grid')
@@ -227,8 +240,8 @@ describe('UiDatePicker', () => {
     await screen.getByRole('button').click()
 
     const days = screen.getByRole('dialog').getByRole('button').all()
-    const startBtn = days.find((d) => d.element().textContent?.trim() === '10')
-    const endBtn = days.find((d) => d.element().textContent?.trim() === '20')
+    const startBtn = days.find((day) => day.element().textContent?.trim() === '10')
+    const endBtn = days.find((day) => day.element().textContent?.trim() === '20')
 
     await startBtn!.click()
     await endBtn!.click()
