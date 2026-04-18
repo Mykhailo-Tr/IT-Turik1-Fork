@@ -57,12 +57,6 @@
             <p class="text-muted">Visibility: {{ team.is_public ? 'Public' : 'Private' }}</p>
             <p class="text-muted">Captain: {{ captainName(team) }}</p>
             <p class="text-muted">Members: {{ team.members.length }}</p>
-            <p v-if="team.my_invitation_status" class="text-muted">
-              My invitation: {{ team.my_invitation_status }}
-            </p>
-            <p v-if="team.my_join_request_status" class="text-muted">
-              My join request: {{ team.my_join_request_status }}
-            </p>
           </div>
 
           <template #footer>
