@@ -16,13 +16,12 @@
       >
         <span>{{ notification.message }}</span>
         <ui-button
-          variant="ghost"
+          :variant="notification.type === 'success' ? 'default' : 'danger'"
           size="sm"
           type="button"
-          class="app-notice-close"
           @click="hideNotification()"
-          >Dismiss</ui-button
-        >
+          ><CrossIcon
+        /></ui-button>
       </div>
     </Transition>
 
@@ -37,6 +36,7 @@ import { useNotification } from '@/composables/useNotification'
 import AppNavbar from './components/shared/AppNavbar.vue'
 import UiButton from './components/UiButton.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
+import CrossIcon from './icons/CrossIcon.vue'
 
 const { notification, hideNotification } = useNotification()
 
@@ -106,6 +106,7 @@ applyTheme()
   gap: 0.7rem;
   z-index: 2000;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(20px);
 }
 
 .type-info {
