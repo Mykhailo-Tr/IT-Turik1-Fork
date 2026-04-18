@@ -10,7 +10,7 @@ export function useForm<T extends object>(schema: v.GenericSchema, initialValues
   function validate(): boolean {
     const result = v.safeParse(schema, fields.value)
 
-    Object.keys(errors).forEach((key) => delete errors.value[key])
+    Object.keys(errors.value).forEach((key) => delete errors.value[key])
 
     if (!result.success) {
       result.issues.forEach((issue) => {
@@ -33,10 +33,15 @@ export function useForm<T extends object>(schema: v.GenericSchema, initialValues
     errors.value[key] = value
   }
 
+  function hydrate(values: T) {
+    fields.value = { ...values }
+    errors.value = {}
+  }
+
   function reset() {
     fields.value = initialValues
     errors.value = {}
   }
 
-  return { fields, errors, validate, validateField, setError, reset }
+  return { fields, errors, validate, validateField, setError, hydrate, reset }
 }
