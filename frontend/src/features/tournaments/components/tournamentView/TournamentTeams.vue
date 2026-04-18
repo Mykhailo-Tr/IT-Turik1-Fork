@@ -87,12 +87,13 @@ const search = ref('')
 const fetchTeams = async (): Promise<Team[]> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
-  return [
-    { id: 1, name: 'Alpha Team', members: 32 },
-    { id: 2, name: 'Bravo Squad', members: 18 },
-    { id: 3, name: 'Phoenix Unit', members: 24 },
-    { id: 4, name: 'Storm Crew', members: 12 },
-  ]
+  return new Array(200).fill(null).map((_, i) => {
+    return {
+      id: i + 1,
+      name: `Team ${i + 1}`,
+      members: i + 1,
+    }
+  })
 }
 
 const { data: teams, isLoading: isTeamsLoading } = useQuery({
@@ -138,7 +139,7 @@ const filteredTeams = computed(() => {
   align-items: center;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  padding: 0.7rem 0;
+  padding: 0.7rem 10px 0.7rem 0;
 }
 
 .team-label {
