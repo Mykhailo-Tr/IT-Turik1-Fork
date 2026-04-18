@@ -16,8 +16,8 @@
 
       <form @submit.prevent="handleSubmit" class="profile-form">
         <div class="form-grid">
-          <div class="form-item">
-            <label class="form-label"> Full name </label>
+          <label class="form-item">
+            <p class="form-label">Full name</p>
 
             <ui-skeleton-loader :loading="isLoading" style="width: 100%">
               <template #skeleton>
@@ -25,43 +25,46 @@
               </template>
 
               <ui-input
-                v-model="form.full_name"
-                :class="{ 'field-invalid': formErrors.full_name }"
+                v-model="form.fields.value.full_name"
                 :disabled="isLoadingError"
+                :isInvalid="!!form.errors.value.full_name"
                 style="width: 100%"
                 type="text"
                 placeholder="John Doe"
                 required
-                @blur="touchField('full_name')"
+                @blur="form.validateField('full_name')"
               />
             </ui-skeleton-loader>
-            <small v-if="formErrors.full_name" class="text-error">{{ formErrors.full_name }}</small>
-          </div>
+            <small v-if="form.errors.value.full_name" class="text-error">{{
+              form.errors.value.full_name
+            }}</small>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> Username </label>
-
+          <label class="form-item">
+            <p class="form-label">Username</p>
             <ui-skeleton-loader :loading="isLoading" style="width: 100%">
               <template #skeleton>
                 <ui-skeleton variant="rect" height="45px" width="100%" />
               </template>
 
               <ui-input
-                v-model="form.username"
-                :class="{ 'field-invalid': formErrors.username }"
+                v-model="form.fields.value.username"
                 :disabled="isLoadingError"
+                :isInvalid="!!form.errors.value.username"
                 style="width: 100%"
                 placeholder="johndoe"
                 required
-                @blur="touchField('username')"
+                @blur="form.validateField('username')"
               />
             </ui-skeleton-loader>
 
-            <small v-if="formErrors.username" class="text-error">{{ formErrors.username }}</small>
-          </div>
+            <small v-if="form.errors.value.username" class="text-error">{{
+              form.errors.value.username
+            }}</small>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> Phone number </label>
+          <label class="form-item">
+            <p class="form-label">Phone number</p>
 
             <ui-skeleton-loader :loading="isLoading" style="width: 100%">
               <template #skeleton>
@@ -69,35 +72,40 @@
               </template>
 
               <PhoneField
-                v-model="form.phone"
+                v-model="form.fields.value.phone"
                 :disabled="isLoadingError"
-                :error="formErrors.phone"
-                @update:modelValue="touchField('phone')"
+                :isInvalid="!!form.errors.value.phone"
+                @blur="form.validateField('phone')"
               />
             </ui-skeleton-loader>
-          </div>
+            <small v-if="form.errors.value.phone" class="text-error">{{
+              form.errors.value.phone
+            }}</small>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> City </label>
+          <label class="form-item">
+            <p class="form-label">City</p>
             <ui-skeleton-loader :loading="isLoading" style="width: 100%">
               <template #skeleton>
                 <ui-skeleton variant="rect" height="45px" width="100%" />
               </template>
 
               <ui-input
-                v-model="form.city"
-                :class="{ 'field-invalid': error?.details.city }"
+                v-model="form.fields.value.city"
                 :disabled="isLoadingError"
+                :isInvalid="!!form.errors.value.city"
                 style="width: 100%"
                 type="text"
                 placeholder="Kyiv"
                 required
-                @blur="touchField('city')"
+                @blur="form.validateField('city')"
               />
             </ui-skeleton-loader>
 
-            <small v-if="formErrors.city" class="text-error">{{ formErrors.city }}</small>
-          </div>
+            <small v-if="form.errors.value.city" class="text-error">{{
+              form.errors.value.city
+            }}</small>
+          </label>
         </div>
 
         <div class="actions">
@@ -105,7 +113,9 @@
             <LoadingIcon v-if="isUpdatingProfile" />
             Save changes
           </ui-button>
+
           <ChangePasswordModal :disabled="isLoadingError || isLoading" />
+
           <ui-button
             variant="secondary"
             :disabled="isUpdatingProfile || isLoadingError || isLoading"
@@ -119,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 import PhoneField from '@/components/shared/PhoneField.vue'
 import { useNotification } from '@/composables/useNotification'
@@ -132,8 +142,8 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import ChangePasswordModal from '../components/modals/ChangePasswordModal.vue'
 import { parseError } from '@/api'
-
-type TouchField = 'full_name' | 'phone' | 'city' | 'username'
+import { useForm } from '@/composables/useForm'
+import { EditProfileSchema } from '@/schemas/profile.schema'
 
 interface ProfileForm {
   username: string
@@ -144,111 +154,48 @@ interface ProfileForm {
 
 const { data: user, isLoading, isLoadingError } = useProfile()
 
-const form = computed<ProfileForm>(() => ({
-  username: user.value?.username ?? '',
-  full_name: user.value?.full_name ?? '',
-  phone: user.value?.phone ?? '',
-  city: user.value?.city ?? '',
-}))
-
-const formErrors = ref<Record<keyof ProfileForm, string>>({
-  full_name: '',
-  city: '',
-  phone: '',
+const form = useForm(EditProfileSchema, {
   username: '',
+  full_name: '',
+  phone: '',
+  city: '',
 })
 
-const touched = ref<Record<TouchField, boolean>>({
-  full_name: false,
-  username: false,
-  phone: false,
-  city: false,
-})
+watch(
+  user,
+  (user) => {
+    if (!user) return
+
+    form.fields.value.username = user.username
+    form.fields.value.full_name = user.full_name ?? ''
+    form.fields.value.phone = user.phone
+    form.fields.value.city = user.city ?? ''
+  },
+  { immediate: true },
+)
 
 const router = useRouter()
-const { showNotification, hideNotification } = useNotification()
+const { showNotification } = useNotification()
 
-const validateFullName = (value: string): string => {
-  if (!value?.trim()) return 'Full name is required.'
-  if (value.trim().length < 2) return 'Full name must be at least 2 characters.'
-  return ''
-}
-
-const validateUsername = (value: string): string => {
-  if (!value?.trim()) return 'Username is required.'
-  if (value.trim().length <= 3) return 'Username must be at least 3 characters.'
-  if (!/^[A-Za-z0-9@.+_-]+$/.test(value)) {
-    return 'Use letters, numbers, and @ . + - _ only.'
-  }
-  return ''
-}
-
-const validatePhone = (value: string): string => {
-  if (!value?.trim()) return 'Phone number is required.'
-  if (!/^\+?1?\d{9,15}$/.test(value)) return 'Use 9-15 digits with an optional + prefix.'
-  return ''
-}
-
-const validateCity = (value: string): string => {
-  if (!value?.trim()) return 'City is required.'
-  if (value.trim().length < 2) return 'City must be at least 2 characters.'
-  return ''
-}
-
-const validateForm = (data: ProfileForm): Record<keyof ProfileForm, string> => {
-  const errors: Record<keyof ProfileForm, string> = {
-    full_name: validateFullName(data.full_name),
-    city: validateCity(data.city),
-    phone: validatePhone(data.phone),
-    username: validateUsername(data.username),
-  }
-
-  return errors
-}
-
-const touchField = (field: TouchField): void => {
-  touched.value[field] = true
-}
-
-const touchAllFields = (): void => {
-  touched.value = { full_name: true, username: true, phone: true, city: true }
-}
-
-const {
-  mutate: updateProfile,
-  isPending: isUpdatingProfile,
-  error: updateProfileError,
-} = useUpdateProfile()
-const error = computed(() => parseError(updateProfileError.value))
+const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
 
 const handleSubmit = () => {
-  touchAllFields()
-  hideNotification()
-
-  const validationErrors = validateForm(form.value)
-  const hasClientErrors = Object.values(validationErrors).some(Boolean)
-
-  if (hasClientErrors) {
-    formErrors.value = validationErrors
-    return
-  }
+  if (!form.validate()) return
 
   updateProfile(
-    { body: form.value },
+    { body: form.fields.value },
     {
       onSuccess: () => {
         showNotification('Profile updated successfully.', 'success')
         router.push('/profile')
       },
       onError: (err) => {
-        if (err.response) {
-          Object.entries(err.response.data.details).forEach(([key, messages]) => {
-            formErrors.value[key as keyof ProfileForm] = messages[0] ?? ''
-          })
-          showNotification('Validation error. Please check your data.', 'error')
-        } else {
-          showNotification('Server connection error.', 'error')
+        const parsedError = parseError(err)
+        for (const [field, errors] of Object.entries(parsedError?.details || {})) {
+          form.setError(field as keyof ProfileForm, errors?.[0] ?? 'Invalid value')
         }
+
+        showNotification(parsedError?.message, 'error')
       },
     },
   )
@@ -301,11 +248,6 @@ const goBackToProfile = () => {
   gap: 0.6rem;
   flex-wrap: wrap;
   margin-top: 1rem;
-}
-
-.field-invalid {
-  border-color: rgba(220, 38, 38, 0.7);
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
 
 .accent-hover:hover {

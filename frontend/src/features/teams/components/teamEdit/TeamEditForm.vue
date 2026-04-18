@@ -6,77 +6,110 @@
     </header>
 
     <form class="form-grid" @submit.prevent="handleSubmit">
-      <div class="form-item">
-        <label class="form-label"> Team name </label>
-        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
-          <template #skeleton>
-            <ui-skeleton variant="rect" height="45px" width="100%" />
-          </template>
-
-          <ui-input v-model="form.name" required :disabled="isSavingChanges" style="width: 100%" />
-        </ui-skeleton-loader>
-      </div>
-
-      <div class="form-item">
-        <label class="form-label"> Team email </label>
+      <label class="form-item">
+        <p class="form-label">Team name</p>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
           </template>
 
           <ui-input
-            v-model="form.email"
+            v-model="form.fields.value.name"
+            required
+            :disabled="isSavingChanges"
+            :isInvalid="!!form.errors.value.name"
+            style="width: 100%"
+            @blur="form.validateField('name')"
+          />
+          <small v-if="form.errors.value.name" class="text-error">{{
+            form.errors.value.name
+          }}</small>
+        </ui-skeleton-loader>
+      </label>
+
+      <label class="form-item">
+        <p class="form-label">Team email</p>
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input
+            v-model="form.fields.value.email"
             type="email"
             required
             :disabled="isSavingChanges"
+            :isInvalid="!!form.errors.value.email"
             style="width: 100%"
-        /></ui-skeleton-loader>
-      </div>
-
-      <div class="form-item">
-        <label class="form-label"> Organization </label>
-        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
-          <template #skeleton>
-            <ui-skeleton variant="rect" height="45px" width="100%" />
-          </template>
-
-          <ui-input v-model="form.organization" :disabled="isSavingChanges" style="width: 100%" />
+            @blur="form.validateField('email')"
+          />
+          <small v-if="form.errors.value.email" class="text-error">{{
+            form.errors.value.email
+          }}</small>
         </ui-skeleton-loader>
-      </div>
+      </label>
 
-      <div class="form-item">
-        <label class="form-label"> Telegram </label>
+      <label class="form-item">
+        <p class="form-label">Organization</p>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
           </template>
 
           <ui-input
-            v-model="form.contact_telegram"
-            pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
+            v-model="form.fields.value.organization"
+            :disabled="isSavingChanges"
+            :isInvalid="!!form.errors.value.organization"
+            style="width: 100%"
+            @blur="form.validateField('organization')"
+          />
+          <small v-if="form.errors.value.organization" class="text-error">{{
+            form.errors.value.organization
+          }}</small>
+        </ui-skeleton-loader>
+      </label>
+
+      <label class="form-item">
+        <p class="form-label">Telegram</p>
+        <ui-skeleton-loader :loading="props.loading" style="width: 100%">
+          <template #skeleton>
+            <ui-skeleton variant="rect" height="45px" width="100%" />
+          </template>
+
+          <ui-input
+            v-model="form.fields.value.contact_telegram"
             title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
             :disabled="isSavingChanges"
+            :isInvalid="!!form.errors.value.contact_telegram"
             style="width: 100%"
+            @blur="form.validateField('contact_telegram')"
           />
+          <small v-if="form.errors.value.contact_telegram" class="text-error">{{
+            form.errors.value.contact_telegram
+          }}</small>
         </ui-skeleton-loader>
-      </div>
+      </label>
 
-      <div class="form-item">
-        <label class="form-label"> Discord </label>
+      <label class="form-item">
+        <p class="form-label">Discord</p>
         <ui-skeleton-loader :loading="props.loading" style="width: 100%">
           <template #skeleton>
             <ui-skeleton variant="rect" height="45px" width="100%" />
           </template>
 
           <ui-input
-            v-model="form.contact_discord"
-            pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
+            v-model="form.fields.value.contact_discord"
             title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
             :disabled="isSavingChanges"
+            :isInvalid="!!form.errors.value.contact_discord"
             style="width: 100%"
+            @blur="form.validateField('contact_discord')"
           />
+          <small v-if="form.errors.value.contact_discord" class="text-error">{{
+            form.errors.value.contact_discord
+          }}</small>
         </ui-skeleton-loader>
-      </div>
+      </label>
 
       <div class="form-actions full-width">
         <ui-button type="submit" :disabled="isSavingChanges || props.loading || props.isError">
@@ -104,6 +137,8 @@ import { useUpdateTeamInfo } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiBadge from '@/components/UiBadge.vue'
+import { useForm } from '@/composables/useForm'
+import { EditTeamSchema } from '@/schemas/teams.schema'
 
 interface Props {
   team?: GetTeamInfoResponse
@@ -113,9 +148,9 @@ interface Props {
 
 const props = defineProps<Props>()
 const router = useRouter()
-const { hideNotification, showNotification } = useNotification()
+const { showNotification } = useNotification()
 
-const form = ref({
+const form = useForm(EditTeamSchema, {
   name: props.team?.name ?? '',
   email: props.team?.email ?? '',
   organization: props.team?.organization ?? '',
@@ -128,11 +163,10 @@ const isSavingChanges = ref(false)
 const { mutate: updateTeam } = useUpdateTeamInfo()
 
 const handleSubmit = () => {
-  if (!props.team) return
-  hideNotification()
+  if (!props.team || !form.validate()) return
 
   updateTeam(
-    { teamId: props.team.id, body: form.value },
+    { teamId: props.team.id, body: form.fields.value },
     {
       onSuccess: () => {
         router.push(`/teams/${props.team?.id}`)

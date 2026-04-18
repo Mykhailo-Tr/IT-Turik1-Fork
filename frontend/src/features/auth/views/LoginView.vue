@@ -13,15 +13,32 @@
 
       <div>
         <form @submit.prevent="handleLogin" class="auth-form">
-          <div class="form-item">
-            <label class="form-label"> Username </label>
-            <ui-input v-model="form.username" autocomplete="username" required />
-          </div>
+          <label class="form-item">
+            <p class="form-label">Username</p>
+            <ui-input
+              v-model="form.fields.value.username"
+              autocomplete="username"
+              :is-invalid="!!form.errors.value.username"
+              required
+              @blur="form.validateField('username')"
+            />
+            <small v-if="form.errors.value.username" class="text-error">{{
+              form.errors.value.username
+            }}</small>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> Password </label>
-            <ui-password-field v-model="form.password" autocomplete="current-password" />
-          </div>
+          <label class="form-item">
+            <p class="form-label">Password</p>
+            <ui-password-field
+              v-model="form.fields.value.password"
+              autocomplete="current-password"
+              :is-invalid="!!form.errors.value.password"
+              @blur="form.validateField('password')"
+            />
+            <small v-if="form.errors.value.password" class="text-error">{{
+              form.errors.value.password
+            }}</small>
+          </label>
 
           <p class="forgot-link">
             <router-link to="/forgot-password">Forgot password?</router-link>
@@ -50,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import GoogleAuthButton from '@/components/shared/GoogleAuthButton.vue'
 import UiButton from '@/components/UiButton.vue'
@@ -63,11 +80,13 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { accountKeys } from '@/queries/keys'
 import type { LoginResponse } from '@/api/accounts/types'
 import { parseError } from '@/api'
+import { useForm } from '@/composables/useForm'
+import { LoginSchema } from '@/schemas/auth.schema'
 
 const queryClient = useQueryClient()
 const store = useUserStore()
 
-const form = ref({ username: '', password: '' })
+const form = useForm(LoginSchema, { username: '', password: '' })
 const router = useRouter()
 
 const saveAndRedirect = (data: LoginResponse) => {
@@ -79,8 +98,10 @@ const { mutate: login, isPending, error: loginError } = useLogin()
 const error = computed(() => parseError(loginError.value))
 
 const handleLogin = async () => {
+  if (!form.validate()) return
+
   login(
-    { body: form.value },
+    { body: form.fields.value },
     {
       onSuccess: (data) => {
         saveAndRedirect(data)

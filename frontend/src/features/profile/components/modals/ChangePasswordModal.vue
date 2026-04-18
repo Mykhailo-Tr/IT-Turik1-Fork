@@ -7,44 +7,47 @@
     </template>
 
     <form class="password-form" @submit.prevent="handlePasswordChange">
-      <div class="form-item">
-        <label class="form-label"> Current password </label>
+      <label class="form-item">
+        <p class="form-label">Current password</p>
         <ui-password-field
-          v-model="passwordForm.current_password"
-          :is-invalid="!!error?.details.current_password"
+          v-model="form.fields.value.current_password"
+          :is-invalid="!!form.errors.value.current_password"
           autocomplete="current-password"
           required
+          @blur="form.validateField('current_password')"
         />
-        <small v-if="error?.details.current_password" class="text-error">{{
-          error?.details.current_password[0]
+        <small v-if="form.errors.value.current_password" class="text-error">{{
+          form.errors.value.current_password
         }}</small>
-      </div>
+      </label>
 
-      <div class="form-item">
-        <label class="form-label"> New password </label>
+      <label class="form-item">
+        <p class="form-label">New password</p>
         <ui-password-field
-          v-model="passwordForm.new_password"
-          :is-invalid="!!error?.details.new_password"
+          v-model="form.fields.value.new_password"
+          :is-invalid="!!form.errors.value.new_password"
           autocomplete="new-password"
           required
+          @blur="form.validateField('new_password')"
         />
-        <small v-if="error?.details.new_password" class="text-error">{{
-          error?.details.new_password[0]
+        <small v-if="form.errors.value.new_password" class="text-error">{{
+          form.errors.value.new_password
         }}</small>
-      </div>
+      </label>
 
-      <div class="form-item">
-        <label class="form-label"> Confirm new password </label>
+      <label class="form-item">
+        <p class="form-label">Confirm new password</p>
         <ui-password-field
-          v-model="passwordForm.confirm_password"
-          :is-invalid="!!error?.details.confirm_password"
+          v-model="form.fields.value.confirm_password"
+          :is-invalid="!!form.errors.value.confirm_password"
           autocomplete="new-password"
           required
+          @blur="form.validateField('confirm_password')"
         />
-        <small v-if="error?.details.confirm_password" class="text-error">{{
-          error?.details.confirm_password[0]
+        <small v-if="form.errors.value.confirm_password" class="text-error">{{
+          form.errors.value.confirm_password
         }}</small>
-      </div>
+      </label>
 
       <p class="auth-link" style="text-align: end">
         <router-link to="/forgot-password">Forgot password?</router-link>
@@ -63,10 +66,12 @@ import { parseError } from '@/api'
 import UiButton from '@/components/UiButton.vue'
 import UiModal from '@/components/UiModal.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
+import { useForm } from '@/composables/useForm'
 import { useNotification } from '@/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { useChangePassword } from '@/queries/accounts'
-import { computed, ref } from 'vue'
+import { ChangePasswordSchema } from '@/schemas/profile.schema'
+import { ref } from 'vue'
 
 interface PasswordForm {
   current_password: string
@@ -74,39 +79,35 @@ interface PasswordForm {
   confirm_password: string
 }
 
-const passwordForm = ref<PasswordForm>({
+const isOpen = ref(false)
+const form = useForm<PasswordForm>(ChangePasswordSchema, {
   current_password: '',
   new_password: '',
   confirm_password: '',
 })
 
-const isOpen = ref(false)
-
-const { showNotification } = useNotification()
-const {
-  mutate: changePassword,
-  isPending: isChangingPassword,
-  error: changePasswordError,
-} = useChangePassword()
-const error = computed(() => parseError(changePasswordError.value))
-
 const resetPasswordState = () => {
-  passwordForm.value = {
-    current_password: '',
-    new_password: '',
-    confirm_password: '',
-  }
+  form.reset()
 }
 
+const { showNotification } = useNotification()
+const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword()
+
 const handlePasswordChange = () => {
-  if (passwordForm.value.confirm_password !== passwordForm.value.new_password) {
-  }
+  if (form.fields.value.confirm_password !== form.fields.value.new_password) return
+  if (!form.validate()) return
+
   changePassword(
-    { body: passwordForm.value },
+    { body: form.fields.value },
     {
       onSuccess: () => {
-        resetPasswordState
         showNotification('Password updated successfully.', 'success')
+      },
+      onError(error) {
+        const parsedError = parseError(error)
+        for (const [field, errors] of Object.entries(parsedError?.details || {})) {
+          form.setError(field as keyof PasswordForm, errors?.[0] ?? 'Invalid value')
+        }
       },
     },
   )
