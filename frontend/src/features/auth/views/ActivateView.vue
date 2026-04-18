@@ -66,7 +66,6 @@ onMounted(async () => {
 
 .notice a {
   color: var(--brand-700);
-  text-decoration: none;
   font-weight: 700;
 }
 </style>

@@ -139,7 +139,6 @@ onMounted(() => queryClient.resetQueries({ queryKey: accountKeys.profile() }))
 
 .forgot-link a {
   color: var(--brand-700);
-  text-decoration: none;
   font-weight: 600;
 }
 

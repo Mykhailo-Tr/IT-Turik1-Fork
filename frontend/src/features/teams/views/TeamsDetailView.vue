@@ -162,7 +162,6 @@ const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  text-decoration: none;
 }
 
 .hero-actions {

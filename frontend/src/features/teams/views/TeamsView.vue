@@ -65,6 +65,5 @@ const { data: teams, isLoading: isLoadingTeams } = useTeams()
 
 .manage-link {
   display: inline-flex;
-  text-decoration: none;
 }
 </style>

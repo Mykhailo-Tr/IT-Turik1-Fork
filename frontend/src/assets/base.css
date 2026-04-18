@@ -186,7 +186,6 @@ a {
 .auth-link a {
   color: var(--brand-700);
   font-weight: 700;
-  text-decoration: none;
 }
 
 ::-webkit-scrollbar {

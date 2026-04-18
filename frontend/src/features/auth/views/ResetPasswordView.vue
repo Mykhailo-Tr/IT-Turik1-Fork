@@ -112,7 +112,6 @@ const handleReset = () => {
 }
 
 .back-btn {
-  text-decoration: none;
   text-align: center;
 }
 
