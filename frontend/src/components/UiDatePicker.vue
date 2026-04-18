@@ -244,10 +244,9 @@ function handleDropdownKeydown(e: KeyboardEvent) {
 }
 
 // Constants & Utils
-
-const weekdays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const weekdays = ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
 const monthNames = Array.from({ length: 12 }, (_, i) =>
-  new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(2026, i, 1)),
+  new Intl.DateTimeFormat('uk-UA', { month: 'long' }).format(new Date(2026, i, 1)),
 )
 
 const isSameDay = (d1: Date, d2: Date) =>
@@ -261,7 +260,11 @@ const normalizeDate = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.get
 
 const displayValue = computed(() => {
   const fmt = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    d.toLocaleDateString('uk-UA', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
 
   if (props.range) {
     const start = props.modelValue?.start
