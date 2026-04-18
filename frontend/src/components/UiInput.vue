@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue?: string
+  modelValue?: string | number
   isInvalid?: boolean
 }
 

@@ -6,59 +6,59 @@
       <p class="section-subtitle">Get access to tournaments, team tools, and profile management.</p>
 
       <div v-if="isSuccess" class="notice success">
-        Registration completed. Check <strong>{{ form.values.email }}</strong> to activate your
-        account.
+        Registration completed. Check <strong>{{ form.fields.value.email }}</strong> to activate
+        your account.
       </div>
 
       <form v-else @submit.prevent="handleRegister" class="register-form">
         <div class="form-grid">
-          <div class="form-item">
-            <label class="form-label"> Username </label>
+          <label class="form-item">
+            <p class="form-label">Username</p>
             <ui-input
-              v-model="form.values.username"
+              v-model="form.fields.value.username"
               @blur="form.validateField('username')"
               placeholder="johndoe"
               required
-              :is-invalid="!!error?.details.username"
+              :is-invalid="!!form.errors.value.username"
             />
-            <small v-if="error?.details.username" class="text-error">{{
-              error?.details.username[0]
+            <small v-if="form.errors.value.username" class="text-error">{{
+              form.errors.value.username
             }}</small>
-          </div>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> Email </label>
+          <label class="form-item">
+            <p class="form-label">Email</p>
             <ui-input
-              v-model="form.values.email"
+              v-model="form.fields.value.email"
               @blur="form.validateField('email')"
-              :is-invalid="!!error?.details.email"
+              :is-invalid="!!form.errors.value.email"
               placeholder="name@mail.com"
               required
             />
-            <small v-if="error?.details.email" class="text-error">{{
-              error?.details.email[0]
+            <small v-if="form.errors.value.email" class="text-error">{{
+              form.errors.value.email
             }}</small>
-          </div>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> Password </label>
+          <label class="form-item">
+            <p class="form-label">Password</p>
             <ui-password-field
-              v-model="form.values.password"
+              v-model="form.fields.value.password"
               autocomplete="new-password"
-              :is-invalid="!!error?.details.password"
+              :is-invalid="!!form.errors.value.password"
               placeholder="********"
               required
               @blur="form.validateField('password')"
             />
-            <small v-if="error?.details.password" class="text-error">{{
-              error?.details.password[0]
+            <small v-if="form.errors.value.password" class="text-error">{{
+              form.errors.value.password
             }}</small>
-          </div>
+          </label>
 
-          <div class="form-item">
-            <label class="form-label"> Role </label>
+          <label class="form-item">
+            <p class="form-label">Role</p>
             <ui-select
-              v-model="form.values.role"
+              v-model="form.fields.value.role"
               @blur="form.validateField('role')"
               :options="[
                 { value: 'team', label: 'Team Member' },
@@ -68,56 +68,63 @@
               ]"
               class="select-control"
             />
-          </div>
+          </label>
         </div>
 
-        <div class="form-item" v-if="isRestrictedRole">
-          <label class="form-label full-width"> Redeem code </label>
+        <label class="form-item" v-if="isRestrictedRole">
+          <p class="form-label full-width">Redeem code</p>
           <ui-input
-            v-model="form.values.redeem_code"
-            :is-invalid="!!error?.details.redeem_code"
+            v-model="form.fields.value.redeem_code"
+            @blur="form.validateField('redeem_code')"
+            :is-invalid="!!form.errors.value.redeem_code"
             placeholder="Enter one-time activation code"
             required
           />
-          <small v-if="error?.details.redeem_code" class="text-error">{{
-            error?.details.redeem_code[0]
+          <small v-if="form.errors.value.redeem_code" class="text-error">{{
+            form.errors.value.redeem_code
           }}</small>
-        </div>
+        </label>
 
         <div style="display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1rem">
-          <div class="form-item">
-            <label class="form-label full-width"> Full name </label>
+          <label class="form-item">
+            <p class="form-label full-width">Full name</p>
             <ui-input
-              v-model="form.values.full_name"
-              :is-invalid="!!error?.details.full_name"
+              v-model="form.fields.value.full_name"
+              :is-invalid="!!form.errors.value.full_name"
               placeholder="John Doe"
+              @blur="form.validateField('full_name')"
             />
-            <small v-if="error?.details.full_name" class="text-error">{{
-              error?.details.full_name[0]
+            <small v-if="form.errors.value.full_name" class="text-error">{{
+              form.errors.value.full_name
             }}</small>
-          </div>
+          </label>
 
           <div class="form-grid">
-            <div class="form-item">
-              <label class="form-label"> Phone </label>
+            <label class="form-item">
+              <p class="form-label">Phone</p>
               <PhoneField
-                v-model="form.values.phone"
-                :error="error?.details.username?.[0]"
+                v-model="form.fields.value.phone"
                 placeholder="Enter phone number"
+                :is-invalid="!!form.errors.value.phone"
+                @blur="form.validateField('phone')"
               />
-            </div>
+              <small v-if="form.errors.value.phone" class="text-error">{{
+                form.errors.value.phone
+              }}</small>
+            </label>
 
-            <div class="form-item">
-              <label class="form-label"> City </label>
+            <label class="form-item">
+              <p class="form-label">City</p>
               <ui-input
-                v-model="form.values.city"
-                :is-invalid="!!error?.details.city"
+                v-model="form.fields.value.city"
+                @blur="form.validateField('city')"
+                :is-invalid="!!form.errors.value.city"
                 placeholder="Kyiv"
               />
-              <small v-if="error?.details.city" class="text-error">{{
-                error?.details.city[0]
+              <small v-if="form.errors.value.city" class="text-error">{{
+                form.errors.value.city
               }}</small>
-            </div>
+            </label>
           </div>
         </div>
 
@@ -178,43 +185,45 @@ const form = useForm<Form>(RegisterSchema, {
   phone: '',
   city: '',
 })
-
-const restrictedRoles = ['jury', 'organizer', 'admin']
-const isRestrictedRole = computed(() => restrictedRoles.includes(form.values.role))
-
-watch(
-  () => form.values.role,
-  (newRole) => {
-    if (!restrictedRoles.includes(newRole)) {
-      form.values.redeem_code = ''
-    }
-  },
-)
-
 const { showNotification } = useNotification()
 const storage = useUserStore()
+
+const { mutate: register, isPending: isLoading, isSuccess } = useRegister()
+
+const restrictedRoles = ['jury', 'organizer', 'admin']
+const isRestrictedRole = computed(() => restrictedRoles.includes(form.fields.value.role))
 
 const saveTokensAndRedirect = (data: RegisterResponse) => {
   storage.setTokens(data)
   router.push('/')
 }
 
-const { mutate: register, isPending: isLoading, isSuccess, error: registerError } = useRegister()
-const error = computed(() => parseError(registerError.value))
-
 const handleRegister = () => {
-  validate(form.value)
+  if (!form.validate()) return
 
   register(
-    { body: form.value },
+    { body: form.fields.value },
     {
       onError: (err) => {
         const parsedError = parseError(err)
+        for (const [field, errors] of Object.entries(parsedError?.details || {})) {
+          form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
+        }
+
         showNotification(parsedError?.message, 'error')
       },
     },
   )
 }
+
+watch(
+  () => form.fields.value.role,
+  (newRole) => {
+    if (!restrictedRoles.includes(newRole)) {
+      form.fields.value.redeem_code = ''
+    }
+  },
+)
 </script>
 
 <style scoped>

@@ -2,44 +2,53 @@
   <section class="page-shell teams-page">
     <ui-card>
       <template #header>
-        <p class="section-eyebrow">Teams</p>
-        <h1 class="section-title">Create new team</h1>
-        <p class="section-subtitle">Create a team and optionally add initial members.</p>
-        <ui-button asLink class="back-link" variant="secondary" size="sm" to="/teams"
-          >Back to teams list</ui-button
-        >
+        <div>
+          <p class="section-eyebrow">Teams</p>
+          <h1 class="section-title">Create new team</h1>
+          <p class="section-subtitle">Create a team and optionally add initial members.</p>
+          <ui-button asLink class="back-link" variant="secondary" size="sm" to="/teams"
+            >Back to teams list</ui-button
+          >
+        </div>
       </template>
 
       <form class="form-grid" @submit.prevent="handleFormSubmit">
         <label class="form-item">
           <p class="form-label">Team name</p>
-          <ui-input v-model="form.name" :is-invalid="!!createTeamError?.details.name" required />
-          <small v-if="createTeamError?.details.name" class="text-error">{{
-            createTeamError?.details.name[0]
+          <ui-input
+            v-model="form.fields.value.name"
+            :is-invalid="!!form.errors.value.name"
+            required
+            @blur="form.validateField('name')"
+          />
+          <small v-if="form.errors.value.name" class="text-error">{{
+            form.errors.value.name
           }}</small>
         </label>
 
         <label class="form-item">
           <p class="form-label">Team email</p>
           <ui-input
-            v-model="form.email"
-            :is-invalid="!!createTeamError?.details.email"
+            v-model="form.fields.value.email"
+            :is-invalid="!!form.errors.value.email"
             type="email"
             required
+            @blur="form.validateField('email')"
           />
-          <small v-if="createTeamError?.details.email" class="text-error">{{
-            createTeamError?.details.email[0]
+          <small v-if="form.errors.value.email" class="text-error">{{
+            form.errors.value.email
           }}</small>
         </label>
 
         <label class="form-item">
           <p class="form-label">Organization</p>
           <ui-input
-            v-model="form.organization"
-            :is-invalid="!!createTeamError?.details.organization"
+            v-model="form.fields.value.organization"
+            :is-invalid="!!form.errors.value.organization"
+            @blur="form.validateField('organization')"
           />
-          <small v-if="createTeamError?.details.organization" class="text-error">{{
-            createTeamError?.details.organization[0]
+          <small v-if="form.errors.value.organization" class="text-error">{{
+            form.errors.value.organization
           }}</small>
         </label>
 
@@ -48,52 +57,52 @@
           <div class="visibility-control">
             <span class="visibility-label">Private</span>
             <ui-switch
-              v-model="form.is_public"
-              :aria-checked="form.is_public ? 'true' : 'false'"
-              :aria-label="`Team visibility: ${form.is_public ? 'Public' : 'Private'}`"
+              v-model="form.fields.value.is_public"
+              :aria-checked="form.fields.value.is_public ? 'true' : 'false'"
+              :aria-label="`Team visibility: ${form.fields.value.is_public ? 'Public' : 'Private'}`"
+              @blur="form.validateField('is_public')"
             />
             <span class="visibility-label">Public</span>
           </div>
-          <small v-if="createTeamError?.details.is_public" class="text-error">{{
-            createTeamError?.details.is_public[0]
+          <small v-if="form.errors.value.is_public" class="text-error">{{
+            form.errors.value.is_public
           }}</small>
         </label>
 
         <label class="form-item">
           <p class="form-label">Telegram</p>
           <ui-input
-            v-model="form.contact_telegram"
-            :is-invalid="!!createTeamError?.details.contact_telegram"
+            v-model="form.fields.value.contact_telegram"
+            :is-invalid="!!form.errors.value.contact_telegram"
             placeholder="@team_username"
-            pattern="^@?[A-Za-z][A-Za-z0-9_]{4,31}$"
             title="Telegram username: 5-32 characters, start with a letter, letters/digits/_"
+            @blur="form.validateField('contact_telegram')"
           />
-          <small v-if="createTeamError?.details.contact_telegram" class="text-error">{{
-            createTeamError?.details.contact_telegram[0]
+          <small v-if="form.errors.value.contact_telegram" class="text-error">{{
+            form.errors.value.contact_telegram
           }}</small>
         </label>
 
         <label class="form-item">
           <p class="form-label">Discord</p>
           <ui-input
-            v-model="form.contact_discord"
-            :is-invalid="!!createTeamError?.details.contact_discord"
+            v-model="form.fields.value.contact_discord"
+            :is-invalid="!!form.errors.value.contact_discord"
             placeholder="team.username"
-            pattern="^@?(?=.{2,32}$)[A-Za-z0-9._]+(?:#[0-9]{4})?$"
             title="Discord username: 2-32 characters, letters/digits/._ with optional #1234"
+            @blur="form.validateField('contact_discord')"
           />
-          <small v-if="createTeamError?.details.contact_discord" class="text-error">{{
-            createTeamError?.details.contact_discord[0]
+          <small v-if="form.errors.value.contact_discord" class="text-error">{{
+            form.errors.value.contact_discord
           }}</small>
         </label>
 
         <label class="form-item">
           <p class="form-label">Add initial members</p>
-
           <ui-select
-            v-model="form.member_ids"
+            v-model="form.fields.value.member_ids"
             :isLoading="isLoadingUsers"
-            :isError="isLoadingError"
+            :isError="isLoadingError || form.errors.value.member_ids"
             :error="`Error while fetching users (code: ${getUsersError?.code})`"
             :multiple="true"
             :options="
@@ -103,9 +112,10 @@
               }))
             "
             placeholder="Select members"
+            @blur="form.validateField('member_ids')"
           />
-          <small v-if="createTeamError?.details.member_ids" class="text-error">{{
-            createTeamError?.details.member_ids[0]
+          <small v-if="form.errors.value.member_ids" class="text-error">{{
+            form.errors.value.member_ids
           }}</small>
         </label>
 
@@ -124,7 +134,7 @@ import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
 import { useNotification } from '@/composables/useNotification'
 import type { CreateTeamBody } from '@/api/teams/types'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCreateTeam } from '@/queries/teams'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
@@ -132,13 +142,15 @@ import { useProfile, useUsers } from '@/queries/accounts'
 import UiSelect from '@/components/UiSelect.vue'
 import { parseError } from '@/api'
 import UiSwitch from '@/components/UiSwitch.vue'
+import { useForm } from '@/composables/useForm'
+import { CreateTeamSchema } from '@/schemas/teams.schema'
 
 const router = useRouter()
-const { showNotification, hideNotification } = useNotification()
+const { showNotification } = useNotification()
 
 type Form = CreateTeamBody
 
-const form = ref<Form>({
+const form = useForm<Form>(CreateTeamSchema, {
   name: '',
   email: '',
   organization: '',
@@ -149,15 +161,7 @@ const form = ref<Form>({
 })
 
 const resetForm = () => {
-  form.value = {
-    name: '',
-    email: '',
-    organization: '',
-    contact_telegram: '',
-    contact_discord: '',
-    is_public: false,
-    member_ids: [],
-  }
+  form.reset()
 }
 
 const { data: user } = useProfile()
@@ -172,20 +176,25 @@ const createCandidateUsers = computed(() => {
 const { data: users, isLoading: isLoadingUsers, error: usersError, isLoadingError } = useUsers()
 const getUsersError = computed(() => parseError(usersError.value))
 
-const { mutate: createTeam, isPending: isCreatingTeam, error } = useCreateTeam()
-const createTeamError = computed(() => parseError(error.value))
+const { mutate: createTeam, isPending: isCreatingTeam } = useCreateTeam()
 
 const handleFormSubmit = () => {
-  hideNotification()
+  if (!form.validate()) return
 
   createTeam(
-    { body: form.value },
+    { body: form.fields.value },
     {
       onSuccess: (data) => {
         showNotification('Team created successfully.', 'success')
         resetForm()
 
         router.push(`/teams/${data.id}`)
+      },
+      onError: (error) => {
+        const parsedError = parseError(error)
+        for (const [field, errors] of Object.entries(parsedError?.details || {})) {
+          form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
+        }
       },
     },
   )
@@ -198,6 +207,7 @@ const handleFormSubmit = () => {
 }
 
 .back-link {
+  margin-top: 0.8rem;
   display: inline-block;
 }
 
