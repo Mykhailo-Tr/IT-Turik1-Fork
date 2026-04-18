@@ -121,7 +121,7 @@ const sizeClass = computed(() => sizes[props.size])
 .ghost-btn {
   border: 1px solid;
   background: color-mix(in oklab, var(--primary) 10%, transparent);
-  color: var(--primary);
+  color: var(--foreground);
   border-color: var(--primary);
 }
 
