@@ -76,6 +76,7 @@
             <span class="form-label">Start date</span>
             <ui-date-picker
               v-model="form.fields.value.startDate"
+              :isInvalid="!!form.errors.value.startDate"
               required
               @blur="form.validateField('startDate')"
             />
@@ -102,6 +103,7 @@
             <span class="form-label">End date</span>
             <ui-date-picker
               v-model="form.fields.value.endDate"
+              :isInvalid="!!form.errors.value.endDate"
               required
               @blur="form.validateField('endDate')"
             />

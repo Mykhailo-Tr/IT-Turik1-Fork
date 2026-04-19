@@ -16,9 +16,9 @@ export interface ApiError<DetailsFields extends string = string> {
 }
 
 export function parseError<DetailsFields extends string = string>(
-  error?: AxiosError<ApiError<DetailsFields>> | null,
+  error?: unknown,
 ): ApiError<DetailsFields> | undefined {
-  if (isAxiosError(error)) {
+  if (isAxiosError<ApiError<DetailsFields>>(error)) {
     if (error.response?.data) {
       const data = error.response.data
 
@@ -31,6 +31,14 @@ export function parseError<DetailsFields extends string = string>(
         code: 'unexpected_error',
         details: {},
       }
+    }
+  }
+
+  if (error instanceof Error) {
+    return {
+      message: error.message || 'Unexpected error. Try again',
+      code: 'unexpected_error',
+      details: {},
     }
   }
 }

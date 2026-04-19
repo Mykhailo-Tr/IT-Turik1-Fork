@@ -65,6 +65,16 @@ describe('UiDatePicker', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
+  it('indicates invalid state when isInvalid is true', async () => {
+    const screen = await render(UiDatePicker, {
+      props: { modelValue: null, isInvalid: true },
+    })
+
+    const trigger = screen.getByRole('button').first()
+    expect(trigger.element()).toHaveClass('invalid')
+    expect(trigger.element()).toHaveAttribute('aria-invalid', 'true')
+  })
+
   it('closes the dropdown when clicking outside', async () => {
     const screen = await render(UiDatePicker, {
       props: { modelValue: null },
@@ -72,6 +82,9 @@ describe('UiDatePicker', () => {
 
     await screen.getByRole('button').click()
     await userEvent.click(document.body)
+
+    const blurEmitted = screen.emitted('blur')
+    expect(blurEmitted).toBeTruthy()
 
     await expect.poll(() => screen.getByRole('dialog').query()).not.toBeInTheDocument()
   })
@@ -106,6 +119,10 @@ describe('UiDatePicker', () => {
     const emitted = screen.emitted('update:modelValue') as Date[][]
     expect(emitted).toBeTruthy()
     expect(emitted[0][0]).toBeInstanceOf(Date)
+
+    const blurEmitted = screen.emitted('blur')
+    expect(blurEmitted).toBeTruthy()
+
     await expect.poll(() => screen.getByRole('dialog').query()).not.toBeInTheDocument()
   })
 
@@ -245,6 +262,10 @@ describe('UiDatePicker', () => {
 
     const emitted = screen.emitted('update:modelValue') as { start: Date; end: Date }[][]
     expect(emitted[0][0]).toMatchObject({ start: expect.any(Date), end: expect.any(Date) })
+
+    const blurEmitted = screen.emitted('blur')
+    expect(blurEmitted).toBeTruthy()
+
     await expect.poll(() => screen.getByRole('dialog').query()).not.toBeInTheDocument()
   })
 
@@ -294,6 +315,9 @@ describe('UiDatePicker', () => {
 
     await screen.getByRole('button').click()
     await userEvent.keyboard('{Escape}')
+
+    const blurEmitted = screen.emitted('blur')
+    expect(blurEmitted).toBeTruthy()
 
     await expect.poll(() => screen.getByRole('dialog').query()).not.toBeInTheDocument()
   })

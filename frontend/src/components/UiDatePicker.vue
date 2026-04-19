@@ -2,7 +2,8 @@
   <div class="datepicker-wrapper" :class="{ open: isOpen }" ref="wrapperRef">
     <ui-button
       variant="ghost"
-      class="datepicker-trigger"
+      :class="['datepicker-trigger', { invalid: !!props.isInvalid }]"
+      :aria-invalid="props.isInvalid ? 'true' : 'false'"
       :disabled="disabled"
       @click="toggleOpen"
       @keydown="handleTriggerKeydown"
@@ -143,6 +144,7 @@ type Props =
       disabled?: boolean
       minDate?: Date
       maxDate?: Date
+      isInvalid?: boolean
     }
   | {
       range: true
@@ -151,6 +153,7 @@ type Props =
       disabled?: boolean
       minDate?: Date
       maxDate?: Date
+      isInvalid?: boolean
     }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -160,6 +163,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: Date | DateRange | null): void
+  (e: 'blur'): void
 }>()
 
 const isOpen = ref(false)
@@ -192,6 +196,7 @@ function handleTriggerKeydown(e: KeyboardEvent) {
     e.preventDefault()
     toggleOpen()
   } else if (e.key === 'Escape') {
+    if (isOpen.value) emit('blur')
     isOpen.value = false
   } else if (e.key === 'ArrowDown' && !isOpen.value) {
     e.preventDefault()
@@ -202,6 +207,7 @@ function handleTriggerKeydown(e: KeyboardEvent) {
 function handleDropdownKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') {
     e.preventDefault()
+    if (isOpen.value) emit('blur')
     isOpen.value = false
     return
   }
@@ -343,18 +349,20 @@ function handleDateClick(date: Date) {
   if (!props.range) {
     emit('update:modelValue', date)
     isOpen.value = false
+    emit('blur')
   } else {
     if (!rangeStartInternal.value) {
       rangeStartInternal.value = date
     } else {
-      const d1 = rangeStartInternal.value
-      const d2 = date
+      const date1 = rangeStartInternal.value
+      const date2 = date
       emit('update:modelValue', {
-        start: d1 < d2 ? d1 : d2,
-        end: d1 < d2 ? d2 : d1,
+        start: date1 < date2 ? date1 : date2,
+        end: date1 < date2 ? date2 : date1,
       })
       rangeStartInternal.value = null
       isOpen.value = false
+      emit('blur')
     }
   }
 }
@@ -390,11 +398,15 @@ function getCellClasses(cell: CalendarCell) {
 // UI Logic
 
 function toggleOpen() {
-  if (!props.disabled) isOpen.value = !isOpen.value
+  if (!props.disabled) {
+    isOpen.value = !isOpen.value
+    if (!isOpen.value) emit('blur')
+  }
 }
 
 function handleOutsideClick(e: MouseEvent) {
   if (wrapperRef.value && !wrapperRef.value.contains(e.target as Node)) {
+    if (isOpen.value) emit('blur')
     isOpen.value = false
   }
 }
@@ -433,6 +445,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
   cursor: pointer;
   color: inherit;
   text-align: left;
+}
+
+.datepicker-trigger.invalid {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 12%, transparent);
 }
 
 .datepicker-icon {
