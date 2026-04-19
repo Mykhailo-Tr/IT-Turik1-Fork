@@ -49,7 +49,7 @@
         <ui-card v-for="team in otherTeamsPageItems" :key="`other-${team.id}`" class="team-item">
           <template #header>
             <div class="team-meta">
-              <h3>{{ team.name }}</h3>
+              <h3 :title="team.name">{{ truncateText(team.name, 60) }}</h3>
             </div>
           </template>
 
@@ -119,6 +119,7 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useProfile } from '@/queries/accounts'
 import { parseError } from '@/api'
+import { truncateText } from '@/lib/utils'
 
 const OTHER_TEAMS_PER_PAGE = 8
 

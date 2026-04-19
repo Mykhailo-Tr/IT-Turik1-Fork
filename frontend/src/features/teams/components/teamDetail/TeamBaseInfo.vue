@@ -29,7 +29,9 @@
               <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
             </template>
 
-            <strong class="text-muted">{{ props.team?.name }}</strong>
+            <strong class="text-muted" :title="props.team?.name">{{
+              truncateText(props.team?.name ?? '', 100)
+            }}</strong>
           </ui-skeleton-loader>
         </ui-card>
 
@@ -135,6 +137,7 @@ import { useLeaveTeam, useSendJoinRequest } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import type { GetTeamInfoResponse } from '@/api/teams/types'
+import { truncateText } from '@/lib/utils'
 
 interface Props {
   team?: GetTeamInfoResponse
