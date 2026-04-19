@@ -46,10 +46,12 @@ import UiCard from './UiCard.vue'
 interface Props {
   modelValue: boolean
   maxWidth?: string
+  closeOnBackdrop?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxWidth: '520px',
+  closeOnBackdrop: true,
 })
 
 const emit = defineEmits(['update:modelValue', 'close'])
@@ -60,7 +62,7 @@ function close() {
 }
 
 function handleBackdropClick() {
-  close()
+  if (props.closeOnBackdrop) close()
 }
 
 function handleEscapeKey(e: KeyboardEvent) {

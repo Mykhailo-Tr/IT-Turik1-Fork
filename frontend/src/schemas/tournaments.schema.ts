@@ -1,3 +1,4 @@
+import { tiptapJsonToText } from '@/lib/utils'
 import * as v from 'valibot'
 
 export const TimeSchema = v.pipe(
@@ -17,4 +18,22 @@ export const CreateTournamentSchema = v.object({
   endTime: TimeSchema,
   rounds: v.pipe(v.number('must be a number'), v.minValue(1, 'Rounds must be at least 1')),
   maxTeams: v.pipe(v.number('must be a number'), v.minValue(2, 'Maximum teams must be at least 2')),
+})
+
+function tiptapJsonMinLength(min: number, message: string) {
+  return v.pipe(
+    v.unknown(),
+    v.check((value) => tiptapJsonToText(value).length >= min, message),
+  )
+}
+
+export const CreateRoundSchema = v.object({
+  title: v.pipe(v.string(), v.minLength(1, 'Title is required')),
+  technicalRequirements: tiptapJsonMinLength(
+    10,
+    'Technical requirements must be at least 10 characters long',
+  ),
+  mustHave: tiptapJsonMinLength(10, 'Must have must be at least 10 characters long'),
+  startDate: v.date(),
+  endDate: v.date(),
 })

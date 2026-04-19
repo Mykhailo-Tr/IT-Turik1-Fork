@@ -18,6 +18,7 @@ import { useUserStore } from '@/stores/user'
 import TournamentsCreateView from '@/features/tournaments/views/TournamentsCreateView.vue'
 import TournamentsListView from '@/features/tournaments/views/TournamentsListView.vue'
 import TournamentView from '@/features/tournaments/views/TournamentView.vue'
+import TournamentsCreateTaskView from '@/features/tournaments/views/TournamentsCreateTaskView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -104,6 +105,11 @@ const router = createRouter({
     {
       path: '/tournaments/:id',
       component: TournamentView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/tournaments/:id/rounds/create',
+      component: TournamentsCreateTaskView,
       meta: { requiresAuth: true },
     },
   ],
