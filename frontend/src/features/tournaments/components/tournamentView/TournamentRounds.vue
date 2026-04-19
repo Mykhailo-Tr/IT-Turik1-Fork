@@ -1,5 +1,10 @@
 <template>
-  <section class="page-shell">
+  <div class="actions" v-if="user?.role === 'admin'">
+    <ui-button asLink :to="`/tournaments/${props.tournamentId}/rounds/create`"
+      >Create round</ui-button
+    >
+  </div>
+  <section>
     <ui-skeleton-loader :loading="isLoading">
       <template #skeleton>
         <div class="rounds-list">
@@ -99,6 +104,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { computed, ref, watch } from 'vue'
 import type { Variants } from '@/components/UiBadge.vue'
+import { useProfile } from '@/queries/accounts'
 
 interface Round {
   id: number
@@ -115,6 +121,8 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const { data: user } = useProfile()
 
 const mockRequirements: JSONContent = {
   type: 'doc',
@@ -292,6 +300,12 @@ function badgeVariant(status: Round['status']): Variants {
 </script>
 
 <style scoped>
+.actions {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+
 .rounds-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

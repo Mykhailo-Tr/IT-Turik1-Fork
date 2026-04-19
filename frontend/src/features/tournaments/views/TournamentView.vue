@@ -64,23 +64,59 @@
 <script setup lang="ts">
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import TournamentInfo from '../components/tournamentView/TournamentInfo.vue'
 import TournamentTeams from '../components/tournamentView/TournamentTeams.vue'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import TournamentSchedule from '../components/tournamentView/TournamentSchedule.vue'
 import TournamentRounds from '../components/tournamentView/TournamentRounds.vue'
 
 type Sections = 'information' | 'schedule' | 'rounds' | 'submissions' | 'leaderboard'
 
 const route = useRoute()
+const router = useRouter()
 const id = Number(route.params.id) ?? 1
 
 const currentSection = ref<Sections>('information')
 
+const sectionQueryKey = 'section'
+const allSections: Sections[] = ['information', 'schedule', 'rounds', 'submissions', 'leaderboard']
+
+function parseSectionFromQuery(value: unknown): Sections | null {
+  const raw = Array.isArray(value) ? value[0] : value
+  if (typeof raw !== 'string') return null
+  return allSections.includes(raw as Sections) ? (raw as Sections) : null
+}
+
+const initialSection = parseSectionFromQuery(route.query[sectionQueryKey])
+if (initialSection) currentSection.value = initialSection
+
 const setActiveSection = (section: Sections) => {
   currentSection.value = section
 }
+
+watch(
+  () => route.query[sectionQueryKey],
+  (value) => {
+    const section = parseSectionFromQuery(value)
+    if (section && section !== currentSection.value) currentSection.value = section
+  },
+)
+
+watch(
+  () => currentSection.value,
+  (section) => {
+    const currentQuerySection = parseSectionFromQuery(route.query[sectionQueryKey])
+    if (currentQuerySection === section) return
+
+    void router.replace({
+      query: {
+        ...route.query,
+        [sectionQueryKey]: section,
+      },
+    })
+  },
+)
 </script>
 
 <style scoped>
