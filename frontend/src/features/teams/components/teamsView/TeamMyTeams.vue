@@ -49,7 +49,7 @@
         <ui-card v-for="team in myTeamsPageItems" :key="`my-${team.id}`" class="team-item">
           <template #header>
             <div class="team-header">
-              <h3>{{ team.name }}</h3>
+              <h3 :title="team.name">{{ truncateText(team.name, 15) }}</h3>
               <ui-badge v-if="isCaptain(team)" variant="green">Captain</ui-badge>
             </div>
           </template>
@@ -92,6 +92,7 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useTeams } from '@/queries/teams'
 import { useProfile } from '@/queries/accounts'
 import { parseError } from '@/api'
+import { truncateText } from '@/lib/utils'
 
 const TEAMS_PER_PAGE = 8
 
