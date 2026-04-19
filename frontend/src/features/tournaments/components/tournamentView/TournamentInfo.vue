@@ -1,17 +1,26 @@
 <template>
-  <ui-card class="tournament-card">
+  <ui-card class="tournament-card" :is-error="isError">
     <template #header>
       <h2 class="tournament-card-title">Tournament Info</h2>
+    </template>
+
+    <template #error>
+      <div style="display: flex; height: 300px; justify-content: center; align-items: center">
+        <p>Error while fetching tournament info (code: {{ error?.code }})</p>
+      </div>
     </template>
 
     <div>
       <p class="text-muted">Name</p>
       <ui-skeleton-loader :loading="isLoading">
         <template #skeleton>
-          <ui-skeleton variant="rect" width="100%" />
+          <div style="display: flex; flex-direction: column; gap: 0.3rem">
+            <ui-skeleton variant="rect" width="100%" />
+            <ui-skeleton variant="rect" width="80%" />
+          </div>
         </template>
 
-        <p>{{ tournament?.name }}</p>
+        <p :title="tournament?.name">{{ truncateText(tournament?.name ?? '', 200) }}</p>
       </ui-skeleton-loader>
     </div>
 
@@ -21,7 +30,7 @@
         <div class="">
           <ui-skeleton-loader :loading="isLoading">
             <template #skeleton>
-              <ui-skeleton variant="rect" width="100%" />
+              <ui-skeleton variant="rect" width="180px" />
             </template>
 
             <p>
@@ -39,7 +48,13 @@
         </div>
       </div>
 
-      <ui-badge>Running</ui-badge>
+      <ui-skeleton-loader :loading="isLoading">
+        <template #skeleton>
+          <ui-skeleton variant="rect" width="100px" />
+        </template>
+
+        <ui-badge>Running</ui-badge>
+      </ui-skeleton-loader>
     </div>
 
     <div>
@@ -47,10 +62,14 @@
 
       <ui-skeleton-loader :loading="isLoading">
         <template #skeleton>
-          <ui-skeleton variant="rect" height="100px" width="100%" />
+          <div style="display: flex; flex-direction: column; gap: 0.4rem">
+            <ui-skeleton variant="rect" width="90%" />
+            <ui-skeleton variant="rect" width="70%" />
+            <ui-skeleton variant="rect" width="80%" />
+          </div>
         </template>
 
-        <p>{{ tournament?.description }}</p>
+        <description-modal :description="tournament?.description ?? ''" />
       </ui-skeleton-loader>
     </div>
 
@@ -66,18 +85,22 @@
           Current round: Round 2 (Active)
         </ui-button>
       </ui-skeleton-loader>
-      <ui-button tournament-action-btn>View details</ui-button>
+      <ui-button :disabled="isLoading">Join tournament</ui-button>
     </div>
   </ui-card>
 </template>
 
 <script setup lang="ts">
+import { parseError } from '@/api'
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { useQuery } from '@tanstack/vue-query'
+import { computed } from 'vue'
+import DescriptionModal from './modals/DescriptionModal.vue'
+import { truncateText } from '@/lib/utils'
 
 interface Response {
   id: number
@@ -99,16 +122,22 @@ const fetchItem = async (id: number): Promise<Response> => {
   return {
     id: id,
     name: `Item ${id}`,
-    description: `Item description ${id}`,
+    description: `"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."`,
     status: Math.random() > 0.5 ? 'Running' : 'Registration open',
     startAt: new Date(),
   }
 }
 
-const { data: tournament, isLoading } = useQuery({
+const {
+  data: tournament,
+  isLoading,
+  error: tournamentInfoError,
+  isError,
+} = useQuery({
   queryKey: ['tournaments', props.tournamentId],
   queryFn: () => fetchItem(props.tournamentId),
 })
+const error = computed(() => parseError(tournamentInfoError.value))
 </script>
 
 <style scoped>

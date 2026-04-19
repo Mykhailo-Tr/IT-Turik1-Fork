@@ -19,7 +19,13 @@
         </div>
       </template>
 
-      <div class="events-list">
+      <ui-card v-if="isRoundsError || isEventsError">
+        <div style="display: flex; height: 500px; justify-content: center; align-items: center">
+          <p>Error while fetching tournament schedule</p>
+        </div>
+      </ui-card>
+
+      <div v-else class="events-list">
         <ui-card v-for="event in schedule" :key="event.title" class="event-card">
           <div class="event-content">
             <div class="event-left-side">
@@ -45,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+import { parseError } from '@/api'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
@@ -105,12 +112,20 @@ const fetchEvents = async (_tournamentId: number): Promise<Event[]> => {
   ]
 }
 
-const { data: rounds, isLoading: roundsLoading } = useQuery({
+const {
+  data: rounds,
+  isLoading: roundsLoading,
+  isError: isRoundsError,
+} = useQuery({
   queryKey: ['rounds', props.tournamentId],
   queryFn: () => fetchRounds(props.tournamentId),
 })
 
-const { data: events, isLoading: eventsLoading } = useQuery({
+const {
+  data: events,
+  isLoading: eventsLoading,
+  isError: isEventsError,
+} = useQuery({
   queryKey: ['events', props.tournamentId],
   queryFn: () => fetchEvents(props.tournamentId),
 })

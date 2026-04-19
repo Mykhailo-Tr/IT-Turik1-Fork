@@ -1,5 +1,3 @@
-import { boolean } from 'valibot'
-
 interface FormatDateOptions {
   showHours?: boolean
 }
@@ -18,4 +16,9 @@ export const formatDate = (date: Date, options?: FormatDateOptions) => {
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+export function truncateText(text: string, maxLength: number) {
+  if (text.length > maxLength) return text.slice(0, maxLength) + '...'
+  return text
 }

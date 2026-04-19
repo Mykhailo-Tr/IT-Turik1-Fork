@@ -95,9 +95,9 @@ import { parseError } from '@/api'
 
 const TEAMS_PER_PAGE = 8
 
+const { data: user } = useProfile()
 const { data: teams, isLoading: isLoadingTeams, isLoadingError, error: teamsError } = useTeams()
 const error = computed(() => parseError(teamsError.value))
-const { data: user } = useProfile()
 
 const myTeams = computed(() => teams.value?.filter((team) => isAcceptedMember(team)))
 const myTeamsPageItems = computed(() => {

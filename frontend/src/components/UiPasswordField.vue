@@ -17,7 +17,7 @@
       type="button"
       :class="['password-toggle', { invalid: isInvalid }]"
     >
-      <EyeIcon class="toggle-icon" @click="isVisible = !isVisible" :is-crossed="isVisible" />
+      <EyeIcon class="toggle-icon" @click="isVisible = !isVisible" :is-crossed="!isVisible" />
     </button>
   </div>
 </template>
