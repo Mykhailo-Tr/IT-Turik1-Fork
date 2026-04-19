@@ -55,6 +55,8 @@
       <TournamentTeams :tournament-id="id" />
     </div>
 
+    <TournamentRounds :tournament-id="id" v-if="currentSection === 'rounds'" />
+
     <TournamentSchedule :tournament-id="id" v-if="currentSection === 'schedule'" />
   </section>
 </template>
@@ -67,6 +69,7 @@ import TournamentInfo from '../components/tournamentView/TournamentInfo.vue'
 import TournamentTeams from '../components/tournamentView/TournamentTeams.vue'
 import { ref } from 'vue'
 import TournamentSchedule from '../components/tournamentView/TournamentSchedule.vue'
+import TournamentRounds from '../components/tournamentView/TournamentRounds.vue'
 
 type Sections = 'information' | 'schedule' | 'rounds' | 'submissions' | 'leaderboard'
 
