@@ -19,6 +19,8 @@ import TournamentsCreateView from '@/features/tournaments/views/TournamentsCreat
 import TournamentsListView from '@/features/tournaments/views/TournamentsListView.vue'
 import TournamentView from '@/features/tournaments/views/TournamentView.vue'
 import TournamentsCreateTaskView from '@/features/tournaments/views/TournamentsCreateTaskView.vue'
+import { accountsService } from '@/api/accounts'
+import NotFoundView from '@/features/not-found-page/NotFoundView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -60,7 +62,7 @@ const router = createRouter({
     {
       path: '/admin/role-codes',
       component: RoleCodesAdmin,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/teams',
@@ -112,6 +114,7 @@ const router = createRouter({
       component: TournamentsCreateTaskView,
       meta: { requiresAuth: true },
     },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },
   ],
 })
 
@@ -146,6 +149,19 @@ router.beforeEach(async (to, _from, next) => {
   ) {
     next('/')
     return
+  }
+
+  if (to.meta.requiresAdmin) {
+    try {
+      const profile = await accountsService.getProfile()
+      if (profile.role !== 'admin') {
+        next('/')
+        return
+      }
+    } catch {
+      next('/')
+      return
+    }
   }
 
   next()

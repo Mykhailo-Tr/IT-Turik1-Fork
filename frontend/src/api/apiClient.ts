@@ -1,4 +1,3 @@
-import router from '@/router'
 import { useUserStore } from '@/stores/user'
 import axios from 'axios'
 
@@ -29,8 +28,13 @@ apiClient.interceptors.response.use(
         store.removeTokens()
       }
 
-      if (router.currentRoute.value.meta.requiresAuth) {
-        router.push('/login')
+      try {
+        const { default: router } = await import('@/router')
+        if (router.currentRoute.value.meta.requiresAuth) {
+          router.push('/login')
+        }
+      } catch {
+        // ignore
       }
     }
 
