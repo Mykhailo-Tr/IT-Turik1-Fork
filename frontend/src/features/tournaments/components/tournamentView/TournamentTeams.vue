@@ -1,7 +1,13 @@
 <template>
-  <ui-card class="tournament-card">
+  <ui-card class="tournament-card" :is-error="isError">
     <template #header>
       <h2 class="tournament-card-title">Teams Info</h2>
+    </template>
+
+    <template #error>
+      <div style="display: flex; height: 300px; justify-content: center; align-items: center">
+        <p>Error while fetching tournament teams (code: {{ error?.code }})</p>
+      </div>
     </template>
 
     <div>
@@ -67,6 +73,7 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import TeamIcon from '@/icons/TeamIcon.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
+import { parseError } from '@/api'
 
 interface Team {
   id: number
@@ -94,10 +101,16 @@ const fetchTeams = async (): Promise<Team[]> => {
   })
 }
 
-const { data: teams, isLoading: isTeamsLoading } = useQuery({
+const {
+  data: teams,
+  isLoading: isTeamsLoading,
+  error: teamsError,
+  isError,
+} = useQuery({
   queryKey: ['tournament-teams', props.tournamentId],
   queryFn: fetchTeams,
 })
+const error = computed(() => parseError(teamsError.value))
 
 const filteredTeams = computed(() => {
   if (!teams.value) return []

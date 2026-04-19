@@ -1,10 +1,18 @@
 <template>
   <section class="page-shell">
-    <ui-card>
+    <ui-card :is-error="isError">
       <template #header>
         <div class="tournaments-header">
           <h1 class="tournaments-title">Tournaments list</h1>
-          <ui-button size="sm" class="create-new-btn" as-link>Create new</ui-button>
+          <ui-button size="sm" asLink to="/tournaments/create" class="create-new-btn"
+            >Create new</ui-button
+          >
+        </div>
+      </template>
+
+      <template #error>
+        <div style="display: flex; height: 300px; justify-content: center; align-items: center">
+          <p>Error while fetching tournaments (code: {{ error?.code }})</p>
         </div>
       </template>
 
@@ -57,8 +65,8 @@
                   </template>
 
                   <div>
-                    <p class="tournaments-description">
-                      {{ tournament.description }}
+                    <p class="tournaments-description" :title="tournament.description">
+                      {{ truncateText(tournament.description, 200) }}
                     </p>
 
                     <div class="tournaments-meta">
@@ -96,10 +104,6 @@
                 </ui-card>
               </div>
             </template>
-
-            <div v-else-if="!isLoading && !isFetching" class="empty-state">
-              No tournaments found
-            </div>
 
             <div v-if="totalPages > 1" class="pagination">
               <ui-button size="sm" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
@@ -144,6 +148,8 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiInput from '@/components/UiInput.vue'
 import ArrowRight from '@/icons/ArrowRight.vue'
+import { parseError } from '@/api'
+import { truncateText } from '@/lib/utils'
 
 interface Data {
   id: number
@@ -172,7 +178,7 @@ const fetchItems = async (page: number, query?: string): Promise<Response> => {
   const allItems = Array.from({ length: totalMockedItems }, (_, i) => ({
     id: i + 1,
     name: `Item ${i + 1}`,
-    description: `Item description ${i + 1}`,
+    description: `"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." ${i + 1}`,
     status: Math.random() > 0.5 ? 'Running' : 'Registration open',
     startAt: new Date(Date.now() + i * 86400000),
   }))
@@ -199,14 +205,20 @@ const fetchItems = async (page: number, query?: string): Promise<Response> => {
   }
 }
 
-const { data, isLoading, isFetching } = useQuery({
+const {
+  data,
+  isLoading,
+  isFetching,
+  error: tournamentsError,
+  isError,
+} = useQuery({
   queryKey: computed(() => ['items', currentPage.value, searchQuery.value]),
   queryFn: () => fetchItems(currentPage.value, searchQuery.value),
   staleTime: 1000 * 60 * 5,
 })
+const error = computed(() => parseError(tournamentsError.value))
 
 const pageItems = computed(() => data.value?.data ?? [])
-
 const totalPages = computed(() => Math.ceil((data.value?.total ?? 0) / pageSize))
 
 const visiblePages = computed(() => {
@@ -311,12 +323,6 @@ const applySearch = () => {
   min-width: 40px;
   height: 40px;
   padding: 0;
-}
-
-.empty-state {
-  padding: 24px 0;
-  text-align: center;
-  color: var(--muted-foreground);
 }
 
 @media (max-width: 1024px) {
