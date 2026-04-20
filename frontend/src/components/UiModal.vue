@@ -7,7 +7,12 @@
         data-testid="modal-backdrop"
         @click.self="handleBackdropClick"
       >
-        <ui-card role="dialog" aria-modal="true" :style="{ width: `min(100%, ${maxWidth})` }">
+        <ui-card
+          role="dialog"
+          aria-modal="true"
+          :scrollable="props.scrollable"
+          :style="{ width: `min(100%, ${maxWidth})` }"
+        >
           <div class="modal-header">
             <slot v-if="$slots.title" class="modal-title" name="title" />
 
@@ -47,6 +52,7 @@ interface Props {
   modelValue: boolean
   maxWidth?: string
   closeOnBackdrop?: boolean
+  scrollable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {

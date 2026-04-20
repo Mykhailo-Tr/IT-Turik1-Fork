@@ -51,7 +51,6 @@
 </template>
 
 <script setup lang="ts">
-import { parseError } from '@/api'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
