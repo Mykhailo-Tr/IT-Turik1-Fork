@@ -97,7 +97,7 @@ const router = createRouter({
     {
       path: '/tournaments/create',
       component: TournamentsCreateView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, requiresAdmin: true },
     },
     {
       path: '/tournaments',

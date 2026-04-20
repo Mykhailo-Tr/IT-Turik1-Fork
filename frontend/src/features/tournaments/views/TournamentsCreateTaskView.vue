@@ -18,6 +18,21 @@
         }}</small>
       </label>
 
+      <label class="form-item desc-field">
+        <span class="form-label">Description</span>
+        <editor-modal
+          v-model="form.fields.value.description"
+          title="Description"
+          addText="Add description"
+          editText="Edit description"
+          ariaLabel="Description editor"
+          @blur="form.validateField('description')"
+        />
+        <small v-if="form.errors.value.description" class="text-error">{{
+          form.errors.value.description
+        }}</small>
+      </label>
+
       <label class="form-item tech-field">
         <span class="form-label">Technical requirements</span>
         <editor-modal
@@ -90,6 +105,7 @@ import type { JSONContent } from '@tiptap/core'
 interface Form {
   title: string
   technicalRequirements: JSONContent | null
+  description: JSONContent | null
   mustHave: JSONContent | null
   startDate: Date
   endDate: Date
@@ -97,6 +113,7 @@ interface Form {
 
 const form = useForm<Form>(CreateRoundSchema, {
   title: '',
+  description: null,
   technicalRequirements: null,
   mustHave: null,
   startDate: new Date(),
@@ -128,9 +145,19 @@ function handleSubmit() {
   grid-row: 1;
 }
 
-.tech-field {
+.desc-field {
   grid-column: 1;
   grid-row: 2;
+}
+
+.tech-field {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.must-have-field {
+  grid-column: 2;
+  grid-row: 3;
 }
 
 .start-date-field {
@@ -141,11 +168,6 @@ function handleSubmit() {
 .end-date-field {
   grid-column: 2;
   grid-row: 2;
-}
-
-.must-have-field {
-  grid-column: 1;
-  grid-row: 3;
 }
 
 .submit-btn {

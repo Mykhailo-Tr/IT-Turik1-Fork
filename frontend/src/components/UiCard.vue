@@ -24,6 +24,8 @@ const props = defineProps<Props>()
 
 <style scoped>
 .card {
+  max-height: calc(100vh - 16px * 2);
+  overflow-y: auto;
   border: 1px solid;
   border-color: inherit;
   border-radius: 14px;
