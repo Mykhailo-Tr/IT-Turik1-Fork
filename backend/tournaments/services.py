@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -178,3 +178,25 @@ def register_team_for_tournament(*, tournament, team, actor):
         team=team,
         created_by=actor,
     )
+
+
+@transaction.atomic
+def delete_round(round_obj):
+    round_obj = Round.objects.select_for_update().select_related('tournament').get(id=round_obj.id)
+    tournament = round_obj.tournament
+
+    rounds_qs = Round.objects.select_for_update().filter(tournament=tournament)
+    rounds_count = rounds_qs.count()
+    if rounds_count <= 1:
+        raise ValidationError({'round': 'Cannot delete the last remaining round.'})
+
+    deleted_position = round_obj.position
+    round_obj.delete()
+
+    # Keep round sequence dense and synchronized with tournament.rounds_count.
+    rounds_qs.filter(position__gt=deleted_position).update(position=models.F('position') - 1)
+
+    tournament.rounds_count = rounds_count - 1
+    tournament.save(update_fields=['rounds_count', 'updated_at'])
+
+    return tournament

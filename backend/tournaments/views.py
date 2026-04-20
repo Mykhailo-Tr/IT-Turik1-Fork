@@ -22,6 +22,7 @@ from .serializers import (
     TournamentTeamRegistrationSerializer,
 )
 from .services import (
+    delete_round,
     mark_round_evaluated,
     start_registration,
     start_round,
@@ -133,12 +134,17 @@ class RoundListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
-class RoundDetailView(generics.RetrieveUpdateAPIView):
+class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
         return get_round_queryset()
+
+    def destroy(self, request, *args, **kwargs):
+        round_obj = self.get_object()
+        delete_round(round_obj)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RoundStartView(SyncStatusesMixin, APIView):
