@@ -65,6 +65,13 @@
       </template>
 
       <div class="details-grid">
+        <ui-card class="description-card">
+          <template #header>
+            <h3>Description</h3>
+          </template>
+
+          <editor-content class="details-editor" :editor="descriptionEditor" />
+        </ui-card>
         <ui-card>
           <template #header>
             <h3>Technical requirements</h3>
@@ -112,6 +119,7 @@ interface Round {
   status: 'active' | 'upcoming' | 'completed'
   startAt: Date
   endAt: Date
+  description: JSONContent
   technicalRequirements: JSONContent
   mustHave: JSONContent
 }
@@ -192,6 +200,40 @@ const mockMustHave: JSONContent = {
   ],
 }
 
+const mockDescription: JSONContent = {
+  type: 'doc',
+  content: [
+    {
+      type: 'heading',
+      attrs: { level: 2 },
+      content: [{ type: 'text', text: 'Descirption' }],
+    },
+    {
+      type: 'orderedList',
+      content: [
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: 'Form validation for required fields.' }],
+            },
+          ],
+        },
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [{ type: 'text', text: 'Responsive UI layout.' }],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
   await new Promise((resolve) => setTimeout(resolve, 450))
@@ -203,6 +245,7 @@ const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
       status: 'active',
       startAt: new Date('2026-04-20T10:00:00'),
       endAt: new Date('2026-04-23T18:00:00'),
+      description: mockDescription,
       technicalRequirements: mockRequirements,
       mustHave: mockMustHave,
     },
@@ -212,6 +255,7 @@ const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
       status: 'completed',
       startAt: new Date('2026-04-19T10:00:00'),
       endAt: new Date('2026-04-19T18:00:00'),
+      description: mockDescription,
       technicalRequirements: mockRequirements,
       mustHave: mockMustHave,
     },
@@ -221,6 +265,7 @@ const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
       status: 'upcoming',
       startAt: new Date('2026-04-19T10:00:00'),
       endAt: new Date('2026-04-19T18:00:00'),
+      description: mockDescription,
       technicalRequirements: mockRequirements,
       mustHave: mockMustHave,
     },
@@ -254,6 +299,18 @@ const requirementsEditor = useEditor({
   },
 })
 
+const descriptionEditor = useEditor({
+  extensions: [StarterKit],
+  content: '',
+  editable: false,
+  editorProps: {
+    attributes: {
+      class: 'prose',
+      'aria-readonly': 'true',
+    },
+  },
+})
+
 const mustHaveEditor = useEditor({
   extensions: [StarterKit],
   content: '',
@@ -273,6 +330,7 @@ watch(
       emitUpdate: false,
     })
     mustHaveEditor.value?.commands.setContent(round?.mustHave ?? '', { emitUpdate: false })
+    descriptionEditor.value?.commands.setContent(round?.description ?? '', { emitUpdate: false })
   },
 )
 
@@ -341,6 +399,10 @@ function badgeVariant(status: Round['status']): Variants {
   gap: 1rem;
 }
 
+.description-card {
+  grid-column: 1 / 3;
+}
+
 .details-editor {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -358,6 +420,10 @@ function badgeVariant(status: Round['status']): Variants {
 @media (max-width: 900px) {
   .details-grid {
     grid-template-columns: 1fr;
+  }
+
+  .description-card {
+    grid-column: 1;
   }
 }
 
