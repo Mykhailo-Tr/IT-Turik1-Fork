@@ -55,7 +55,12 @@ class TournamentAdminSerializer(TournamentPublicSerializer):
     @transaction.atomic
     def create(self, validated_data):
         request = self.context.get('request')
-        tournament = Tournament.objects.create(created_by=getattr(request, 'user', None), **validated_data)
+        tournament = Tournament(created_by=getattr(request, 'user', None), **validated_data)
+        try:
+            tournament.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        tournament.save()
         ensure_round_placeholders(tournament)
         return tournament
 
@@ -130,11 +135,24 @@ class RoundSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        round_obj = Round.objects.create(**validated_data)
-        if not round_obj.name:
-            round_obj.name = round_obj.default_name
-            round_obj.save(update_fields=['name', 'updated_at'])
+        round_obj = Round(**validated_data)
+        try:
+            round_obj.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        round_obj.save()
         return round_obj
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        try:
+            instance.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        instance.save()
+        return instance
 
 
 class SubmissionSerializer(serializers.ModelSerializer):

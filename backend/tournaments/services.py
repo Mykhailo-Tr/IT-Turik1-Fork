@@ -5,6 +5,19 @@ from rest_framework.exceptions import ValidationError
 from .models import Round, Tournament
 
 
+def _set_tournament_finished_if_all_rounds_evaluated(*, tournament):
+    if tournament.status != Tournament.STATUS_RUNNING:
+        return False
+
+    has_pending_rounds = tournament.rounds.exclude(status=Round.STATUS_EVALUATED).exists()
+    if has_pending_rounds:
+        return False
+
+    tournament.status = Tournament.STATUS_FINISHED
+    tournament.save(update_fields=['status', 'updated_at'])
+    return True
+
+
 @transaction.atomic
 def ensure_round_placeholders(tournament):
     existing_count = tournament.rounds.count()
@@ -22,8 +35,19 @@ def ensure_round_placeholders(tournament):
 
 
 @transaction.atomic
+def start_registration(tournament):
+    if tournament.status != Tournament.STATUS_DRAFT:
+        raise ValidationError({'status': 'Only draft tournaments can be moved to registration.'})
+
+    tournament.status = Tournament.STATUS_REGISTRATION
+    tournament.save(update_fields=['status', 'updated_at'])
+    return tournament
+
+
+@transaction.atomic
 def start_round(round_obj):
     now = timezone.now()
+    round_obj = Round.objects.select_for_update().select_related('tournament').get(id=round_obj.id)
     tournament = round_obj.tournament
 
     if round_obj.status != Round.STATUS_DRAFT:
@@ -65,6 +89,7 @@ def start_round(round_obj):
 
 @transaction.atomic
 def mark_round_evaluated(round_obj):
+    round_obj = Round.objects.select_for_update().select_related('tournament').get(id=round_obj.id)
     tournament = round_obj.tournament
 
     if round_obj.status != Round.STATUS_SUBMISSION_CLOSED:
@@ -73,10 +98,7 @@ def mark_round_evaluated(round_obj):
     round_obj.status = Round.STATUS_EVALUATED
     round_obj.save(update_fields=['status', 'updated_at'])
 
-    last_position = tournament.rounds.order_by('-position').values_list('position', flat=True).first()
-    if last_position and round_obj.position == last_position:
-        tournament.status = Tournament.STATUS_FINISHED
-        tournament.save(update_fields=['status', 'updated_at'])
+    _set_tournament_finished_if_all_rounds_evaluated(tournament=tournament)
 
     return round_obj
 
@@ -85,31 +107,17 @@ def mark_round_evaluated(round_obj):
 def sync_time_based_statuses(reference_time=None):
     now = reference_time or timezone.now()
 
-    updated_round_ids = []
-
     active_rounds_to_close = Round.objects.filter(
         status=Round.STATUS_ACTIVE,
         end_date__lte=now,
     )
-    for round_obj in active_rounds_to_close:
-        round_obj.status = Round.STATUS_SUBMISSION_CLOSED
-        round_obj.save(update_fields=['status', 'updated_at'])
-        updated_round_ids.append(round_obj.id)
+    updated_round_ids = list(active_rounds_to_close.values_list('id', flat=True))
+    if updated_round_ids:
+        active_rounds_to_close.update(status=Round.STATUS_SUBMISSION_CLOSED, updated_at=now)
 
-    finished_tournament_ids = set(
-        Round.objects.filter(
-            tournament__status=Tournament.STATUS_RUNNING,
-        )
-        .values_list('tournament_id', flat=True)
-        .distinct()
-    )
-
-    for tournament_id in finished_tournament_ids:
-        rounds = list(
-            Round.objects.filter(tournament_id=tournament_id).only('status', 'position').order_by('position')
-        )
-        if rounds and all(r.status == Round.STATUS_EVALUATED for r in rounds):
-            Tournament.objects.filter(id=tournament_id).update(status=Tournament.STATUS_FINISHED, updated_at=now)
+    running_tournaments = Tournament.objects.filter(status=Tournament.STATUS_RUNNING).prefetch_related('rounds')
+    for tournament in running_tournaments:
+        _set_tournament_finished_if_all_rounds_evaluated(tournament=tournament)
 
     return {
         'closed_round_ids': updated_round_ids,

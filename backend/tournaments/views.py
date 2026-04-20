@@ -1,16 +1,16 @@
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.utils.permissions import is_platform_admin
-from teams.models import TeamMember
-
 from .models import Round, Submission, Tournament
-from .permissions import IsPlatformAdminPermission
+from .permissions import (
+    IsPlatformAdminOrTeamMemberPermission,
+    IsPlatformAdminPermission,
+)
 from .serializers import (
     CurrentTaskSerializer,
     OwnSubmissionSerializer,
@@ -19,7 +19,12 @@ from .serializers import (
     TournamentAdminSerializer,
     TournamentPublicSerializer,
 )
-from .services import mark_round_evaluated, start_round, sync_time_based_statuses
+from .services import (
+    mark_round_evaluated,
+    start_registration,
+    start_round,
+    sync_time_based_statuses,
+)
 
 
 def get_tournament_queryset():
@@ -41,50 +46,44 @@ def get_own_submissions_queryset(user):
     )
 
 
-class TournamentListView(generics.ListAPIView):
+class SyncStatusesMixin:
+    def initial(self, request, *args, **kwargs):
+        sync_time_based_statuses()
+        return super().initial(request, *args, **kwargs)
+
+
+class TournamentListView(SyncStatusesMixin, generics.ListAPIView):
     queryset = get_tournament_queryset()
     permission_classes = [AllowAny]
     serializer_class = TournamentPublicSerializer
 
-    def list(self, request, *args, **kwargs):
-        sync_time_based_statuses()
-        return super().list(request, *args, **kwargs)
 
-
-class TournamentDetailView(generics.RetrieveAPIView):
+class TournamentDetailView(SyncStatusesMixin, generics.RetrieveAPIView):
     queryset = get_tournament_queryset()
     permission_classes = [AllowAny]
     serializer_class = TournamentPublicSerializer
 
-    def retrieve(self, request, *args, **kwargs):
-        sync_time_based_statuses()
-        return super().retrieve(request, *args, **kwargs)
 
-
-class TournamentCreateUpdateView(APIView):
+class TournamentCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    serializer_class = TournamentAdminSerializer
 
-    def post(self, request):
-        serializer = TournamentAdminSerializer(data=request.data, context={'request': request})
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         tournament = serializer.save()
         return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_201_CREATED)
 
-    def put(self, request, pk):
-        tournament = get_object_or_404(Tournament, pk=pk)
-        serializer = TournamentAdminSerializer(tournament, data=request.data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        tournament = serializer.save()
-        return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
 
-    def patch(self, request, pk):
-        tournament = get_object_or_404(Tournament, pk=pk)
-        serializer = TournamentAdminSerializer(
-            tournament,
-            data=request.data,
-            partial=True,
-            context={'request': request},
-        )
+class TournamentUpdateView(generics.UpdateAPIView):
+    queryset = Tournament.objects.all()
+    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    serializer_class = TournamentAdminSerializer
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        tournament = self.get_object()
+        serializer = self.get_serializer(tournament, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         tournament = serializer.save()
         return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
@@ -95,11 +94,7 @@ class TournamentStartRegistrationView(APIView):
 
     def post(self, request, pk):
         tournament = get_object_or_404(Tournament, pk=pk)
-        if tournament.status != Tournament.STATUS_DRAFT:
-            raise ValidationError({'status': ['Only draft tournaments can be moved to registration.']})
-
-        tournament.status = Tournament.STATUS_REGISTRATION
-        tournament.save(update_fields=['status', 'updated_at'])
+        start_registration(tournament)
         return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
 
 
@@ -123,29 +118,27 @@ class RoundDetailView(generics.RetrieveUpdateAPIView):
         return get_round_queryset()
 
 
-class RoundStartView(APIView):
+class RoundStartView(SyncStatusesMixin, APIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
 
     def post(self, request, pk):
-        sync_time_based_statuses()
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)
         start_round(round_obj)
         round_obj.refresh_from_db()
         return Response(RoundSerializer(round_obj).data, status=status.HTTP_200_OK)
 
 
-class RoundMarkEvaluatedView(APIView):
+class RoundMarkEvaluatedView(SyncStatusesMixin, APIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
 
     def post(self, request, pk):
-        sync_time_based_statuses()
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)
         mark_round_evaluated(round_obj)
         round_obj.refresh_from_db()
         return Response(RoundSerializer(round_obj).data, status=status.HTTP_200_OK)
 
 
-class SubmissionListCreateView(generics.ListCreateAPIView):
+class SubmissionListCreateView(SyncStatusesMixin, generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
@@ -154,11 +147,10 @@ class SubmissionListCreateView(generics.ListCreateAPIView):
         return SubmissionSerializer
 
     def get_queryset(self):
-        sync_time_based_statuses()
         return get_own_submissions_queryset(self.request.user)
 
 
-class SubmissionDetailView(generics.RetrieveUpdateAPIView):
+class SubmissionDetailView(SyncStatusesMixin, generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
@@ -167,19 +159,13 @@ class SubmissionDetailView(generics.RetrieveUpdateAPIView):
         return SubmissionSerializer
 
     def get_queryset(self):
-        sync_time_based_statuses()
         return get_own_submissions_queryset(self.request.user)
 
 
-class CurrentTaskView(APIView):
-    permission_classes = [IsAuthenticated]
+class CurrentTaskView(SyncStatusesMixin, APIView):
+    permission_classes = [IsAuthenticated, IsPlatformAdminOrTeamMemberPermission]
 
     def get(self, request):
-        sync_time_based_statuses()
-
-        if not is_platform_admin(request.user) and not TeamMember.objects.filter(user=request.user).exists():
-            raise PermissionDenied('Team membership is required to view current task.')
-
         queryset = (
             Round.objects.select_related('tournament')
             .filter(
