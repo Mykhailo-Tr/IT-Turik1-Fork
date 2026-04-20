@@ -41,40 +41,53 @@ def get_own_submissions_queryset(user):
     )
 
 
-class TournamentListCreateView(generics.ListCreateAPIView):
+class TournamentListView(generics.ListAPIView):
     queryset = get_tournament_queryset()
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated(), IsPlatformAdminPermission()]
-        return [AllowAny()]
-
-    def get_serializer_class(self):
-        if self.request.method == 'POST':
-            return TournamentAdminSerializer
-        return TournamentPublicSerializer
+    permission_classes = [AllowAny]
+    serializer_class = TournamentPublicSerializer
 
     def list(self, request, *args, **kwargs):
         sync_time_based_statuses()
         return super().list(request, *args, **kwargs)
 
 
-class TournamentDetailView(generics.RetrieveUpdateAPIView):
+class TournamentDetailView(generics.RetrieveAPIView):
     queryset = get_tournament_queryset()
-
-    def get_permissions(self):
-        if self.request.method in {'PUT', 'PATCH'}:
-            return [IsAuthenticated(), IsPlatformAdminPermission()]
-        return [AllowAny()]
-
-    def get_serializer_class(self):
-        if self.request.method in {'PUT', 'PATCH'}:
-            return TournamentAdminSerializer
-        return TournamentPublicSerializer
+    permission_classes = [AllowAny]
+    serializer_class = TournamentPublicSerializer
 
     def retrieve(self, request, *args, **kwargs):
         sync_time_based_statuses()
         return super().retrieve(request, *args, **kwargs)
+
+
+class TournamentCreateUpdateView(APIView):
+    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+
+    def post(self, request):
+        serializer = TournamentAdminSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        tournament = serializer.save()
+        return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_201_CREATED)
+
+    def put(self, request, pk):
+        tournament = get_object_or_404(Tournament, pk=pk)
+        serializer = TournamentAdminSerializer(tournament, data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        tournament = serializer.save()
+        return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
+
+    def patch(self, request, pk):
+        tournament = get_object_or_404(Tournament, pk=pk)
+        serializer = TournamentAdminSerializer(
+            tournament,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        tournament = serializer.save()
+        return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
 
 
 class TournamentStartRegistrationView(APIView):
