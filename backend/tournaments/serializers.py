@@ -3,10 +3,11 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import serializers
 
+from teams.models import Team
 from teams.models import TeamMember
 
-from .models import Round, Submission, Tournament
-from .services import ensure_round_placeholders
+from .models import Round, Submission, Tournament, TournamentTeamRegistration
+from .services import ensure_round_placeholders, register_team_for_tournament
 
 
 class RoundShortSerializer(serializers.ModelSerializer):
@@ -263,4 +264,27 @@ class CurrentTaskSerializer(serializers.ModelSerializer):
             'deadline',
             'must_have_requirements',
             'tech_requirements',
+        )
+
+
+class TournamentTeamRegistrationSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(source='team.name', read_only=True)
+
+    class Meta:
+        model = TournamentTeamRegistration
+        fields = ('id', 'tournament', 'team', 'team_name', 'created_at')
+        read_only_fields = ('id', 'tournament', 'created_at')
+
+
+class TournamentTeamRegistrationCreateSerializer(serializers.Serializer):
+    team_id = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), source='team')
+
+    def save(self, **kwargs):
+        request = self.context['request']
+        tournament = self.context['tournament']
+        team = self.validated_data['team']
+        return register_team_for_tournament(
+            tournament=tournament,
+            team=team,
+            actor=request.user,
         )

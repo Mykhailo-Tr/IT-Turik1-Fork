@@ -1,8 +1,11 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
-from .models import Round, Tournament
+from teams.models import TeamMember
+
+from .models import Round, Tournament, TournamentTeamRegistration
 
 
 def _set_tournament_finished_if_all_rounds_evaluated(*, tournament):
@@ -122,3 +125,56 @@ def sync_time_based_statuses(reference_time=None):
     return {
         'closed_round_ids': updated_round_ids,
     }
+
+
+def get_team_participant_ids(*, team):
+    participant_ids = set(
+        TeamMember.objects.filter(team=team).values_list('user_id', flat=True)
+    )
+    participant_ids.add(team.captain_id)
+    return participant_ids
+
+
+@transaction.atomic
+def register_team_for_tournament(*, tournament, team, actor):
+    if tournament.status != Tournament.STATUS_REGISTRATION:
+        raise ValidationError({'tournament': 'Tournament is not open for team registration.'})
+
+    if team.captain_id != actor.id:
+        raise ValidationError({'team': 'Only the team owner can register this team for a tournament.'})
+
+    if TournamentTeamRegistration.objects.filter(tournament=tournament, team=team).exists():
+        raise ValidationError({'team': 'This team is already registered for the tournament.'})
+
+    participant_ids = get_team_participant_ids(team=team)
+    participant_count = len(participant_ids)
+    if tournament.min_team_members and participant_count < tournament.min_team_members:
+        raise ValidationError(
+            {'team': f'Team must have at least {tournament.min_team_members} members for this tournament.'}
+        )
+
+    if tournament.max_teams is not None:
+        current_registered_count = TournamentTeamRegistration.objects.filter(tournament=tournament).count()
+        if current_registered_count >= tournament.max_teams:
+            raise ValidationError({'tournament': 'Tournament registration limit has been reached.'})
+
+    conflict_registration = (
+        TournamentTeamRegistration.objects.select_related('team')
+        .filter(tournament=tournament)
+        .exclude(team=team)
+        .filter(
+            Q(team__captain_id__in=participant_ids)
+            | Q(team__team_members__user_id__in=participant_ids)
+        )
+        .first()
+    )
+    if conflict_registration is not None:
+        raise ValidationError(
+            {'team': f'Cannot register: team shares participants with "{conflict_registration.team.name}".'}
+        )
+
+    return TournamentTeamRegistration.objects.create(
+        tournament=tournament,
+        team=team,
+        created_by=actor,
+    )

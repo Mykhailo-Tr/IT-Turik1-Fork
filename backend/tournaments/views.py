@@ -18,6 +18,8 @@ from .serializers import (
     SubmissionSerializer,
     TournamentAdminSerializer,
     TournamentPublicSerializer,
+    TournamentTeamRegistrationCreateSerializer,
+    TournamentTeamRegistrationSerializer,
 )
 from .services import (
     mark_round_evaluated,
@@ -96,6 +98,20 @@ class TournamentStartRegistrationView(APIView):
         tournament = get_object_or_404(Tournament, pk=pk)
         start_registration(tournament)
         return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
+
+
+class TournamentTeamRegistrationCreateView(SyncStatusesMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        tournament = get_object_or_404(Tournament, pk=pk)
+        serializer = TournamentTeamRegistrationCreateSerializer(
+            data=request.data,
+            context={'request': request, 'tournament': tournament},
+        )
+        serializer.is_valid(raise_exception=True)
+        registration = serializer.save()
+        return Response(TournamentTeamRegistrationSerializer(registration).data, status=status.HTTP_201_CREATED)
 
 
 class RoundListCreateView(generics.ListCreateAPIView):

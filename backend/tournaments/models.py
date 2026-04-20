@@ -199,3 +199,36 @@ class Submission(models.Model):
 
         if errors:
             raise ValidationError(errors)
+
+
+class TournamentTeamRegistration(models.Model):
+    tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        related_name='team_registrations',
+    )
+    team = models.ForeignKey(
+        'teams.Team',
+        on_delete=models.CASCADE,
+        related_name='tournament_registrations',
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='created_tournament_team_registrations',
+        blank=True,
+        null=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
+        constraints = [
+            models.UniqueConstraint(
+                fields=['tournament', 'team'],
+                name='uniq_tournament_team_registration',
+            ),
+        ]
+
+    def __str__(self):
+        return f'{self.tournament_id}:{self.team_id}'
