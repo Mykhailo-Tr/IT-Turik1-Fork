@@ -1,7 +1,7 @@
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -77,7 +77,7 @@ class TournamentCreateView(generics.CreateAPIView):
         return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_201_CREATED)
 
 
-class TournamentUpdateView(generics.UpdateAPIView):
+class TournamentUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Tournament.objects.all()
     permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
     serializer_class = TournamentAdminSerializer
@@ -89,6 +89,13 @@ class TournamentUpdateView(generics.UpdateAPIView):
         serializer.is_valid(raise_exception=True)
         tournament = serializer.save()
         return Response(TournamentPublicSerializer(tournament).data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        tournament = self.get_object()
+        if tournament.created_by_id != request.user.id:
+            raise PermissionDenied('Only the admin owner of this tournament can delete it.')
+        tournament.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TournamentStartRegistrationView(APIView):
