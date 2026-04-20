@@ -4,6 +4,7 @@
       >Create round</ui-button
     >
   </div>
+
   <section>
     <ui-skeleton-loader :loading="isLoading">
       <template #skeleton>
@@ -59,7 +60,7 @@
       </div>
     </ui-skeleton-loader>
 
-    <ui-modal v-model="isDetailsOpen" maxWidth="1100px" @close="closeDetails">
+    <ui-modal v-model="isDetailsOpen" scrollable maxWidth="1100px" @close="closeDetails">
       <template #title>
         <h2>{{ selectedRound?.title ?? 'Round details' }}</h2>
       </template>

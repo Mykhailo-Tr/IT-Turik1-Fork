@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div :class="['card', { scrollable: props.scrollable }]">
     <slot v-if="$slots.header" name="header" />
 
     <Transition name="error-fade" role="alert">
@@ -17,6 +17,7 @@
 <script setup lang="ts">
 interface Props {
   isError?: boolean
+  scrollable?: boolean
 }
 
 const props = defineProps<Props>()
@@ -24,8 +25,6 @@ const props = defineProps<Props>()
 
 <style scoped>
 .card {
-  max-height: calc(100vh - 16px * 2);
-  overflow-y: auto;
   border: 1px solid;
   border-color: inherit;
   border-radius: 14px;
@@ -35,6 +34,11 @@ const props = defineProps<Props>()
   gap: 1rem;
   background: var(--card);
   color: var(--card-foreground);
+}
+
+.card.scrollable {
+  max-height: calc(100vh - 16px * 2);
+  overflow-y: auto;
 }
 
 .error-fade-enter-active,

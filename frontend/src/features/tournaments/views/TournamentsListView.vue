@@ -4,7 +4,12 @@
       <template #header>
         <div class="tournaments-header">
           <h1 class="tournaments-title">Tournaments list</h1>
-          <ui-button size="sm" asLink to="/tournaments/create" class="create-new-btn"
+          <ui-button
+            v-if="user?.role === 'admin'"
+            size="sm"
+            asLink
+            to="/tournaments/create"
+            class="create-new-btn"
             >Create new</ui-button
           >
         </div>
@@ -150,6 +155,7 @@ import UiInput from '@/components/UiInput.vue'
 import ArrowRight from '@/icons/ArrowRight.vue'
 import { parseError } from '@/api'
 import { truncateText } from '@/lib/utils'
+import { useProfile } from '@/queries/accounts'
 
 interface Data {
   id: number
@@ -171,6 +177,8 @@ const totalMockedItems = 120
 const currentPage = ref(1)
 const searchInput = ref('')
 const searchQuery = ref('')
+
+const { data: user } = useProfile()
 
 const fetchItems = async (page: number, query?: string): Promise<Response> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
