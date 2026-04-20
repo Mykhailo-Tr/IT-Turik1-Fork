@@ -1,4 +1,8 @@
 <template>
+  <div class="top-actions" v-if="user?.role === 'admin'">
+    <AddEventModel :tournament-id="props.tournamentId" />
+  </div>
+
   <section class="page-shell">
     <ui-skeleton-loader :loading="isLoading">
       <template #skeleton>
@@ -37,12 +41,23 @@
               <p>{{ event.title }}</p>
             </div>
 
-            <div :class="['event-dates', { range: !!event.startDate && !!event.endDate }]">
-              <p v-if="event.startDate" class="text-muted start-date">
+            <div class="event-right-side">
+              <p v-if="event.type === 'event' && event.startDate" class="text-muted">
                 {{ formatDate(event.startDate, { showHours: true }) }}
               </p>
-              <p class="text-muted">{{ formatDate(event.endDate, { showHours: true }) }}</p>
+              <p v-if="event.type === 'round' && event.endDate" class="text-muted">
+                {{ formatDate(event.endDate, { showHours: true }) }}
+              </p>
             </div>
+          </div>
+
+          <div class="event-actions" v-if="user?.role === 'admin' && event.type === 'event'">
+            <EditEventModal
+              :event-id="event.id"
+              :title="event.title"
+              :start-date="event.startDate!"
+            />
+            <DeleteEventModel :event-id="event.id" :title="event.title" />
           </div>
         </ui-card>
       </div>
@@ -59,16 +74,21 @@ import FinishIcon from '@/icons/FinishIcon.vue'
 import { formatDate } from '@/lib/utils'
 import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
+import EditEventModal from './modals/EditEventModal.vue'
+import { useProfile } from '@/queries/accounts'
+import DeleteEventModel from './modals/DeleteEventModel.vue'
+import AddEventModel from './modals/AddEventModel.vue'
 
 interface Round {
+  id: number
   title: string
   endAt: Date
 }
 
 interface Event {
+  id: number
   title: string
   startAt: Date
-  endAt: Date
 }
 
 interface Props {
@@ -76,6 +96,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { data: user } = useProfile()
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
@@ -83,10 +104,12 @@ const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
 
   return [
     {
+      id: 1,
       title: 'Round 2',
       endAt: new Date('2026-04-20T18:00:00'),
     },
     {
+      id: 2,
       title: 'Round 1',
       endAt: new Date('2026-04-19T12:00:00'),
     },
@@ -99,14 +122,14 @@ const fetchEvents = async (_tournamentId: number): Promise<Event[]> => {
 
   return [
     {
+      id: 1,
       title: 'Opening Ceremony',
       startAt: new Date('2026-04-18T10:00:00'),
-      endAt: new Date('2026-08-18T10:00:00'),
     },
     {
+      id: 2,
       title: 'Final Event',
       startAt: new Date('2026-04-21T15:00:00'),
-      endAt: new Date('2026-10-12T10:00:00'),
     },
   ]
 }
@@ -134,6 +157,7 @@ const isLoading = computed(() => roundsLoading.value || eventsLoading.value)
 const schedule = computed(() => {
   const roundItems =
     rounds.value?.map((round) => ({
+      id: round.id,
       type: 'round' as const,
       title: round.title,
       startDate: null,
@@ -143,10 +167,10 @@ const schedule = computed(() => {
 
   const eventItems =
     events.value?.map((event) => ({
+      id: event.id,
       type: 'event' as const,
       title: event.title,
       startDate: event.startAt,
-      endDate: event.endAt,
       sortDate: event.startAt,
     })) ?? []
 
@@ -197,21 +221,22 @@ const schedule = computed(() => {
   border-radius: 50%;
 }
 
-.event-left-side {
+.event-left-side,
+.event-right-side {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.event-dates {
+.top-actions,
+.event-actions {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  gap: 0.6rem;
+  justify-content: end;
 }
 
-.event-dates.range {
-  padding-left: 15px;
-  border-left: 2px solid var(--border);
-  border-radius: 5px 0 0 5px;
+.event-actions {
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
 </style>
