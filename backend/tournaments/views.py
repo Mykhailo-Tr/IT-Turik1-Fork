@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import JuryAssignment, Round, Submission, SubmissionEvaluation, Tournament
+from .models import Round, Submission, Tournament
 from .permissions import (
     IsJuryPermission,
     IsPlatformAdminOrTeamMemberPermission,
@@ -14,10 +14,10 @@ from .permissions import (
 )
 from .serializers import (
     CurrentTaskSerializer,
-    JuryAssignmentSerializer,
+    
     OwnSubmissionSerializer,
     RoundSerializer,
-    SubmissionEvaluationSerializer,
+    
     SubmissionSerializer,
     TournamentAdminSerializer,
     TournamentPublicSerializer,
@@ -25,7 +25,6 @@ from .serializers import (
     TournamentTeamRegistrationSerializer,
 )
 from .services import (
-    assign_submissions_to_jury,
     close_submissions_on_round,
     delete_round,
     mark_round_evaluated,
@@ -230,37 +229,3 @@ class CurrentTaskView(SyncStatusesMixin, APIView):
         return Response(CurrentTaskSerializer(active_round).data, status=status.HTTP_200_OK)
 
 
-class JuryAssignmentListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsJuryPermission]
-    serializer_class = JuryAssignmentSerializer
-
-    def get_queryset(self):
-        return JuryAssignment.objects.filter(jury=self.request.user).select_related(
-            'submission', 'submission__team', 'submission__round', 'submission__round__tournament'
-        )
-
-
-class JuryEvaluationCreateView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated, IsJuryPermission]
-    serializer_class = SubmissionEvaluationSerializer
-
-    def perform_create(self, serializer):
-        serializer.save()
-
-
-class AdminRoundAssignmentView(APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
-
-    def post(self, request, pk):
-        round_obj = get_object_or_404(Round, pk=pk)
-        k = request.data.get('k', 2)
-        assign_submissions_to_jury(round_obj, k=int(k))
-        return Response({'status': 'Assignments created.'}, status=status.HTTP_201_CREATED)
-
-class JuryEvaluationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsJuryPermission]
-    serializer_class = SubmissionEvaluationSerializer
-    lookup_field = 'assignment_id'
-
-    def get_queryset(self):
-        return SubmissionEvaluation.objects.filter(assignment__jury=self.request.user)
