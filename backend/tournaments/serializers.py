@@ -15,6 +15,7 @@ from .models import (
     TournamentTeamRegistration,
 )
 from .services import ensure_round_placeholders, register_team_for_tournament
+from teams.serializers import TeamSummarySerializer
 
 
 class RoundShortSerializer(serializers.ModelSerializer):
@@ -164,8 +165,8 @@ class RoundSerializer(serializers.ModelSerializer):
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
-    team_name = serializers.CharField(source='team.name', read_only=True)
-    round_name = serializers.CharField(source='round.name', read_only=True)
+    team_details = TeamSummarySerializer(source='team', read_only=True)
+    round_details = RoundShortSerializer(source='round', read_only=True)
 
     class Meta:
         model = Submission
@@ -173,8 +174,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'id',
             'team',
             'round',
-            'team_name',
-            'round_name',
+            'team_details',
+            'round_details',
             'github_url',
             'demo_video_url',
             'demo_video_file',
@@ -184,6 +185,10 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'updated_at',
         )
         read_only_fields = ('created_at', 'updated_at')
+        extra_kwargs = {
+            'team': {'write_only': True},
+            'round': {'write_only': True},
+        }
 
     def _request_user(self):
         request = self.context.get('request')
@@ -243,8 +248,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
 
 class OwnSubmissionSerializer(serializers.ModelSerializer):
-    team_name = serializers.CharField(source='team.name', read_only=True)
-    round_name = serializers.CharField(source='round.name', read_only=True)
+    team = TeamSummarySerializer(read_only=True)
+    round = RoundShortSerializer(read_only=True)
 
     class Meta:
         model = Submission
@@ -252,8 +257,6 @@ class OwnSubmissionSerializer(serializers.ModelSerializer):
             'id',
             'team',
             'round',
-            'team_name',
-            'round_name',
             'github_url',
             'demo_video_url',
             'demo_video_file',
