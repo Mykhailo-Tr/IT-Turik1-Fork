@@ -91,6 +91,19 @@ def start_round(round_obj):
 
 
 @transaction.atomic
+def close_submissions_on_round(round_obj):
+    round_obj = Round.objects.select_for_update().get(id=round_obj.id)
+
+    if round_obj.status != Round.STATUS_ACTIVE:
+        raise ValidationError({'status': 'Only active rounds can have their submissions closed.'})
+
+    round_obj.status = Round.STATUS_SUBMISSION_CLOSED
+    round_obj.save(update_fields=['status', 'updated_at'])
+
+    return round_obj
+
+
+@transaction.atomic
 def mark_round_evaluated(round_obj):
     round_obj = Round.objects.select_for_update().select_related('tournament').get(id=round_obj.id)
     tournament = round_obj.tournament
@@ -200,3 +213,33 @@ def delete_round(round_obj):
     tournament.save(update_fields=['rounds_count', 'updated_at'])
 
     return tournament
+
+
+@transaction.atomic
+def assign_submissions_to_jury(round_obj, k=2):
+    import random
+    from accounts.models import User
+    from .models import JuryAssignment
+
+    if round_obj.status != Round.STATUS_SUBMISSION_CLOSED:
+        raise ValidationError({'status': 'Round must be submission_closed before assignment.'})
+
+    submissions = list(round_obj.submissions.all())
+    juries = list(User.objects.filter(role='jury'))
+
+    if not juries:
+        raise ValidationError({'jury': 'No jury members found to assign submissions.'})
+
+    # Adjust k if there are not enough jurors
+    actual_k = min(k, len(juries))
+
+    for submission in submissions:
+        # Get random sample of juries
+        assigned_juries = random.sample(juries, actual_k)
+        for jury in assigned_juries:
+            JuryAssignment.objects.get_or_create(
+                submission=submission,
+                jury=jury,
+            )
+
+    return round_obj

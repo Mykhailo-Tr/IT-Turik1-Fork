@@ -29,3 +29,11 @@ class IsPlatformAdminOrTeamMemberPermission(BasePermission):
         if is_platform_admin(user):
             return True
         return TeamMember.objects.filter(user=user).exists()
+
+
+class IsJuryPermission(BasePermission):
+    message = 'Jury access required.'
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(user and user.is_authenticated and user.role == 'jury')
