@@ -64,11 +64,37 @@ class TournamentListView(SyncStatusesMixin, generics.ListAPIView):
     permission_classes = [AllowAny]
     serializer_class = TournamentPublicSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        base_queryset = get_tournament_queryset()
+        published_filter = ~Q(status=Tournament.STATUS_DRAFT)
+
+        if user.is_staff:
+            return base_queryset
+
+        if user.is_authenticated:
+            return base_queryset.filter(published_filter | Q(created_by=user))
+
+        return base_queryset.filter(published_filter)
+
 
 class TournamentDetailView(SyncStatusesMixin, generics.RetrieveAPIView):
     queryset = get_tournament_queryset()
     permission_classes = [AllowAny]
     serializer_class = TournamentPublicSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        base_queryset = get_tournament_queryset()
+        published_filter = ~Q(status=Tournament.STATUS_DRAFT)
+
+        if user.is_staff:
+            return base_queryset
+
+        if user.is_authenticated:
+            return base_queryset.filter(published_filter | Q(created_by=user))
+
+        return base_queryset.filter(published_filter)
 
 
 class TournamentCreateView(generics.CreateAPIView):
