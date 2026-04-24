@@ -3,6 +3,10 @@ from .models import JuryAssignment, SubmissionEvaluation
 from tournaments.serializers import SubmissionSerializer
 
 
+class RoundAssignmentRequestSerializer(serializers.Serializer):
+    k = serializers.IntegerField(required=False, default=2, min_value=1)
+
+
 class SubmissionEvaluationSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubmissionEvaluation

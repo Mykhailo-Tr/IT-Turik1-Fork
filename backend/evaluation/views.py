@@ -9,7 +9,11 @@ from tournaments.permissions import IsJuryPermission, IsPlatformAdminPermission
 from .services import assign_submissions_to_jury
 
 from .models import JuryAssignment, SubmissionEvaluation
-from .serializers import JuryAssignmentSerializer, SubmissionEvaluationSerializer
+from .serializers import (
+    JuryAssignmentSerializer,
+    RoundAssignmentRequestSerializer,
+    SubmissionEvaluationSerializer,
+)
 
 
 class JuryAssignmentListView(generics.ListAPIView):
@@ -44,6 +48,8 @@ class AdminRoundAssignmentView(APIView):
 
     def post(self, request, pk):
         round_obj = get_object_or_404(Round, pk=pk)
-        k = request.data.get('k', 2)
-        assign_submissions_to_jury(round_obj, k=int(k))
+        request_serializer = RoundAssignmentRequestSerializer(data=request.data)
+        request_serializer.is_valid(raise_exception=True)
+        k = request_serializer.validated_data['k']
+        assign_submissions_to_jury(round_obj, k=k)
         return Response({'status': 'Assignments created.'}, status=status.HTTP_201_CREATED)
