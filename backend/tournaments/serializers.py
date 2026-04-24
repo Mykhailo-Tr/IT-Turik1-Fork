@@ -12,7 +12,11 @@ from .models import (
     Tournament,
     TournamentTeamRegistration,
 )
-from .services import ensure_round_placeholders, register_team_for_tournament
+from .services import (
+    ensure_round_placeholders,
+    ensure_team_registered_for_tournament,
+    register_team_for_tournament,
+)
 from teams.serializers import TeamSummarySerializer
 
 
@@ -230,6 +234,12 @@ class SubmissionSerializer(serializers.ModelSerializer):
             now = timezone.now()
             if round_obj.status != Round.STATUS_ACTIVE or round_obj.end_date <= now:
                 errors['round'] = 'Round is closed for submissions.'
+
+        if not errors and instance is None and team and round_obj:
+            ensure_team_registered_for_tournament(
+                tournament=round_obj.tournament,
+                team=team,
+            )
 
         if errors:
             raise serializers.ValidationError(errors)

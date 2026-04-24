@@ -150,6 +150,35 @@ class TournamentApiTests(APITestCase):
         # without strictly requiring 'non_field_errors' or 'team' key
         self.assertTrue(response.data.get('details'))
 
+    def test_submission_requires_team_tournament_registration(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            **self.tournament_data
+        )
+        round_obj = Round.objects.create(
+            tournament=tournament,
+            position=1,
+            status=Round.STATUS_ACTIVE,
+            start_date=timezone.now() - timezone.timedelta(hours=1),
+            end_date=timezone.now() + timezone.timedelta(hours=1),
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('submissions')
+        submission_data = {
+            'team': self.team.id,
+            'round': round_obj.id,
+            'github_url': 'https://github.com/test/repo',
+            'demo_video_url': 'https://youtube.com/test',
+            'description': 'Unregistered team submission',
+        }
+        response = self.client.post(url, submission_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data.get('code'), 'validation_error')
+        self.assertIn('team', response.data['details'])
+
     def test_registration_limit_reached(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,

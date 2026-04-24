@@ -148,6 +148,12 @@ def get_team_participant_ids(*, team):
     return participant_ids
 
 
+def ensure_team_registered_for_tournament(*, tournament, team):
+    if TournamentTeamRegistration.objects.filter(tournament=tournament, team=team).exists():
+        return
+    raise ValidationError({'team': 'Team must be registered for this tournament before submitting.'})
+
+
 @transaction.atomic
 def register_team_for_tournament(*, tournament, team, actor):
     if tournament.status != Tournament.STATUS_REGISTRATION:
