@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'teams',
+    'evaluation',
     'tournaments',
     'corsheaders',
     'rest_framework_simplejwt',

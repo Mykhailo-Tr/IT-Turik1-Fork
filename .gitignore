@@ -10,6 +10,7 @@
 backend/db.sqlite3
 backend/db.sqlite3-journal
 
+.gemini
 .codex
 tasks.txt
 

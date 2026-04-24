@@ -1,159 +1,320 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError, transaction
+from django.utils import timezone
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
-from teams.models import Team, TeamMember
-from .models import Tournament, TournamentTeam
+from teams.models import Team
+from teams.models import TeamMember
+
+from .models import (
+    Round,
+    Submission,
+    Tournament,
+    TournamentTeamRegistration,
+)
+from .services import (
+    ensure_round_placeholders,
+    ensure_team_registered_for_tournament,
+    register_team_for_tournament,
+)
+from teams.serializers import TeamSummarySerializer
 
 
-class TournamentReadSerializer(serializers.ModelSerializer):
-    registered_teams_count = serializers.SerializerMethodField()
-    is_registration_open = serializers.SerializerMethodField()
-    can_register = serializers.SerializerMethodField()
-    is_creator = serializers.SerializerMethodField()
-    created_by_id = serializers.IntegerField(source='created_by.id', read_only=True)
+class RoundShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Round
+        fields = ('id', 'position', 'name', 'start_date', 'end_date', 'status')
+
+
+class TournamentPublicSerializer(serializers.ModelSerializer):
+    rounds = RoundShortSerializer(many=True, read_only=True)
 
     class Meta:
         model = Tournament
         fields = (
             'id',
-            'title',
+            'name',
             'description',
-            'registration_start',
-            'registration_end',
             'start_date',
             'end_date',
+            'tech_requirements',
+            'must_have_requirements',
             'max_teams',
-            'min_teams',
+            'min_team_members',
             'rounds_count',
             'status',
-            'created_by_id',
-            'created_at',
-            'registered_teams_count',
-            'is_registration_open',
-            'can_register',
-            'is_creator',
+            'rounds',
         )
+
+
+class TournamentAdminSerializer(TournamentPublicSerializer):
+    class Meta(TournamentPublicSerializer.Meta):
+        read_only_fields = ('status',)
+
+    def validate_rounds_count(self, value):
+        if value < 1:
+            raise serializers.ValidationError('rounds_count must be at least 1.')
+        return value
+
+    def validate(self, attrs):
+        start_date = attrs.get('start_date', getattr(self.instance, 'start_date', None))
+        end_date = attrs.get('end_date', getattr(self.instance, 'end_date', None))
+        if start_date and end_date and end_date <= start_date:
+            raise serializers.ValidationError({'end_date': 'end_date must be greater than start_date.'})
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        request = self.context.get('request')
+        tournament = Tournament(created_by=getattr(request, 'user', None), **validated_data)
+        try:
+            tournament.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        tournament.save()
+        ensure_round_placeholders(tournament)
+        return tournament
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        try:
+            instance.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        instance.save()
+        ensure_round_placeholders(instance)
+        return instance
+
+
+class RoundSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Round
+        fields = (
+            'id',
+            'tournament',
+            'position',
+            'name',
+            'description',
+            'tech_requirements',
+            'must_have_requirements',
+            'start_date',
+            'end_date',
+            'passing_count',
+            'winners_count',
+            'evaluation_criteria',
+            'materials',
+            'status',
+        )
+        read_only_fields = ('status',)
+
+    def validate(self, attrs):
+        instance = self.instance
+        tournament = attrs.get('tournament', getattr(instance, 'tournament', None))
+        position = attrs.get('position', getattr(instance, 'position', None))
+        start_date = attrs.get('start_date', getattr(instance, 'start_date', None))
+        end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
+        winners_count = attrs.get('winners_count', getattr(instance, 'winners_count', None))
+
+        errors = {}
+
+        if start_date and end_date and start_date >= end_date:
+            errors['end_date'] = 'end_date must be greater than start_date.'
+
+        if tournament and start_date and end_date:
+            if start_date < tournament.start_date or end_date > tournament.end_date:
+                errors['start_date'] = 'Round dates must be within tournament dates.'
+
+            if tournament.rounds_count == 1 and (
+                start_date != tournament.start_date or end_date != tournament.end_date
+            ):
+                errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
+
+        if position is not None and position < 1:
+            errors['position'] = 'position must be at least 1.'
+        if tournament and position and position > tournament.rounds_count:
+            errors['position'] = 'position must be less than or equal to tournament rounds_count.'
+
+        if tournament and position and winners_count is not None and position != tournament.rounds_count:
+            errors['winners_count'] = 'winners_count is allowed only for the last round.'
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        round_obj = Round(**validated_data)
+        try:
+            round_obj.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        round_obj.save()
+        return round_obj
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        try:
+            instance.full_clean()
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.message_dict) from None
+        instance.save()
+        return instance
+
+
+class SubmissionSerializer(serializers.ModelSerializer):
+    team_details = TeamSummarySerializer(source='team', read_only=True)
+    round_details = RoundShortSerializer(source='round', read_only=True)
+
+    class Meta:
+        model = Submission
+        fields = (
+            'id',
+            'team',
+            'round',
+            'team_details',
+            'round_details',
+            'github_url',
+            'demo_video_url',
+            'demo_video_file',
+            'live_demo_url',
+            'description',
+            'created_at',
+            'updated_at',
+        )
+        read_only_fields = ('created_at', 'updated_at')
+        extra_kwargs = {
+            'team': {'write_only': True},
+            'round': {'write_only': True},
+        }
 
     def _request_user(self):
         request = self.context.get('request')
-        if not request or not request.user.is_authenticated:
+        if not request:
             return None
         return request.user
 
-    def get_registered_teams_count(self, obj):
-        return obj.registered_teams_count
-
-    def get_is_registration_open(self, obj):
-        return obj.is_registration_open()
-
-    def get_can_register(self, obj):
-        return obj.can_accept_teams()
-
-    def get_is_creator(self, obj):
+    def validate(self, attrs):
+        instance = self.instance
         user = self._request_user()
-        if not user:
-            return False
-        return obj.created_by_id == user.id
+        team = attrs.get('team', getattr(instance, 'team', None))
+        round_obj = attrs.get('round', getattr(instance, 'round', None))
+        github_url = attrs.get('github_url', getattr(instance, 'github_url', ''))
+        demo_video_url = attrs.get('demo_video_url', getattr(instance, 'demo_video_url', ''))
+        demo_video_file = attrs.get('demo_video_file', getattr(instance, 'demo_video_file', None))
 
+        errors = {}
 
-class TournamentWriteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Tournament
-        fields = (
-            'title',
-            'description',
-            'registration_start',
-            'registration_end',
-            'start_date',
-            'end_date',
-            'max_teams',
-            'min_teams',
-            'rounds_count',
-        )
+        if not github_url:
+            errors['github_url'] = 'github_url is required.'
 
-    def validate(self, attrs):
-        instance = self.instance or Tournament()
-        for field, value in attrs.items():
-            setattr(instance, field, value)
-        try:
-            instance.clean()
-        except DjangoValidationError as exc:
-            raise ValidationError(exc.message_dict)
-        return attrs
+        if not demo_video_url and not demo_video_file:
+            errors['demo_video_url'] = 'Provide demo_video_url or demo_video_file.'
 
-    def to_representation(self, instance):
-        return TournamentReadSerializer(instance, context=self.context).data
+        if not team:
+            errors['team'] = 'team is required.'
 
+        if not round_obj:
+            errors['round'] = 'round is required.'
 
-class TournamentTeamRegistrationSerializer(serializers.Serializer):
-    team_id = serializers.IntegerField()
+        if instance is not None:
+            if 'team' in attrs and attrs['team'].id != instance.team_id:
+                errors['team'] = 'team cannot be changed.'
+            if 'round' in attrs and attrs['round'].id != instance.round_id:
+                errors['round'] = 'round cannot be changed.'
 
-    def __init__(self, *args, **kwargs):
-        self.tournament = kwargs.pop('tournament')
-        super().__init__(*args, **kwargs)
+        if team and user and not TeamMember.objects.filter(team=team, user=user).exists() and team.captain_id != user.id:
+            errors['team'] = 'You are not a member of this team.'
 
-    def validate_team_id(self, value):
-        try:
-            team = Team.objects.select_related('captain').prefetch_related('members').get(pk=value)
-        except Team.DoesNotExist:
-            raise ValidationError('Team not found.')
-        self._team = team
-        return value
+        if round_obj:
+            now = timezone.now()
+            if round_obj.status != Round.STATUS_ACTIVE or round_obj.end_date <= now:
+                errors['round'] = 'Round is closed for submissions.'
 
-    def validate(self, attrs):
-        tournament = self.tournament
-        team = self._team
-        request = self.context.get('request')
-
-        if not tournament.can_accept_teams():
-            if not tournament.is_registration_open():
-                raise ValidationError({'message': ['Registration is not open for this tournament.']})
-            raise ValidationError({'message': ['This tournament has reached the maximum number of teams.']})
-
-        if request and request.user.id != team.captain_id:
-            raise ValidationError({'team_id': ['You must be the captain of the team to register it.']})
-
-        if TournamentTeam.objects.filter(tournament=tournament, team=team).exists():
-            raise ValidationError({'team_id': ['This team is already registered for this tournament.']})
-
-        captain_teams_in_tournament = TournamentTeam.objects.filter(
-            tournament=tournament,
-            team__captain_id=team.captain_id,
-        )
-        if captain_teams_in_tournament.exists():
-            raise ValidationError(
-                {'team_id': ['You already have a team registered in this tournament.']}
+        if not errors and instance is None and team and round_obj:
+            ensure_team_registered_for_tournament(
+                tournament=round_obj.tournament,
+                team=team,
             )
 
-        member_count = team.members.count()
-        min_size = tournament.effective_min_teams()
-        if member_count < min_size:
-            raise ValidationError(
-                {'team_id': [f'Team must have at least {min_size} confirmed members (currently {member_count}).']}
-            )
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
-        return TournamentTeam.objects.create(
-            tournament=self.tournament,
-            team=self._team,
+        request = self.context.get('request')
+        try:
+            return Submission.objects.create(created_by=getattr(request, 'user', None), **validated_data)
+        except IntegrityError:
+            raise serializers.ValidationError({'team': 'Only one submission per team per round is allowed.'}) from None
+
+
+class OwnSubmissionSerializer(serializers.ModelSerializer):
+    team = TeamSummarySerializer(read_only=True)
+    round = RoundShortSerializer(read_only=True)
+
+    class Meta:
+        model = Submission
+        fields = (
+            'id',
+            'team',
+            'round',
+            'github_url',
+            'demo_video_url',
+            'demo_video_file',
+            'live_demo_url',
+            'description',
+            'created_at',
+            'updated_at',
         )
 
 
-class StatusTransitionSerializer(serializers.Serializer):
-    status = serializers.ChoiceField(choices=Tournament.STATUS_CHOICES)
+class CurrentTaskSerializer(serializers.ModelSerializer):
+    tournament_id = serializers.IntegerField(source='tournament.id', read_only=True)
+    tournament_name = serializers.CharField(source='tournament.name', read_only=True)
+    deadline = serializers.DateTimeField(source='end_date', read_only=True)
+    task = serializers.CharField(source='description', read_only=True)
 
-    def __init__(self, *args, **kwargs):
-        self.tournament = kwargs.pop('tournament')
-        super().__init__(*args, **kwargs)
+    class Meta:
+        model = Round
+        fields = (
+            'id',
+            'tournament_id',
+            'tournament_name',
+            'name',
+            'task',
+            'deadline',
+            'must_have_requirements',
+            'tech_requirements',
+        )
 
-    def validate_status(self, value):
-        self.tournament.validate_status_transition(value)
-        return value
 
-    def save(self):
-        self.tournament.status = self.validated_data['status']
-        self.tournament.save(skip_auto_status=True)
-        return self.tournament
+class TournamentTeamRegistrationSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(source='team.name', read_only=True)
+
+    class Meta:
+        model = TournamentTeamRegistration
+        fields = ('id', 'tournament', 'team', 'team_name', 'created_at')
+        read_only_fields = ('id', 'tournament', 'created_at')
+
+
+class TournamentTeamRegistrationCreateSerializer(serializers.Serializer):
+    team_id = serializers.PrimaryKeyRelatedField(queryset=Team.objects.all(), source='team')
+
+    def save(self, **kwargs):
+        request = self.context['request']
+        tournament = self.context['tournament']
+        team = self.validated_data['team']
+        return register_team_for_tournament(
+            tournament=tournament,
+            team=team,
+            actor=request.user,
+        )
+
+
