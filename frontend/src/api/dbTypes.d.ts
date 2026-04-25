@@ -98,9 +98,13 @@ type RoundStatus = 'draft' | 'active' | 'submission_closed' | 'evaluated'
 
 interface Round {
   id: RoundId
-  position: number
   name: string
+  position: number
   start_date: Date
   end_date: Date
-  status
+  status: RoundStatus
+  description: JSONContent
+  must_have_requirements: JSONContent
+  tech_requirements: JSONContent
+  passing_count: number
 }

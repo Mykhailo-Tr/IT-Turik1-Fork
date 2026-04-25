@@ -43,13 +43,13 @@ function tiptapJsonMinLength(min: number, message: string) {
 }
 
 export const CreateRoundSchema = v.object({
-  title: v.pipe(v.string(), v.minLength(1, 'Title is required')),
+  name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
   description: tiptapJsonMinLength(10, 'Description must be at least 10 characters long'),
-  technicalRequirements: tiptapJsonMinLength(
+  tech_requirements: tiptapJsonMinLength(
     10,
     'Technical requirements must be at least 10 characters long',
   ),
-  mustHave: tiptapJsonMinLength(10, 'Must have must be at least 10 characters long'),
-  startDate: v.date(),
-  endDate: v.date(),
+  must_have_requirements: tiptapJsonMinLength(10, 'Must have must be at least 10 characters long'),
+  start_date: v.date(),
+  end_date: v.date(),
 })

@@ -18,7 +18,7 @@ import { useUserStore } from '@/stores/user'
 import TournamentsCreateView from '@/features/tournaments/views/TournamentsCreateView.vue'
 import TournamentsListView from '@/features/tournaments/views/TournamentsListView.vue'
 import TournamentView from '@/features/tournaments/views/TournamentView.vue'
-import TournamentsCreateTaskView from '@/features/tournaments/views/TournamentsCreateTaskView.vue'
+import TournamentsCreateRoundView from '@/features/tournaments/views/TournamentsCreateRoundView.vue'
 import { accountsService } from '@/api/accounts'
 import NotFoundView from '@/features/not-found-page/NotFoundView.vue'
 
@@ -111,7 +111,7 @@ const router = createRouter({
     },
     {
       path: '/tournaments/:id/rounds/create',
-      component: TournamentsCreateTaskView,
+      component: TournamentsCreateRoundView,
       meta: { requiresAuth: true },
     },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView },

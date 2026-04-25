@@ -6,16 +6,14 @@
 
     <form class="round-form" @submit.prevent="handleSubmit">
       <label class="form-item title-field">
-        <span class="form-label">Title</span>
+        <span class="form-label">Name</span>
         <ui-input
-          v-model="form.fields.value.title"
+          v-model="form.fields.value.name"
           placeholder="Enter round title"
-          :isInvalid="!!form.errors.value.title"
-          @blur="form.validateField('title')"
+          :isInvalid="!!form.errors.value.name"
+          @blur="form.validateField('name')"
         />
-        <small v-if="form.errors.value.title" class="text-error">{{
-          form.errors.value.title
-        }}</small>
+        <small v-if="form.errors.value.name" class="text-error">{{ form.errors.value.name }}</small>
       </label>
 
       <label class="form-item desc-field">
@@ -36,54 +34,68 @@
       <label class="form-item tech-field">
         <span class="form-label">Technical requirements</span>
         <editor-modal
-          v-model="form.fields.value.technicalRequirements"
+          v-model="form.fields.value.tech_requirements"
           title="Technical requirements"
           addText="Add technical requirements"
           editText="Edit technical requirements"
           ariaLabel="Technical requirements editor"
-          @blur="form.validateField('technicalRequirements')"
+          @blur="form.validateField('tech_requirements')"
         />
-        <small v-if="form.errors.value.technicalRequirements" class="text-error">{{
-          form.errors.value.technicalRequirements
+        <small v-if="form.errors.value.tech_requirements" class="text-error">{{
+          form.errors.value.tech_requirements
         }}</small>
       </label>
 
       <label class="form-item start-date-field">
         <span class="form-label">Start date</span>
         <ui-date-picker
-          v-model="form.fields.value.startDate"
-          :isInvalid="!!form.errors.value.startDate"
-          @blur="form.validateField('startDate')"
+          v-model="form.fields.value.start_date"
+          :isInvalid="!!form.errors.value.start_date"
+          @blur="form.validateField('start_date')"
         />
-        <small v-if="form.errors.value.startDate" class="text-error">{{
-          form.errors.value.startDate
+        <small v-if="form.errors.value.start_date" class="text-error">{{
+          form.errors.value.start_date
         }}</small>
       </label>
 
       <label class="form-item end-date-field">
         <span class="form-label">End date</span>
         <ui-date-picker
-          v-model="form.fields.value.endDate"
-          :isInvalid="!!form.errors.value.endDate"
-          @blur="form.validateField('endDate')"
+          v-model="form.fields.value.start_date"
+          :isInvalid="!!form.errors.value.start_date"
+          @blur="form.validateField('start_date')"
         />
-        <small v-if="form.errors.value.endDate" class="text-error">{{
-          form.errors.value.endDate
+        <small v-if="form.errors.value.start_date" class="text-error">{{
+          form.errors.value.start_date
         }}</small>
       </label>
 
       <label class="form-item must-have-field">
         <span class="form-label">Must have</span>
         <editor-modal
-          v-model="form.fields.value.mustHave"
+          v-model="form.fields.value.must_have_requirements"
           title="Must have"
           addText="Add must have"
           editText="Edit must have"
           ariaLabel="Must have editor"
-          @blur="form.validateField('mustHave')"
+          @blur="form.validateField('must_have_requirements')"
         />
-        <small v-if="form.errors.value.mustHave" class="text-error">{{
-          form.errors.value.mustHave
+        <small v-if="form.errors.value.must_have_requirements" class="text-error">{{
+          form.errors.value.must_have_requirements
+        }}</small>
+      </label>
+
+      <label class="form-item passing-count-field">
+        <span class="form-label">Passing count</span>
+        <ui-input
+          type="number"
+          v-model.number="form.fields.value.passing_count"
+          placeholder="Enter round title"
+          :isInvalid="!!form.errors.value.passing_count"
+          @blur="form.validateField('passing_count')"
+        />
+        <small v-if="form.errors.value.passing_count" class="text-error">{{
+          form.errors.value.passing_count
         }}</small>
       </label>
 
@@ -101,34 +113,43 @@ import EditorModal from '@/features/tournaments/components/createTaskView/modals
 import { useForm } from '@/composables/useForm'
 import { CreateRoundSchema } from '@/schemas/tournaments.schema'
 import type { JSONContent } from '@tiptap/core'
+import { useCreateRound } from '@/queries/tournaments'
+import { useRoute } from 'vue-router'
 
 interface Form {
-  title: string
-  technicalRequirements: JSONContent | null
+  name: string
+  passing_count: number
+  tech_requirements: JSONContent | null
   description: JSONContent | null
-  mustHave: JSONContent | null
-  startDate: Date
-  endDate: Date
+  must_have_requirements: JSONContent | null
+  start_date: Date
+  end_date: Date
 }
 
 const form = useForm<Form>(CreateRoundSchema, {
-  title: '',
+  name: '',
+  passing_count: 2,
   description: null,
-  technicalRequirements: null,
-  mustHave: null,
-  startDate: new Date(),
-  endDate: new Date(),
+  tech_requirements: null,
+  must_have_requirements: null,
+  start_date: new Date(),
+  end_date: new Date(),
 })
+
+const route = useRoute()
+const tournamentId = Number(route.params.id)
+
+const { mutate: createRound } = useCreateRound()
 
 function handleSubmit() {
   if (!form.validate()) return
 
-  // TODO: submit to API
-  const payload = {
-    ...form.fields.value,
-  }
-
-  console.log('Create round payload (TipTap JSON):', payload)
+  createRound({
+    body: {
+      tournament: tournamentId,
+      ...form.fields.value,
+    },
+  })
 }
 </script>
 
@@ -170,9 +191,14 @@ function handleSubmit() {
   grid-row: 2;
 }
 
+.passing-count-field {
+  grid-column: 1;
+  grid-row: 4;
+}
+
 .submit-btn {
   grid-column: 2;
-  grid-row: 4;
+  grid-row: 5;
   justify-self: end;
 }
 
@@ -185,6 +211,15 @@ function handleSubmit() {
     grid-template-columns: 1fr;
     grid-template-rows: auto;
     gap: 1.2rem;
+  }
+
+  .must-have-field {
+    grid-column: 1;
+    grid-row: 4;
+  }
+
+  .passing-count-field {
+    grid-row: 5;
   }
 
   .start-date-field,
