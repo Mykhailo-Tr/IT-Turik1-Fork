@@ -6,19 +6,34 @@ export const TimeSchema = v.pipe(
   v.regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Time must be in HH:MM format (00:00–23:59)'),
 )
 
-export const CreateTournamentSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(1, 'Tournament name is required')),
-  description: v.pipe(
-    v.string(),
-    v.minLength(20, 'Description must be at least 20 characters long'),
-  ),
-  startDate: v.date(),
-  startTime: TimeSchema,
-  endDate: v.date(),
-  endTime: TimeSchema,
-  rounds: v.pipe(v.number('must be a number'), v.minValue(1, 'Rounds must be at least 1')),
-  maxTeams: v.pipe(v.number('must be a number'), v.minValue(2, 'Maximum teams must be at least 2')),
-})
+export const CreateTournamentSchema = v.pipe(
+  v.object({
+    name: v.pipe(v.string(), v.minLength(1, 'Tournament name is required')),
+
+    description: v.pipe(
+      v.string(),
+      v.minLength(20, 'Description must be at least 20 characters long'),
+    ),
+
+    startDate: v.date(),
+    startTime: TimeSchema,
+
+    endDate: v.date(),
+    endTime: TimeSchema,
+
+    rounds: v.pipe(v.number('must be a number'), v.minValue(1, 'Rounds must be at least 1')),
+
+    maxTeams: v.pipe(
+      v.number('must be a number'),
+      v.minValue(2, 'Maximum teams must be at least 2'),
+    ),
+
+    minTeamMembers: v.pipe(
+      v.number('must be a number'),
+      v.minValue(2, 'Minimum team members must be at least 2'),
+    ),
+  }),
+)
 
 function tiptapJsonMinLength(min: number, message: string) {
   return v.pipe(

@@ -4,7 +4,7 @@
       <h1 class="section-title">Create tournament</h1>
     </template>
 
-    <form class="tournament-form" @submit.prevent="() => {}">
+    <form class="tournament-form" @submit.prevent="handleSubmit">
       <label class="form-item name-field">
         <span class="form-label">Team name</span>
         <ui-input
@@ -37,7 +37,7 @@
         <label class="form-item">
           <span class="form-label">Rounds</span>
           <ui-select
-            v-model="form.fields.value.rounds"
+            v-model="form.fields.value.rounds_count"
             :options="[
               { value: '1', label: '1' },
               { value: '2', label: '2' },
@@ -45,27 +45,44 @@
               { value: '4', label: '4' },
             ]"
             required
-            @blur="form.validateField('rounds')"
+            @blur="form.validateField('rounds_count')"
           />
-          <small v-if="form.errors.value.rounds" class="text-error">{{
-            form.errors.value.rounds
+          <small v-if="form.errors.value.rounds_count" class="text-error">{{
+            form.errors.value.rounds_count
           }}</small>
         </label>
 
-        <label class="form-item">
+        <label class="form-item" style="grid-column-start: 1">
           <span class="form-label">Max Teams</span>
           <ui-input
             id="maxTeams"
             type="number"
-            v-model.number="form.fields.value.maxTeams"
+            v-model.number="form.fields.value.max_teams"
             min="1"
             max="10"
             required
-            :isInvalid="!!form.errors.value.maxTeams"
-            @blur="form.validateField('maxTeams')"
+            :isInvalid="!!form.errors.value.max_teams"
+            @blur="form.validateField('max_teams')"
           />
-          <small v-if="form.errors.value.maxTeams" class="text-error">{{
-            form.errors.value.maxTeams
+          <small v-if="form.errors.value.max_teams" class="text-error">{{
+            form.errors.value.max_teams
+          }}</small>
+        </label>
+
+        <label class="form-item">
+          <span class="form-label">Min team members</span>
+          <ui-input
+            id="maxTeams"
+            type="number"
+            v-model.number="form.fields.value.min_team_members"
+            min="1"
+            max="10"
+            required
+            :isInvalid="!!form.errors.value.min_team_members"
+            @blur="form.validateField('min_team_members')"
+          />
+          <small v-if="form.errors.value.min_team_members" class="text-error">{{
+            form.errors.value.min_team_members
           }}</small>
         </label>
       </div>
@@ -132,6 +149,8 @@
 </template>
 
 <script setup lang="ts">
+import { parseError } from '@/api'
+import type { CreateTournamentBody } from '@/api/tournaments/types'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiDatePicker from '@/components/UiDatePicker.vue'
@@ -140,7 +159,11 @@ import UiSelect from '@/components/UiSelect.vue'
 import UiTextArea from '@/components/UiTextArea.vue'
 import UiTimePicker from '@/components/UiTimePicker.vue'
 import { useForm } from '@/composables/useForm'
+import { combineDateAndTime } from '@/lib/date'
+import { useCreateTournament } from '@/queries/tournaments'
 import { CreateTournamentSchema } from '@/schemas/tournaments.schema'
+import { unref } from 'vue'
+import { useRouter } from 'vue-router'
 
 interface Form {
   name: string
@@ -149,8 +172,9 @@ interface Form {
   startTime: string
   endTime: string
   endDate: Date
-  rounds: number
-  maxTeams: number
+  rounds_count: number
+  max_teams: number
+  min_team_members: number
 }
 
 const form = useForm<Form>(CreateTournamentSchema, {
@@ -160,9 +184,54 @@ const form = useForm<Form>(CreateTournamentSchema, {
   startTime: '00:00',
   endDate: new Date(),
   endTime: '00:00',
-  rounds: 1,
-  maxTeams: 2,
+  rounds_count: 1,
+  max_teams: 2,
+  min_team_members: 2,
 })
+
+const router = useRouter()
+const { mutate: createTournament } = useCreateTournament()
+
+const apiToFormFieldMap: Record<string, keyof Form> = {
+  start_date: 'startDate',
+  end_date: 'endDate',
+}
+
+function toPayload(values: Form): CreateTournamentBody {
+  return {
+    name: values.name,
+    description: values.description,
+    rounds_count: values.rounds_count,
+    max_teams: values.max_teams,
+    min_team_members: values.min_team_members,
+    start_date: combineDateAndTime(values.startDate, values.startTime),
+    end_date: combineDateAndTime(values.endDate, values.endTime),
+  }
+}
+
+const handleSubmit = () => {
+  const values = unref(form.fields)
+
+  createTournament(
+    {
+      body: toPayload(values),
+    },
+    {
+      onSuccess() {
+        router.push('/tournaments')
+      },
+
+      onError: (error) => {
+        const parsedError = parseError(error)
+
+        for (const [apiField, errors] of Object.entries(parsedError?.details || {})) {
+          const formField = apiToFormFieldMap[apiField] ?? apiField
+          form.setError(formField as keyof Form, errors?.[0] ?? 'Invalid value')
+        }
+      },
+    },
+  )
+}
 </script>
 
 <style scoped>

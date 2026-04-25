@@ -1,10 +1,12 @@
-import { isAxiosError, type AxiosError } from 'axios'
+import { AxiosError, isAxiosError } from 'axios'
 import { accountsService } from './accounts'
 import { teamsService } from './teams'
+import { tournamentsService } from './tournaments'
 
 const $api = {
   accounts: accountsService,
   teams: teamsService,
+  tournaments: tournamentsService,
 }
 
 export default $api
@@ -16,7 +18,7 @@ export interface ApiError<DetailsFields extends string = string> {
 }
 
 export function parseError<DetailsFields extends string = string>(
-  error?: unknown,
+  error?: AxiosError<ApiError<DetailsFields>> | null,
 ): ApiError<DetailsFields> | undefined {
   if (isAxiosError<ApiError<DetailsFields>>(error)) {
     if (error.response?.data) {

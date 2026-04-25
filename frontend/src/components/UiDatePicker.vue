@@ -116,7 +116,7 @@ import ArrowRight from '@/icons/ArrowRight.vue'
 import ArrowLeft from '@/icons/ArrowLeft.vue'
 import CalendarIcon from '@/icons/CalendarIcon.vue'
 import ArrowDown from '@/icons/ArrowDown.vue'
-import { formatDate } from '@/lib/utils'
+import { formatDate } from '@/lib/date'
 
 export interface DateRange {
   start: Date | null

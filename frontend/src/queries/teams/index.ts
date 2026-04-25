@@ -2,7 +2,6 @@ import $api from '@/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { teamKeys } from '../keys'
 import type { AxiosError } from 'axios'
-import type { TeamId } from '@/api/dbTypes'
 import type {
   AddMemberArgs,
   ChangeTeamVisibilityArgs,

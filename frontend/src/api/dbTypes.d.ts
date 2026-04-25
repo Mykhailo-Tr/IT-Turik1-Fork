@@ -75,3 +75,32 @@ interface JoinRequest {
   created_at: Date
   updated_at: Date
 }
+
+// Tournament
+type TournamentId = number
+type TournamentStatus = 'draft' | 'registration' | 'running' | 'finished'
+
+interface Tournament {
+  id: TournamentId
+  name: string
+  description: string
+  start_date: Date
+  end_date: Date
+  max_teams: number
+  min_team_members: number
+  rounds_count: number
+  status: TournamentStatus
+}
+
+// Round
+type RoundId = number
+type RoundStatus = 'draft' | 'active' | 'submission_closed' | 'evaluated'
+
+interface Round {
+  id: RoundId
+  position: number
+  name: string
+  start_date: Date
+  end_date: Date
+  status
+}

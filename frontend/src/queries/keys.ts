@@ -13,3 +13,7 @@ export const accountKeys = {
   users: () => ['users'],
   roleCodes: (filter?: GetRoleCodesFilter) => ['role-codes', filter?.role ?? 'all'],
 }
+
+export const touranmentsKeys = {
+  allTouranments: () => ['tournaments'],
+}

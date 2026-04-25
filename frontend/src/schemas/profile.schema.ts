@@ -11,7 +11,7 @@ export const EditProfileSchema = v.object({
   phone: v.pipe(
     v.string(),
     v.trim(),
-    v.regex(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/, 'Invalid phone number'),
+    v.regex(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, 'Invalid phone number'),
   ),
   city: v.pipe(v.string(), v.minLength(2, 'City must be at least 2 characters.')),
 })
