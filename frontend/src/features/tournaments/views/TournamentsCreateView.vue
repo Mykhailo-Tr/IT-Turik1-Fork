@@ -213,6 +213,8 @@ function toPayload(values: Form): CreateTournamentBody {
 const handleSubmit = () => {
   const values = unref(form.fields)
 
+  if (!form.validate()) return
+
   createTournament(
     {
       body: toPayload(values),

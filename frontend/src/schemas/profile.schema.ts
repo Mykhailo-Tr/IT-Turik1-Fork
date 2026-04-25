@@ -1,4 +1,5 @@
 import * as v from 'valibot'
+import { PasswordSchema } from './auth.schema'
 
 export const EditProfileSchema = v.object({
   username: v.pipe(
@@ -15,8 +16,32 @@ export const EditProfileSchema = v.object({
   city: v.pipe(v.string(), v.minLength(2, 'City must be at least 2 characters.')),
 })
 
-export const ChangePasswordSchema = v.object({
-  current_password: v.pipe(v.string(), v.minLength(8, 'Min 8 characters')),
-  new_password: v.pipe(v.string(), v.minLength(8, 'Min 8 characters')),
-  confirm_password: v.pipe(v.string(), v.minLength(8, 'Min 8 characters')),
-})
+export const ChangePasswordSchema = v.pipe(
+  v.object({
+    current_password: PasswordSchema,
+    new_password: PasswordSchema,
+    confirm_password: PasswordSchema,
+  }),
+
+  v.forward(
+    v.partialCheck(
+      [['new_password'], ['confirm_password']],
+      (input) => {
+        return input.new_password === input.confirm_password
+      },
+      'The two passwords do not match.',
+    ),
+    ['confirm_password'],
+  ),
+
+  v.forward(
+    v.partialCheck(
+      [['current_password'], ['new_password']],
+      (input) => {
+        return input.new_password !== input.current_password
+      },
+      'New password must be different from current password',
+    ),
+    ['new_password'],
+  ),
+)

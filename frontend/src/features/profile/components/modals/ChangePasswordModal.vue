@@ -94,7 +94,6 @@ const { showNotification } = useNotification()
 const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword()
 
 const handlePasswordChange = () => {
-  if (form.fields.value.confirm_password !== form.fields.value.new_password) return
   if (!form.validate()) return
 
   changePassword(

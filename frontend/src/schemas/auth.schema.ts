@@ -1,9 +1,18 @@
 import type { User } from '@/api/dbTypes'
 import * as v from 'valibot'
 
+export const PasswordSchema = v.pipe(
+  v.string(),
+  v.minLength(8, 'Password must be at least 8 characters'),
+  v.regex(/[A-Z]/, 'Password must contain at least one uppercase letter'),
+  v.regex(/[a-z]/, 'Password must contain at least one lowercase letter'),
+  v.regex(/[0-9]/, 'Password must contain at least one number'),
+  v.regex(/[!@#$%^&*(),.?":{}|<>]/, 'Password must contain at least one special character'),
+)
+
 export const LoginSchema = v.object({
   username: v.pipe(v.string(), v.minLength(1, 'Username cannot be empty')),
-  password: v.pipe(v.string(), v.minLength(8, 'Min 8 characters')),
+  password: PasswordSchema,
 })
 
 export const RegisterSchema = v.object({
@@ -14,7 +23,7 @@ export const RegisterSchema = v.object({
   ),
   full_name: v.pipe(v.string(), v.minLength(1, 'Fullname cannot be empty')),
   email: v.pipe(v.string(), v.email('Invalid email')),
-  password: v.pipe(v.string(), v.minLength(8, 'Min 8 characters')),
+  password: PasswordSchema,
   role: v.picklist<User['role'][]>(['admin', 'jury', 'organizer', 'team']),
   phone: v.pipe(
     v.string(),

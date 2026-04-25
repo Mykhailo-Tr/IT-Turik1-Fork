@@ -1,3 +1,4 @@
+import { combineDateAndTime } from '@/lib/date'
 import { tiptapJsonToText } from '@/lib/utils'
 import * as v from 'valibot'
 
@@ -33,6 +34,19 @@ export const CreateTournamentSchema = v.pipe(
       v.minValue(2, 'Minimum team members must be at least 2'),
     ),
   }),
+
+  v.forward(
+    v.partialCheck(
+      [['startDate'], ['endDate'], ['startTime'], ['endTime']],
+      (input) => {
+        const combinedStartDate = combineDateAndTime(input.startDate, input.startTime)
+        const combinedEndDate = combineDateAndTime(input.endDate, input.endTime)
+        return combinedEndDate > combinedStartDate
+      },
+      'End date/time must be after start date/time',
+    ),
+    ['endDate'],
+  ),
 )
 
 function tiptapJsonMinLength(min: number, message: string) {
@@ -42,14 +56,29 @@ function tiptapJsonMinLength(min: number, message: string) {
   )
 }
 
-export const CreateRoundSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
-  description: tiptapJsonMinLength(10, 'Description must be at least 10 characters long'),
-  tech_requirements: tiptapJsonMinLength(
-    10,
-    'Technical requirements must be at least 10 characters long',
+export const CreateRoundSchema = v.pipe(
+  v.object({
+    name: v.pipe(v.string(), v.minLength(1, 'Name is required')),
+    description: tiptapJsonMinLength(10, 'Description must be at least 10 characters long'),
+    passing_count: v.pipe(v.number(), v.minValue(1, 'Minimum 1 team shoud pass')),
+    tech_requirements: tiptapJsonMinLength(
+      10,
+      'Technical requirements must be at least 10 characters long',
+    ),
+    must_have_requirements: tiptapJsonMinLength(
+      10,
+      'Must have must be at least 10 characters long',
+    ),
+    start_date: v.date(),
+    end_date: v.date(),
+  }),
+
+  v.forward(
+    v.partialCheck(
+      [['start_date'], ['end_date']],
+      (input) => input.end_date > input.start_date,
+      'End date must be after start date',
+    ),
+    ['end_date'],
   ),
-  must_have_requirements: tiptapJsonMinLength(10, 'Must have must be at least 10 characters long'),
-  start_date: v.date(),
-  end_date: v.date(),
-})
+)

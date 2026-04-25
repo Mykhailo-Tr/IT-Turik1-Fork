@@ -61,12 +61,12 @@
       <label class="form-item end-date-field">
         <span class="form-label">End date</span>
         <ui-date-picker
-          v-model="form.fields.value.start_date"
-          :isInvalid="!!form.errors.value.start_date"
-          @blur="form.validateField('start_date')"
+          v-model="form.fields.value.end_date"
+          :isInvalid="!!form.errors.value.end_date"
+          @blur="form.validateField('end_date')"
         />
-        <small v-if="form.errors.value.start_date" class="text-error">{{
-          form.errors.value.start_date
+        <small v-if="form.errors.value.end_date" class="text-error">{{
+          form.errors.value.end_date
         }}</small>
       </label>
 
@@ -90,7 +90,7 @@
         <ui-input
           type="number"
           v-model.number="form.fields.value.passing_count"
-          placeholder="Enter round title"
+          placeholder="Enter passing teams count"
           :isInvalid="!!form.errors.value.passing_count"
           @blur="form.validateField('passing_count')"
         />

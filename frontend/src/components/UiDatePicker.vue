@@ -449,6 +449,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .datepicker-trigger.invalid {
   border-color: var(--destructive);
+  background: color-mix(in srgb, var(--destructive) 10%, transparent) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive) 12%, transparent);
 }
 
