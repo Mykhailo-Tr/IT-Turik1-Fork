@@ -1,7 +1,7 @@
 <template>
   <ui-card class="tournament-card" :is-error="isError">
     <template #header>
-      <h2 class="tournament-card-title">Tournament Info</h2>
+      <h2 class="tournament-title">Tournament Info</h2>
     </template>
 
     <template #error>
@@ -34,15 +34,7 @@
             </template>
 
             <p>
-              {{
-                tournament?.startAt.toLocaleDateString('uk-UA', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: 'numeric',
-                  minute: 'numeric',
-                })
-              }}
+              {{ tournament?.startAt ? formatDate(tournament?.startAt) : '-' }}
             </p>
           </ui-skeleton-loader>
         </div>
@@ -69,7 +61,25 @@
           </div>
         </template>
 
-        <description-modal :description="tournament?.description ?? ''" />
+        <p
+          :title="tournament?.description"
+          @click="toggleDescriptionModal"
+          class="tournament-description"
+        >
+          {{ truncateText(tournament?.description ?? '', 190) }}
+
+          <full-screen-icon
+            class="text-muted"
+            width="15px"
+            height="15px"
+            style="display: inline; margin-left: 4px"
+          />
+        </p>
+
+        <description-modal
+          v-model="isDesciptionOpen"
+          :description="tournament?.description ?? ''"
+        />
       </ui-skeleton-loader>
     </div>
 
@@ -98,9 +108,11 @@ import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import DescriptionModal from './modals/DescriptionModal.vue'
 import { truncateText } from '@/lib/utils'
+import { formatDate } from '@/lib/date'
+import FullScreenIcon from '@/icons/FullScreenIcon.vue'
 
 interface Response {
   id: number
@@ -115,6 +127,11 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const isDesciptionOpen = ref(false)
+
+const toggleDescriptionModal = () => {
+  isDesciptionOpen.value = !isDesciptionOpen.value
+}
 
 const fetchItem = async (id: number): Promise<Response> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
@@ -145,9 +162,19 @@ const error = computed(() => parseError(tournamentInfoError.value))
   flex: 1;
 }
 
-.tournament-card-title {
+.tournament-title {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
+}
+
+.tournament-description {
+  border-radius: 6px;
+  transition: baclground 2s ease-in;
+}
+
+.tournament-description:hover {
+  cursor: pointer;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .tournament-start {

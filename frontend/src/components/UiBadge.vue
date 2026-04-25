@@ -19,13 +19,13 @@ const props = withDefaults(defineProps<Props>(), { variant: 'gray' })
   font-size: 0.74rem;
   font-weight: 700;
   padding: 0.2rem 0.5rem;
-  border: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  border: 1px solid;
 }
 
 .badge--green {
-  border-color: color-mix(in srgb, var(--brand-600) 40%, transparent);
-  background: color-mix(in srgb, var(--brand-600) 10%, transparent);
-  color: var(--brand-600);
+  border-color: #0d9412;
+  background: #41940d1f;
+  color: #22940d;
 }
 
 .badge--gray {

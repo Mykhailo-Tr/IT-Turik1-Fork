@@ -58,7 +58,7 @@ const onVisibilityKeydown = (event: KeyboardEvent) => {
   padding: 0.17rem;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: var(--secondary);
+  background: color-mix(in srgb, var(--foreground) 15%, transparent);
   cursor: pointer;
   flex-shrink: 0;
   transition: background 180ms ease;

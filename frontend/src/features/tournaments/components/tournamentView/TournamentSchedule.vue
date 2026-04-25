@@ -1,6 +1,6 @@
 <template>
   <div class="top-actions" v-if="user?.role === 'admin'">
-    <AddEventModel :tournament-id="props.tournamentId" />
+    <AddEventModal :tournament-id="props.tournamentId" />
   </div>
 
   <section class="page-shell">
@@ -55,7 +55,7 @@
               :title="event.title"
               :start-date="event.startDate!"
             />
-            <DeleteEventModel :event-id="event.id" :title="event.title" />
+            <DeleteEventModal :event-id="event.id" :title="event.title" />
           </div>
         </ui-card>
       </div>
@@ -74,8 +74,8 @@ import { useQuery } from '@tanstack/vue-query'
 import { computed } from 'vue'
 import EditEventModal from './modals/EditEventModal.vue'
 import { useProfile } from '@/queries/accounts'
-import DeleteEventModel from './modals/DeleteEventModel.vue'
-import AddEventModel from './modals/AddEventModel.vue'
+import DeleteEventModal from './modals/DeleteEventModal.vue'
+import AddEventModal from './modals/AddEventModal.vue'
 
 interface Round {
   id: number

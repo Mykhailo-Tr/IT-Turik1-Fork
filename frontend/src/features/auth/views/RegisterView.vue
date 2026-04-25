@@ -1,9 +1,15 @@
 <template>
   <section class="page-shell centered">
     <ui-card class="register-card">
-      <p class="section-eyebrow">Join the Platform</p>
-      <h1 class="section-title">Create your account</h1>
-      <p class="section-subtitle">Get access to tournaments, team tools, and profile management.</p>
+      <template #header>
+        <div>
+          <p class="section-eyebrow">Join the Platform</p>
+          <h1 class="section-title">Create your account</h1>
+          <p class="section-subtitle">
+            Get access to tournaments, team tools, and profile management.
+          </p>
+        </div>
+      </template>
 
       <div v-if="isSuccess" class="notice success">
         Registration completed. Check <strong>{{ form.fields.value.email }}</strong> to activate

@@ -5,7 +5,6 @@ import type {
   JoinRequestId,
   Team,
   TeamId,
-  User,
   UserId,
 } from '../dbTypes'
 

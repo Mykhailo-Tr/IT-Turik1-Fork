@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-vue'
 import UiDatePicker from '../UiDatePicker.vue'
-import { formatDate } from '../../lib/utils'
+import { formatDate } from '../../lib/date'
 
 const FIXED_DATE = new Date(2026, 3, 10)
 const FIXED_DATE_2 = new Date(2026, 3, 20)

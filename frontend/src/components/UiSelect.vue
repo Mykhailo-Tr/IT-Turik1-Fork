@@ -80,7 +80,7 @@ import ArrowDown from '@/icons/ArrowDown.vue'
 import SelectedIcon from '@/icons/SelectedIcon.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 
-export type SelectOptionValue = string
+export type SelectOptionValue = string | number
 
 export interface SelectOption {
   value: SelectOptionValue
@@ -88,7 +88,7 @@ export interface SelectOption {
 }
 
 type Props = {
-  multiple?: false
+  multiple?: boolean
   modelValue: SelectOptionValue | SelectOptionValue[] | null
   options?: SelectOption[]
   placeholder?: string
@@ -119,7 +119,9 @@ const searchInputRef = ref<HTMLInputElement | null>(null)
 
 const filteredOptions = computed(() =>
   searchQuery.value.trim()
-    ? props.options.filter((o) => o.label.toLowerCase().includes(searchQuery.value.toLowerCase()))
+    ? props.options.filter((option) =>
+        option.label.toLowerCase().includes(searchQuery.value.toLowerCase()),
+      )
     : props.options,
 )
 
@@ -130,14 +132,16 @@ function isSelected(option: SelectOption): boolean {
   return option.value === props.modelValue
 }
 
-const selectedLabel = computed<string>(() => {
+const selectedLabel = computed<SelectOptionValue>(() => {
   if (props.multiple) {
     const arr = props.modelValue as SelectOptionValue[]
     if (!arr.length) return props.placeholder
-    const labels = arr.map((v) => props.options.find((o) => o.value === v)?.label ?? v)
+    const labels = arr.map(
+      (value) => props.options.find((option) => option.value === value)?.label ?? value,
+    )
     return labels.length === 1 ? labels[0]! : `${labels[0]!} +${labels.length - 1} more`
   }
-  const found = props.options.find((o) => o.value === props.modelValue)
+  const found = props.options.find((option) => option.value === props.modelValue)
   return found ? found.label : props.placeholder
 })
 
@@ -163,10 +167,10 @@ watch(isOpen, async (opened) => {
   if (opened) {
     computeDropdownPosition()
     searchQuery.value = ''
-    const selectedIdx = filteredOptions.value.findIndex((o) =>
+    const selectedIdx = filteredOptions.value.findIndex((option) =>
       props.multiple
-        ? (props.modelValue as SelectOptionValue[]).includes(o.value)
-        : o.value === props.modelValue,
+        ? (props.modelValue as SelectOptionValue[]).includes(option.value)
+        : option.value === props.modelValue,
     )
     focusedIndex.value = selectedIdx >= 0 ? selectedIdx : 0
     await nextTick()

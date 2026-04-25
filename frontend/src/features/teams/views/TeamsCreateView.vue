@@ -102,7 +102,7 @@
           <ui-select
             v-model="form.fields.value.member_ids"
             :isLoading="isLoadingUsers"
-            :isError="isLoadingError || form.errors.value.member_ids"
+            :isError="isLoadingError || !!form.errors.value.member_ids"
             :error="`Error while fetching users (code: ${getUsersError?.code})`"
             :multiple="true"
             :options="

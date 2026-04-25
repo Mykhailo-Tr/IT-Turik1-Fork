@@ -127,10 +127,9 @@
 
       <div class="form-item">
         <ui-select
-          :model-value="String(addMemberSelection)"
+          v-model="addMemberSelection"
           :options="userOptions"
           :isLoading="isLoadingUsers"
-          @update:model-value="(val) => (addMemberSelection = Number(val))"
         />
       </div>
 

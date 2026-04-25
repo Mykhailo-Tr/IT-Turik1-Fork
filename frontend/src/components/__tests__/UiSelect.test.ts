@@ -10,6 +10,13 @@ const mockOptions: SelectOption[] = [
   { value: 'date', label: 'Date' },
 ]
 
+const mockNumberOptions: SelectOption[] = [
+  { value: 1, label: 'Apple' },
+  { value: 2, label: 'Banana' },
+  { value: 3, label: 'Cherry' },
+  { value: 4, label: 'Date' },
+]
+
 describe('UiSelect', () => {
   it('shows placeholder when no option is selected', async () => {
     const screen = await render(UiSelect, {
@@ -68,6 +75,20 @@ describe('UiSelect', () => {
     await options.click()
 
     expect(screen.emitted('update:modelValue')?.[0]).toStrictEqual(['apple'])
+  })
+
+  it('selects an numeric option', async () => {
+    const screen = await render(UiSelect, {
+      props: { modelValue: null, options: mockNumberOptions },
+    })
+
+    const trigger = screen.getByRole('button')
+    await trigger.click()
+
+    const options = screen.getByRole('option').first()
+    await options.click()
+
+    expect(screen.emitted('update:modelValue')?.[0]).toStrictEqual([1])
   })
 
   it('allows multiple selections', async () => {
