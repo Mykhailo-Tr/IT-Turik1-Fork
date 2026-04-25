@@ -6,22 +6,24 @@
       <h3>Delete event</h3>
     </template>
 
-    <p class="modal-text">
-      This action cannot be undone. Enter
-      <ui-badge variant="red">{{ props.title }}</ui-badge>
-      to confirm deletion.
-    </p>
+    <div>
+      <p class="modal-text">
+        This action cannot be undone. Enter
+        <ui-badge variant="red">{{ props.title }}</ui-badge>
+        to confirm deletion.
+      </p>
 
-    <ui-input
-      v-model="confirmInput"
-      :placeholder="props.title"
-      style="width: 100%"
-      :disabled="isDeleting"
-    />
+      <ui-input
+        v-model="confirmInput"
+        :placeholder="props.title"
+        style="width: 100%"
+        :disabled="isDeleting"
+      />
 
-    <p v-if="errorMessage" class="text-error">
-      {{ errorMessage }}
-    </p>
+      <p v-if="errorMessage" class="text-error">
+        {{ errorMessage }}
+      </p>
+    </div>
 
     <template #footer>
       <ui-button variant="secondary" :disabled="isDeleting" @click="closeModal"> Cancel </ui-button>

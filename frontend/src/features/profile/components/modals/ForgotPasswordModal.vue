@@ -5,6 +5,7 @@
     <template #title>
       <h2>Forgot password</h2>
     </template>
+
     <form class="password-form" @submit.prevent="handleRecoveryRequest">
       <p class="text-muted">No worries. We will send a secure reset link to your email.</p>
       <div class="form-item">

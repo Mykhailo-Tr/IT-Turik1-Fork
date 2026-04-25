@@ -1,14 +1,20 @@
 <template>
   <section class="page-shell centered">
     <ui-card class="activate-card">
-      <p class="section-eyebrow">Email Verification</p>
-      <h1 class="section-title activate-title">Account activation</h1>
+      <template #header>
+        <div>
+          <p class="section-eyebrow">Email Verification</p>
+          <h1 class="section-title activate-title">Account activation</h1>
+        </div>
+      </template>
 
-      <p v-if="isPending" class="text-muted status">Checking your activation token...</p>
+      <div>
+        <p v-if="isPending" class="text-muted status">Checking your activation token...</p>
 
-      <div v-if="isSuccess" class="notice success">
-        Account was successfully activated
-        <router-link to="/login">Go to sign in</router-link>
+        <div v-if="isSuccess" class="notice success">
+          Account was successfully activated
+          <router-link to="/login">Go to sign in</router-link>
+        </div>
       </div>
     </ui-card>
   </section>

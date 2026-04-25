@@ -1,16 +1,12 @@
 <template>
   <ui-card class="not-found-card">
-    <template #header>
+    <div>
       <h1 class="title">Page not found</h1>
-    </template>
-
-    <p class="text">
-      The page you’re looking for doesn’t exist or was moved.
-    </p>
-
-    <div class="actions">
-      <ui-button asLink to="/">Go home</ui-button>
-      <ui-button variant="secondary" asLink to="/tournaments">Browse tournaments</ui-button>
+      <p class="text">The page you’re looking for doesn’t exist or was moved.</p>
+      <div class="actions">
+        <ui-button asLink to="/">Go home</ui-button>
+        <ui-button variant="secondary" asLink to="/tournaments">Browse tournaments</ui-button>
+      </div>
     </div>
   </ui-card>
 </template>
@@ -38,8 +34,7 @@ import UiCard from '@/components/UiCard.vue'
 .actions {
   display: flex;
   gap: 0.6rem;
-  margin-top: 1.25rem;
+  margin-top: 1rem;
   flex-wrap: wrap;
 }
 </style>
-

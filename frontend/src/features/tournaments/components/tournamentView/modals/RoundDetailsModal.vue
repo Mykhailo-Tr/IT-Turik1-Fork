@@ -10,39 +10,41 @@
       <h2>{{ props.title }}</h2>
     </template>
 
-    <div class="sections">
-      <ui-button
-        variant="secondary"
-        :class="['sections-btn', { active: activeSection === 'description' }]"
-        @click="setActiveSection('description')"
-        >Description</ui-button
-      >
-      <ui-button
-        variant="secondary"
-        :class="['sections-btn', { active: activeSection === 'tech_requirements' }]"
-        @click="setActiveSection('tech_requirements')"
-        >Technical Requirements</ui-button
-      >
-      <ui-button
-        variant="secondary"
-        :class="['sections-btn', { active: activeSection === 'must_have' }]"
-        @click="setActiveSection('must_have')"
-        >Must Have</ui-button
-      >
-    </div>
-
     <div>
-      <ui-card v-if="activeSection === 'description'" class="editor-card">
-        <editor-content class="details-editor" :editor="descriptionEditor" />
-      </ui-card>
+      <div class="sections">
+        <ui-button
+          variant="secondary"
+          :class="['sections-btn', { active: activeSection === 'description' }]"
+          @click="setActiveSection('description')"
+          >Description</ui-button
+        >
+        <ui-button
+          variant="secondary"
+          :class="['sections-btn', { active: activeSection === 'tech_requirements' }]"
+          @click="setActiveSection('tech_requirements')"
+          >Technical Requirements</ui-button
+        >
+        <ui-button
+          variant="secondary"
+          :class="['sections-btn', { active: activeSection === 'must_have' }]"
+          @click="setActiveSection('must_have')"
+          >Must Have</ui-button
+        >
+      </div>
 
-      <ui-card v-if="activeSection === 'tech_requirements'" class="editor-card">
-        <editor-content class="details-editor" :editor="requirementsEditor" />
-      </ui-card>
+      <div>
+        <ui-card v-if="activeSection === 'description'" class="editor-card">
+          <editor-content class="details-editor" :editor="descriptionEditor" />
+        </ui-card>
 
-      <ui-card v-if="activeSection === 'must_have'" class="editor-card">
-        <editor-content class="details-editor" :editor="mustHaveEditor" />
-      </ui-card>
+        <ui-card v-if="activeSection === 'tech_requirements'" class="editor-card">
+          <editor-content class="details-editor" :editor="requirementsEditor" />
+        </ui-card>
+
+        <ui-card v-if="activeSection === 'must_have'" class="editor-card">
+          <editor-content class="details-editor" :editor="mustHaveEditor" />
+        </ui-card>
+      </div>
     </div>
   </ui-modal>
 </template>

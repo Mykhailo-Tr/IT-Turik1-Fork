@@ -6,52 +6,54 @@
         <h1 class="section-title">Reset password</h1>
       </template>
 
-      <p v-if="isLoading" class="text-muted">Checking your reset link...</p>
-      <p v-else-if="validationError" class="notice error">{{ validationError.message }}</p>
+      <div>
+        <p v-if="isLoading" class="text-muted">Checking your reset link...</p>
+        <p v-else-if="validationError" class="notice error">{{ validationError.message }}</p>
 
-      <div v-else-if="isSuccess" class="notice success reset-success">
-        Password has been reset successfully.
-        <ui-button asLink to="/login">Back to Login</ui-button>
+        <div v-else-if="isSuccess" class="notice success reset-success">
+          Password has been reset successfully.
+          <ui-button asLink to="/login">Back to Login</ui-button>
+        </div>
+
+        <form v-else class="reset-form" @submit.prevent="handleReset">
+          <div class="form-item">
+            <label class="form-label"> New password </label>
+            <ui-password-field
+              v-model="form.new_password"
+              :isInvalid="!!resetingError?.details.new_password"
+              autocomplete="new-password"
+              placeholder="Create a strong password"
+              required
+            />
+            <small v-if="resetingError?.details.new_password" class="text-error">{{
+              resetingError.details.new_password[0]
+            }}</small>
+            <small v-else class="text-muted">
+              Use at least 8 characters, including upper/lowercase letters, a number, and a special
+              character.
+            </small>
+          </div>
+
+          <div class="form-item">
+            <label class="form-label"> Confirm new password </label>
+            <ui-password-field
+              v-model="form.confirm_password"
+              autocomplete="new-password"
+              :isInvalid="!!resetingError?.details.confirm_password"
+              placeholder="Repeat your new password"
+              required
+            />
+            <small v-if="resetingError?.details.confirm_password" class="text-error">{{
+              resetingError.details.confirm_password[0]
+            }}</small>
+          </div>
+
+          <ui-button :disabled="isResetingPassword" type="submit">
+            <loading-icon v-if="isResetingPassword" />
+            Set new password
+          </ui-button>
+        </form>
       </div>
-
-      <form v-else class="reset-form" @submit.prevent="handleReset">
-        <div class="form-item">
-          <label class="form-label"> New password </label>
-          <ui-password-field
-            v-model="form.new_password"
-            :isInvalid="!!resetingError?.details.new_password"
-            autocomplete="new-password"
-            placeholder="Create a strong password"
-            required
-          />
-          <small v-if="resetingError?.details.new_password" class="text-error">{{
-            resetingError.details.new_password[0]
-          }}</small>
-          <small v-else class="text-muted">
-            Use at least 8 characters, including upper/lowercase letters, a number, and a special
-            character.
-          </small>
-        </div>
-
-        <div class="form-item">
-          <label class="form-label"> Confirm new password </label>
-          <ui-password-field
-            v-model="form.confirm_password"
-            autocomplete="new-password"
-            :isInvalid="!!resetingError?.details.confirm_password"
-            placeholder="Repeat your new password"
-            required
-          />
-          <small v-if="resetingError?.details.confirm_password" class="text-error">{{
-            resetingError.details.confirm_password[0]
-          }}</small>
-        </div>
-
-        <ui-button :disabled="isResetingPassword" type="submit">
-          <loading-icon v-if="isResetingPassword" />
-          Set new password
-        </ui-button>
-      </form>
     </ui-card>
   </section>
 </template>

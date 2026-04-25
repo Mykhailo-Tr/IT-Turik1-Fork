@@ -17,67 +17,69 @@
       <h3>Change team visibility</h3>
     </template>
 
-    <p class="modal-text">
-      Select the new visibility for
-      <ui-badge variant="green" :title="team?.name">{{
-        truncateText(team?.name ?? '', 15)
-      }}</ui-badge
-      ><br />
-      This affects who can discover and join your team.
-    </p>
+    <div>
+      <p class="modal-text">
+        Select the new visibility for
+        <ui-badge variant="green" :title="team?.name">{{
+          truncateText(team?.name ?? '', 15)
+        }}</ui-badge
+        ><br />
+        This affects who can discover and join your team.
+      </p>
 
-    <div class="visibility-options">
-      <label class="visibility-option" :class="{ selected: selectedVisibility === true }">
-        <ui-input
-          type="radio"
-          name="visibility"
-          :value="true"
-          :checked="selectedVisibility === true"
-          :disabled="isChangingVisibility"
-          @change="selectedVisibility = true"
-        />
-        <div class="visibility-option-content">
-          <div class="visibility-option-header">
-            <eye-in-circle />
-            <strong>Public</strong>
+      <div class="visibility-options">
+        <label class="visibility-option" :class="{ selected: selectedVisibility === true }">
+          <ui-input
+            type="radio"
+            name="visibility"
+            :value="true"
+            :checked="selectedVisibility === true"
+            :disabled="isChangingVisibility"
+            @change="selectedVisibility = true"
+          />
+          <div class="visibility-option-content">
+            <div class="visibility-option-header">
+              <eye-in-circle />
+              <strong>Public</strong>
+            </div>
+            <p>Anyone can find and request to join this team.</p>
           </div>
-          <p>Anyone can find and request to join this team.</p>
-        </div>
-      </label>
+        </label>
 
-      <label class="visibility-option" :class="{ selected: selectedVisibility === false }">
-        <ui-input
-          type="radio"
-          name="visibility"
-          :value="false"
-          :checked="selectedVisibility === false"
-          :disabled="isChangingVisibility"
-          @change="selectedVisibility = false"
-        />
-        <div class="visibility-option-content">
-          <div class="visibility-option-header">
-            <lock-icon />
-            <strong>Private</strong>
+        <label class="visibility-option" :class="{ selected: selectedVisibility === false }">
+          <ui-input
+            type="radio"
+            name="visibility"
+            :value="false"
+            :checked="selectedVisibility === false"
+            :disabled="isChangingVisibility"
+            @change="selectedVisibility = false"
+          />
+          <div class="visibility-option-content">
+            <div class="visibility-option-header">
+              <lock-icon />
+              <strong>Private</strong>
+            </div>
+            <p>Only invited members can find and access this team.</p>
           </div>
-          <p>Only invited members can find and access this team.</p>
-        </div>
-      </label>
-    </div>
+        </label>
+      </div>
 
-    <div v-if="selectedVisibility !== team?.is_public" class="visibility-confirm-note">
-      <danger-icon />
-      <span>
-        You are about to change this team from
-        <strong>{{ team?.is_public ? 'Public' : 'Private' }}</strong>
-        to
-        <strong>{{ selectedVisibility ? 'Public' : 'Private' }}</strong
-        >.
-      </span>
-    </div>
+      <div v-if="selectedVisibility !== team?.is_public" class="visibility-confirm-note">
+        <danger-icon />
+        <span>
+          You are about to change this team from
+          <strong>{{ team?.is_public ? 'Public' : 'Private' }}</strong>
+          to
+          <strong>{{ selectedVisibility ? 'Public' : 'Private' }}</strong
+          >.
+        </span>
+      </div>
 
-    <p v-if="changeVisibilityError?.message" class="text-error modal-error">
-      {{ changeVisibilityError.message }}
-    </p>
+      <p v-if="changeVisibilityError?.message" class="text-error modal-error">
+        {{ changeVisibilityError.message }}
+      </p>
+    </div>
 
     <template #footer>
       <ui-button

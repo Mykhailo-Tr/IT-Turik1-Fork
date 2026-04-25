@@ -1,11 +1,15 @@
 <template>
   <section class="page-shell centered">
     <ui-card class="complete-card">
-      <p class="section-eyebrow">Final Step</p>
-      <h1 class="section-title">Complete your profile</h1>
-      <p class="section-subtitle">
-        Choose your role and review your account details before continuing.
-      </p>
+      <template #header>
+        <div>
+          <p class="section-eyebrow">Final Step</p>
+          <h1 class="section-title">Complete your profile</h1>
+          <p class="section-subtitle">
+            Choose your role and review your account details before continuing.
+          </p>
+        </div>
+      </template>
 
       <form class="form-grid" @submit.prevent="handleSubmit">
         <div class="form-item">

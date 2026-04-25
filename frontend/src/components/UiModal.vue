@@ -27,9 +27,7 @@
             </ui-button>
           </div>
 
-          <div>
-            <slot />
-          </div>
+          <slot />
 
           <template #footer>
             <div v-if="$slots.footer" class="modal-footer">

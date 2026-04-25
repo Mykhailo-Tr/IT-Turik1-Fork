@@ -8,20 +8,22 @@
       <h3>Delete team</h3>
     </template>
 
-    <p class="modal-text">
-      This action cannot be undone. Enter
-      <ui-badge variant="red">{{ props.team?.name }}</ui-badge>
-      to confirm.
-    </p>
+    <div>
+      <p class="modal-text">
+        This action cannot be undone. Enter
+        <ui-badge variant="red">{{ props.team?.name }}</ui-badge>
+        to confirm.
+      </p>
 
-    <ui-input
-      v-model="deleteConfirmInput"
-      :placeholder="props.team?.name"
-      :disabled="isDeleting"
-      style="width: 100%"
-    />
+      <ui-input
+        v-model="deleteConfirmInput"
+        :placeholder="props.team?.name"
+        :disabled="isDeleting"
+        style="width: 100%"
+      />
 
-    <p v-if="deleteError" class="text-error">{{ deleteError }}</p>
+      <p v-if="deleteError" class="text-error">{{ deleteError }}</p>
+    </div>
 
     <template #footer>
       <ui-button variant="secondary" size="sm" :disabled="isDeleting" @click="closeDeleteModal">

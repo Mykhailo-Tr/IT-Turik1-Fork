@@ -89,12 +89,7 @@
                 </template>
 
                 <div style="display: flex; flex-direction: column; gap: 4px">
-                  <ui-skeleton variant="rect" width="100%" />
-                  <ui-skeleton variant="rect" width="100%" />
-                  <ui-skeleton variant="rect" width="100%" />
-                  <ui-skeleton variant="rect" width="100%" />
-                  <ui-skeleton variant="rect" width="100%" />
-                  <ui-skeleton variant="rect" width="100%" />
+                  <ui-skeleton v-for="i in 6" :key="i" variant="rect" width="100%" />
                 </div>
               </ui-card>
             </div>
@@ -113,7 +108,7 @@
                 <template #header>
                   <div class="code-head">
                     <strong class="mono">{{ code.code }}</strong>
-                    <ui-badge :variant="code.is_used ? 'gray' : 'green'" class="status-pill">
+                    <ui-badge :variant="code.is_used ? 'gray' : 'green'">
                       {{ code.is_used ? 'Used' : 'Active' }}
                     </ui-badge>
                   </div>
@@ -291,13 +286,6 @@ const formatDateTime = (value: string | number | Date) => {
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   overflow-wrap: anywhere;
-}
-
-.status-pill {
-  border-radius: 999px;
-  padding: 0.18rem 0.55rem;
-  font-size: 0.75rem;
-  font-weight: 700;
 }
 
 .empty-error {

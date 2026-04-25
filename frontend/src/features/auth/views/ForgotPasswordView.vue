@@ -2,13 +2,14 @@
   <section class="page-shell centered">
     <ui-card class="forgot-card">
       <template #header>
-        <p class="section-eyebrow">Password Recovery</p>
+        <div>
+          <p class="section-eyebrow">Password Recovery</p>
+          <h1 class="section-title">Forgot your password?</h1>
+          <p class="section-subtitle">
+            Enter your account email and we will send you a password reset link.
+          </p>
+        </div>
       </template>
-
-      <h1 class="section-title">Forgot your password?</h1>
-      <p class="section-subtitle">
-        Enter your account email and we will send you a password reset link.
-      </p>
 
       <form class="forgot-form" @submit.prevent="handleSubmit">
         <div class="form-item">
