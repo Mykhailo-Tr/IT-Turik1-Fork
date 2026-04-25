@@ -87,29 +87,17 @@ export interface SelectOption {
   label: string
 }
 
-type Props =
-  | {
-      multiple?: false
-      modelValue: SelectOptionValue | null
-      options?: SelectOption[]
-      placeholder?: string
-      height?: number
-      minWidth?: string
-      isLoading?: boolean
-      isError?: boolean
-      error?: string
-    }
-  | {
-      multiple: true
-      modelValue: SelectOptionValue[]
-      options?: SelectOption[]
-      placeholder?: string
-      height?: number
-      minWidth?: string
-      isLoading?: boolean
-      isError?: boolean
-      error?: string
-    }
+type Props = {
+  multiple?: false
+  modelValue: SelectOptionValue | SelectOptionValue[] | null
+  options?: SelectOption[]
+  placeholder?: string
+  height?: number
+  minWidth?: string
+  isLoading?: boolean
+  isError?: boolean
+  error?: string
+}
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,

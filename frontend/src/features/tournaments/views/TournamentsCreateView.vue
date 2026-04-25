@@ -37,7 +37,8 @@
         <label class="form-item">
           <span class="form-label">Rounds</span>
           <ui-select
-            v-model="form.fields.value.rounds_count"
+            :modelValue="String(form.fields.value.rounds_count)"
+            @update:modelValue="(val) => (form.fields.value.rounds_count = Number(val))"
             :options="[
               { value: '1', label: '1' },
               { value: '2', label: '2' },

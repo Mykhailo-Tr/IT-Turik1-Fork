@@ -127,15 +127,19 @@
 
       <div class="form-item">
         <ui-select
-          v-model="addMemberSelection"
+          :model-value="String(addMemberSelection)"
           :options="userOptions"
           :isLoading="isLoadingUsers"
+          @update:model-value="(val) => (addMemberSelection = Number(val))"
         />
       </div>
 
       <p v-if="availableUsers?.length === 0" class="text-muted">No available users to add.</p>
 
-      <ui-button @click="addMember" :disabled="addMemberLoading || isLoadingUsers">
+      <ui-button
+        @click="addMember"
+        :disabled="addMemberLoading || isLoadingUsers || !addMemberSelection"
+      >
         {{ addMemberLoading ? 'Sending...' : 'Send invitation' }}
       </ui-button>
     </div>
@@ -175,7 +179,7 @@ const { data: invitations, isLoading: isLoadingInvitations } = useTeamInvitation
 })
 
 const memberSearch = ref('')
-const addMemberSelection = ref('')
+const addMemberSelection = ref<number | null>(null)
 const kickLoadingIds = ref<Set<UserId>>(new Set())
 
 const availableUsers = computed(() => {
@@ -244,7 +248,7 @@ const addMember = () => {
     { teamId: props.team.id, body: { user_id: Number(addMemberSelection.value) } },
     {
       onSuccess: () => {
-        addMemberSelection.value = ''
+        addMemberSelection.value = null
         showNotification('Invitation sent.', 'success')
       },
       onError: (err) => {
