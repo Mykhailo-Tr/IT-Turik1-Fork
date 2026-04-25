@@ -6,7 +6,6 @@ import { formatDate } from '../../lib/utils'
 
 const FIXED_DATE = new Date(2026, 3, 10)
 const FIXED_DATE_2 = new Date(2026, 3, 20)
-const locale: Intl.LocalesArgument = 'uk-UA'
 
 const monthNames = Array.from({ length: 12 }, (_, i) =>
   new Intl.DateTimeFormat('uk-UA', { month: 'long' }).format(new Date(2026, i, 1)),

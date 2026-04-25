@@ -92,13 +92,15 @@ const search = ref('')
 const fetchTeams = async (): Promise<Team[]> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
-  return new Array(200).fill(null).map((_, i) => {
-    return {
-      id: i + 1,
-      name: `Team ${i + 1}`,
-      members: i + 1,
-    }
-  })
+  return Array.from({ length: 200 })
+    .fill(null)
+    .map((_, i) => {
+      return {
+        id: i + 1,
+        name: `Team ${i + 1}`,
+        members: i + 1,
+      }
+    })
 }
 
 const {

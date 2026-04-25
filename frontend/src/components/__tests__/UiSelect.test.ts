@@ -142,7 +142,7 @@ describe('UiSelect', () => {
     })
 
     const trigger = screen.getByRole('button')
-    expect(trigger).toBeDisabled
+    expect(trigger).toBeDisabled()
 
     const loading = screen.getByTestId('loading-icon')
     const arrow = screen.getByTestId('arrow-icon')

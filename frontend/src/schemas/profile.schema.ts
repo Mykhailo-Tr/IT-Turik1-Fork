@@ -1,4 +1,3 @@
-import type { User } from '@/api/dbTypes'
 import * as v from 'valibot'
 
 export const EditProfileSchema = v.object({
