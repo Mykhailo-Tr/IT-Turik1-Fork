@@ -58,42 +58,16 @@
           </div>
         </ui-card>
       </div>
+
+      <round-details-modal
+        v-if="selectedRound"
+        v-model="isDetailsOpen"
+        :title="selectedRound?.title ?? ''"
+        :description="selectedRound?.description ?? {}"
+        :mustHave="selectedRound?.mustHave ?? {}"
+        :technicalRequirements="selectedRound?.technicalRequirements ?? {}"
+      />
     </ui-skeleton-loader>
-
-    <ui-modal v-model="isDetailsOpen" scrollable maxWidth="1100px" @close="closeDetails">
-      <template #title>
-        <h2>{{ selectedRound?.title ?? 'Round details' }}</h2>
-      </template>
-
-      <div class="details-grid">
-        <ui-card class="description-card">
-          <template #header>
-            <h3>Description</h3>
-          </template>
-
-          <editor-content class="details-editor" :editor="descriptionEditor" />
-        </ui-card>
-        <ui-card>
-          <template #header>
-            <h3>Technical requirements</h3>
-          </template>
-
-          <editor-content class="details-editor" :editor="requirementsEditor" />
-        </ui-card>
-
-        <ui-card>
-          <template #header>
-            <h3>Must have</h3>
-          </template>
-
-          <editor-content class="details-editor" :editor="mustHaveEditor" />
-        </ui-card>
-      </div>
-
-      <template #footer>
-        <ui-button variant="secondary" @click="closeDetails">Close</ui-button>
-      </template>
-    </ui-modal>
   </section>
 </template>
 
@@ -102,18 +76,16 @@ import { parseError } from '@/api'
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import UiModal from '@/components/UiModal.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { truncateText } from '@/lib/utils'
 import { formatDate } from '@/lib/date'
 import { useQuery } from '@tanstack/vue-query'
 import type { JSONContent } from '@tiptap/core'
-import StarterKit from '@tiptap/starter-kit'
-import { EditorContent, useEditor } from '@tiptap/vue-3'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import type { Variants } from '@/components/UiBadge.vue'
 import { useProfile } from '@/queries/accounts'
+import RoundDetailsModal from './modals/RoundDetailsModal.vue'
 
 interface Round {
   id: number
@@ -236,7 +208,6 @@ const mockDescription: JSONContent = {
   ],
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
   await new Promise((resolve) => setTimeout(resolve, 450))
 
@@ -289,61 +260,9 @@ const rounds = computed(() => data.value ?? [])
 const isDetailsOpen = ref(false)
 const selectedRound = ref<Round | null>(null)
 
-const requirementsEditor = useEditor({
-  extensions: [StarterKit],
-  content: '',
-  editable: false,
-  editorProps: {
-    attributes: {
-      class: 'prose',
-      'aria-readonly': 'true',
-    },
-  },
-})
-
-const descriptionEditor = useEditor({
-  extensions: [StarterKit],
-  content: '',
-  editable: false,
-  editorProps: {
-    attributes: {
-      class: 'prose',
-      'aria-readonly': 'true',
-    },
-  },
-})
-
-const mustHaveEditor = useEditor({
-  extensions: [StarterKit],
-  content: '',
-  editable: false,
-  editorProps: {
-    attributes: {
-      class: 'prose',
-      'aria-readonly': 'true',
-    },
-  },
-})
-
-watch(
-  () => selectedRound.value,
-  (round) => {
-    requirementsEditor.value?.commands.setContent(round?.technicalRequirements ?? '', {
-      emitUpdate: false,
-    })
-    mustHaveEditor.value?.commands.setContent(round?.mustHave ?? '', { emitUpdate: false })
-    descriptionEditor.value?.commands.setContent(round?.description ?? '', { emitUpdate: false })
-  },
-)
-
 function openDetails(round: Round) {
   selectedRound.value = round
   isDetailsOpen.value = true
-}
-
-function closeDetails() {
-  isDetailsOpen.value = false
-  selectedRound.value = null
 }
 
 function badgeLabel(status: Round['status']) {

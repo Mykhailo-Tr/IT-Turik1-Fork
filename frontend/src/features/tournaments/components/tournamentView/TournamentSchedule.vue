@@ -96,7 +96,6 @@ interface Props {
 const props = defineProps<Props>()
 const { data: user } = useProfile()
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
   await new Promise((resolve) => setTimeout(resolve, 500))
 
@@ -114,7 +113,6 @@ const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
   ]
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const fetchEvents = async (_tournamentId: number): Promise<Event[]> => {
   await new Promise((resolve) => setTimeout(resolve, 200))
 
