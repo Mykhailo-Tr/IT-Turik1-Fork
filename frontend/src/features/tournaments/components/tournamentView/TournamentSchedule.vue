@@ -11,11 +11,9 @@
             <div class="event-content">
               <div class="event-left-side">
                 <ui-skeleton variant="rounded" width="50px" height="50px" />
-
                 <ui-skeleton variant="rect" width="100px" />
               </div>
               <div class="event-dates">
-                <ui-skeleton variant="rect" width="150px" />
                 <ui-skeleton variant="rect" width="150px" />
               </div>
             </div>
