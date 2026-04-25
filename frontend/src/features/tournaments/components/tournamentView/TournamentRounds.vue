@@ -179,18 +179,44 @@ const mockDescription: JSONContent = {
   content: [
     {
       type: 'heading',
-      attrs: { level: 2 },
-      content: [{ type: 'text', text: 'Descirption' }],
+      attrs: { level: 1 },
+      content: [{ type: 'text', text: 'Tournament Challenge Description' }],
     },
+
+    {
+      type: 'paragraph',
+      content: [
+        {
+          type: 'text',
+          text: 'Build a modern tournament platform that allows teams to register, manage rounds, submit solutions, and track rankings in real time. The final solution should prioritize ',
+        },
+        { type: 'text', marks: [{ type: 'bold' }], text: 'clarity' },
+        { type: 'text', text: ', ' },
+        { type: 'text', marks: [{ type: 'italic' }], text: 'performance' },
+        { type: 'text', text: ', and maintainability.' },
+      ],
+    },
+
+    {
+      type: 'heading',
+      attrs: { level: 2 },
+      content: [{ type: 'text', text: 'Core Objectives' }],
+    },
+
     {
       type: 'orderedList',
+      attrs: { start: 1 },
       content: [
         {
           type: 'listItem',
           content: [
             {
               type: 'paragraph',
-              content: [{ type: 'text', text: 'Form validation for required fields.' }],
+              content: [
+                { type: 'text', text: 'Create a secure authentication flow for ' },
+                { type: 'text', marks: [{ type: 'bold' }], text: 'admins' },
+                { type: 'text', text: ' and participants.' },
+              ],
             },
           ],
         },
@@ -199,9 +225,149 @@ const mockDescription: JSONContent = {
           content: [
             {
               type: 'paragraph',
-              content: [{ type: 'text', text: 'Responsive UI layout.' }],
+              content: [
+                {
+                  type: 'text',
+                  text: 'Allow tournament organizers to create and schedule multiple rounds with deadlines.',
+                },
+              ],
             },
           ],
+        },
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'Implement dashboards with live standings and statistics.' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      type: 'heading',
+      attrs: { level: 2 },
+      content: [{ type: 'text', text: 'Functional Requirements' }],
+    },
+
+    {
+      type: 'bulletList',
+      content: [
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', marks: [{ type: 'bold' }], text: 'Registration:' },
+                { type: 'text', text: ' Teams can join using invite codes.' },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', marks: [{ type: 'bold' }], text: 'Submissions:' },
+                { type: 'text', text: ' Users upload files or links before deadlines.' },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', marks: [{ type: 'bold' }], text: 'Notifications:' },
+                { type: 'text', text: ' Email or in-app reminders for upcoming rounds.' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      type: 'heading',
+      attrs: { level: 2 },
+      content: [{ type: 'text', text: 'Technical Expectations' }],
+    },
+
+    {
+      type: 'orderedList',
+      attrs: { start: 4 },
+      content: [
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'Use ' },
+                { type: 'text', marks: [{ type: 'italic' }], text: 'TypeScript' },
+                { type: 'text', text: ' across frontend and backend where possible.' },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                {
+                  type: 'text',
+                  text: 'Apply proper validation, error handling, and loading states.',
+                },
+              ],
+            },
+          ],
+        },
+        {
+          type: 'listItem',
+          content: [
+            {
+              type: 'paragraph',
+              content: [
+                { type: 'text', text: 'Ensure responsive layouts for desktop and mobile devices.' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      type: 'blockquote',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            {
+              type: 'text',
+              text: 'A polished and intuitive experience is valued as much as raw functionality.',
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      type: 'paragraph',
+      content: [
+        {
+          type: 'text',
+          text: 'Bonus points for implementing advanced analytics, reusable UI components, and elegant state management architecture.',
         },
       ],
     },
