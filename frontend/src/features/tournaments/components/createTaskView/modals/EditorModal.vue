@@ -23,6 +23,7 @@
               :disabled="!editor"
               @click="toggleH1"
               :aria-pressed="editor?.isActive('heading', { level: 1 }) ?? false"
+              :class="{ 'is-active': editor?.isActive('heading', { level: 1 }) }"
             >
               <heading1-icon width="20px" height="20" />
             </ui-button>
@@ -32,6 +33,7 @@
               :disabled="!editor"
               @click="toggleH2"
               :aria-pressed="editor?.isActive('heading', { level: 2 }) ?? false"
+              :class="{ 'is-active': editor?.isActive('heading', { level: 2 }) }"
             >
               <heading2-icon width="20px" height="20" />
             </ui-button>
@@ -41,6 +43,7 @@
               :disabled="!editor"
               @click="toggleBold"
               :aria-pressed="editor?.isActive('bold') ?? false"
+              :class="{ 'is-active': editor?.isActive('bold') }"
             >
               <bold-icon width="20" height="20" />
             </ui-button>
@@ -48,8 +51,29 @@
               size="sm"
               variant="secondary"
               :disabled="!editor"
+              :aria-pressed="editor?.isActive('bold') ?? false"
+              @click="toggleUnderline"
+              :class="{ 'is-active': editor?.isActive('underline') }"
+            >
+              <underline-icon />
+            </ui-button>
+            <ui-button
+              size="sm"
+              variant="secondary"
+              :disabled="!editor"
+              :aria-pressed="editor?.isActive('bold') ?? false"
+              @click="toggleHighlight"
+              :class="{ 'is-active': editor?.isActive('highlight') }"
+            >
+              <highlight-icon />
+            </ui-button>
+            <ui-button
+              size="sm"
+              variant="secondary"
+              :disabled="!editor"
               @click="toggleItalic"
               :aria-pressed="editor?.isActive('italic') ?? false"
+              :class="{ 'is-active': editor?.isActive('italic') }"
             >
               <italic-icon width="20" height="20" />
             </ui-button>
@@ -59,6 +83,7 @@
               :disabled="!editor"
               @click="toggleBulletList"
               :aria-pressed="editor?.isActive('bulletList') ?? false"
+              :class="{ 'is-active': editor?.isActive('bulletList') }"
             >
               <bullet-list-icon width="20px" height="20" />
             </ui-button>
@@ -68,6 +93,7 @@
               :disabled="!editor"
               @click="toggleOrderedList"
               :aria-pressed="editor?.isActive('orderedList') ?? false"
+              :class="{ 'is-active': editor?.isActive('orderedList') }"
             >
               <numeric-list-icon width="20px" height="20" />
             </ui-button>
@@ -100,6 +126,9 @@ import type { JSONContent } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import { computed, ref } from 'vue'
 import { tiptapJsonToText } from '@/lib/utils'
+import UnderlineIcon from '@/icons/typography/UnderlineIcon.vue'
+import HighlightIcon from '@/icons/typography/HighlightIcon.vue'
+import Highlight from '@tiptap/extension-highlight'
 
 interface Props {
   title: string
@@ -131,7 +160,7 @@ const editTextComputed = computed(() => props.editText || `Edit ${props.title.to
 const hasValue = computed(() => tiptapJsonToText(modelValue.value).length > 0)
 
 const editor = useEditor({
-  extensions: [StarterKit],
+  extensions: [StarterKit, Highlight],
   content: draftJson.value ?? '',
   editorProps: {
     attributes: {
@@ -173,6 +202,14 @@ function toggleItalic() {
   editor.value?.chain().focus().toggleItalic().run()
 }
 
+function toggleUnderline() {
+  editor.value?.chain().focus().toggleUnderline().run()
+}
+
+function toggleHighlight() {
+  editor.value?.chain().focus().toggleHighlight({ color: '#8ce99a' }).run()
+}
+
 function toggleBulletList() {
   editor.value?.chain().focus().toggleBulletList().run()
 }
@@ -209,6 +246,10 @@ function toggleH2() {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+.toolbar button.is-active {
+  background: var(--primary);
 }
 
 .editor {

@@ -44,10 +44,6 @@
         <editor-content class="details-editor" :editor="mustHaveEditor" />
       </ui-card>
     </div>
-
-    <template #footer>
-      <ui-button variant="secondary" @click="handleClose">Close</ui-button>
-    </template>
   </ui-modal>
 </template>
 
