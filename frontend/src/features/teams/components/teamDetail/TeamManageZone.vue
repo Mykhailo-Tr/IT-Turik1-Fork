@@ -126,12 +126,12 @@ const emit = defineEmits<{
   justify-content: space-between;
   align-items: center;
   gap: 0.9rem;
-  margin-bottom: 1rem;
 }
 
-.manage-row:nth-of-type(2) {
-  padding-top: 0.5rem;
-  border-top: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
+.manage-row:not(:last-child) {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
 }
 
 .manage-row h3 {

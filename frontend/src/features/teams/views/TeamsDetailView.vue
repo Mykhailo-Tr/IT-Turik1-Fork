@@ -10,7 +10,9 @@
                 <ui-skeleton variant="rect" height="30px" width="200px" />
               </template>
 
-              <h1 class="section-title">{{ team?.name || 'Team details' }}</h1>
+              <h1 class="section-title" :title="team?.name">
+                {{ truncateText(team?.name ?? 'Team details', 45) }}
+              </h1>
             </ui-skeleton-loader>
           </div>
 
@@ -122,6 +124,7 @@ import TeamManageZone from '../components/teamDetail/TeamManageZone.vue'
 import TeamJoinRequests from '../components/teamDetail/TeamJoinRequests.vue'
 import TeamInvitations from '../components/teamDetail/TeamInvitations.vue'
 import UiInput from '@/components/UiInput.vue'
+import { truncateText } from '@/lib/utils'
 
 const router = useRouter()
 const route = useRoute()

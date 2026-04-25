@@ -12,7 +12,7 @@
                 <ui-skeleton variant="rect" width="150px" />
               </template>
 
-              <span>{{ team?.name || 'team' }}</span>
+              <span :title="team?.name">{{ truncateText(team?.name ?? 'team', 45) }}</span>
             </ui-skeleton-loader>
           </h1>
         </div>
@@ -49,6 +49,7 @@ import { useTeamInfo } from '@/queries/teams'
 import { useProfile } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
+import { truncateText } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()

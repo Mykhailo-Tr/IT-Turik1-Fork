@@ -18,7 +18,10 @@
     </template>
 
     <p class="modal-text">
-      Select the new visibility for <ui-badge variant="green">{{ team?.name }}</ui-badge
+      Select the new visibility for
+      <ui-badge variant="green" :title="team?.name">{{
+        truncateText(team?.name ?? '', 15)
+      }}</ui-badge
       ><br />
       This affects who can discover and join your team.
     </p>
@@ -114,6 +117,7 @@ import type { GetTeamInfoResponse } from '@/api/teams/types'
 import { computed, ref } from 'vue'
 import { useChangeTeamVisibility } from '@/queries/teams'
 import { parseError } from '@/api'
+import { truncateText } from '@/lib/utils'
 
 interface Props {
   team?: GetTeamInfoResponse

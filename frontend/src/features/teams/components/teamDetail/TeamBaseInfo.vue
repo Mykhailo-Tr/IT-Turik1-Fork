@@ -30,7 +30,7 @@
             </template>
 
             <strong class="text-muted" :title="props.team?.name">{{
-              truncateText(props.team?.name ?? '', 100)
+              truncateText(props.team?.name ?? '', 35)
             }}</strong>
           </ui-skeleton-loader>
         </ui-card>

@@ -52,7 +52,7 @@
                 {{ team.name }}
               </div>
 
-              <ui-badge variant="green"> {{ team.members }} members </ui-badge>
+              <ui-badge variant="primary"> {{ team.members }} members </ui-badge>
             </RouterLink>
           </template>
 

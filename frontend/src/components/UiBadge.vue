@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-export type Variants = 'green' | 'gray' | 'red' | 'orange'
+export type Variants = 'green' | 'gray' | 'red' | 'orange' | 'primary'
 
 interface Props {
   variant?: Variants
@@ -26,6 +26,12 @@ const props = withDefaults(defineProps<Props>(), { variant: 'gray' })
   border-color: #0d9412;
   background: #41940d1f;
   color: #22940d;
+}
+
+.badge--primary {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--primary);
 }
 
 .badge--gray {

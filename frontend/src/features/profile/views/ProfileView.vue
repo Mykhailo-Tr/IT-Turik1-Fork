@@ -59,7 +59,7 @@
                 <ui-skeleton variant="rect" width="100%" />
               </template>
 
-              <ui-badge variant="green">{{ user?.role ?? '-' }}</ui-badge>
+              <ui-badge variant="primary">{{ user?.role ?? '-' }}</ui-badge>
             </ui-skeleton-loader>
           </ui-card>
 
@@ -123,9 +123,10 @@
                     v-for="team in user?.teams || []"
                     :key="team.id"
                     :to="`/teams/${team.id}`"
+                    :title="team.name"
                     class="team-link"
                   >
-                    {{ team.name }}
+                    {{ truncateText(team.name, 20) }}
                   </router-link>
                 </div>
 
@@ -168,6 +169,7 @@ import { useUserStore } from '@/stores/user'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { parseError } from '@/api'
+import { truncateText } from '@/lib/utils'
 
 const store = useUserStore()
 const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
