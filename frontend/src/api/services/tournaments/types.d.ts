@@ -16,6 +16,17 @@ export interface CreateTournamentArgs {
   body: CreateTournamentBody
 }
 
+// Tournament info
+export interface GetTournamentInfoArgs {
+  id: TournamentId
+}
+
+// TODO
+
+export type GetTournamentInfoResponse = Tournament & {
+  rounds: [] // TODO
+}
+
 // Create round
 export type CreateRoundBody = Pick<
   Round,
@@ -24,6 +35,7 @@ export type CreateRoundBody = Pick<
   | 'description'
   | 'tech_requirements'
   | 'must_have_requirements'
+  | 'criteria'
   | 'start_date'
   | 'end_date'
 > & {

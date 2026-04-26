@@ -1,8 +1,15 @@
 interface FormatDateOptions {
   showHours?: boolean
 }
-export const formatDate = (date: Date, options?: FormatDateOptions) => {
-  if (options?.showHours)
+
+export const formatDate = (value: Date | string, options?: FormatDateOptions) => {
+  const date = value instanceof Date ? value : new Date(value)
+
+  if (isNaN(date.getTime())) {
+    return ''
+  }
+
+  if (options?.showHours) {
     return date.toLocaleDateString('uk-UA', {
       month: 'short',
       day: 'numeric',
@@ -10,6 +17,7 @@ export const formatDate = (date: Date, options?: FormatDateOptions) => {
       hour: 'numeric',
       minute: 'numeric',
     })
+  }
 
   return date.toLocaleDateString('uk-UA', {
     month: 'short',

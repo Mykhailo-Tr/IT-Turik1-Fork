@@ -70,6 +70,17 @@
         }}</small>
       </label>
 
+      <label class="form-item criteria-field">
+        <span class="form-label">Evaluation criteria</span>
+        <AddCriteriaModal
+          v-model="form.fields.value.criteria"
+          @blur="form.validateField('criteria')"
+        />
+        <small v-if="form.errors.value.criteria" class="text-error">
+          {{ form.errors.value.criteria }}
+        </small>
+      </label>
+
       <label class="form-item must-have-field">
         <span class="form-label">Must have</span>
         <editor-modal
@@ -99,7 +110,10 @@
         }}</small>
       </label>
 
-      <ui-button class="submit-btn" type="submit">Create</ui-button>
+      <ui-button class="submit-btn" type="submit" :disabled="isPending">
+        <loading-icon v-if="isPending" />
+        <p>Create</p></ui-button
+      >
     </form>
   </ui-card>
 </template>
@@ -109,12 +123,22 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiDatePicker from '@/components/UiDatePicker.vue'
 import UiInput from '@/components/UiInput.vue'
+import AddCriteriaModal from '@/features/tournaments/components/createTaskView/modals/AddCriteriaModal.vue'
 import EditorModal from '@/features/tournaments/components/createTaskView/modals/EditorModal.vue'
 import { useForm } from '@/composables/useForm'
 import { CreateRoundSchema } from '@/schemas/tournaments.schema'
 import type { JSONContent } from '@tiptap/core'
 import { useCreateRound } from '@/queries/tournaments'
 import { useRoute } from 'vue-router'
+import { parseApiError } from '@/api'
+import { useNotification } from '@/composables/useNotification'
+
+interface RoundCriteriaItem {
+  id: string
+  name: string
+  description: string
+  max_score: number
+}
 
 interface Form {
   name: string
@@ -122,6 +146,7 @@ interface Form {
   tech_requirements: JSONContent | null
   description: JSONContent | null
   must_have_requirements: JSONContent | null
+  criteria: RoundCriteriaItem[]
   start_date: Date
   end_date: Date
 }
@@ -132,24 +157,37 @@ const form = useForm<Form>(CreateRoundSchema, {
   description: null,
   tech_requirements: null,
   must_have_requirements: null,
+  criteria: [],
   start_date: new Date(),
   end_date: new Date(),
 })
 
 const route = useRoute()
+const { showNotification } = useNotification()
 const tournamentId = Number(route.params.id)
 
-const { mutate: createRound } = useCreateRound()
+const { mutate: createRound, isPending } = useCreateRound()
 
 function handleSubmit() {
   if (!form.validate()) return
 
-  createRound({
-    body: {
-      tournament: tournamentId,
-      ...form.fields.value,
+  createRound(
+    {
+      body: {
+        tournament: tournamentId,
+        ...form.fields.value,
+      },
     },
-  })
+    {
+      onError(error) {
+        const parsedError = parseApiError(error)
+        for (const [field, errors] of Object.entries(parsedError?.details || {})) {
+          form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
+        }
+        showNotification(parsedError?.message, 'error')
+      },
+    },
+  )
 }
 </script>
 
@@ -193,13 +231,17 @@ function handleSubmit() {
 
 .passing-count-field {
   grid-column: 1;
-  grid-row: 4;
+  grid-row: 5;
+}
+
+.criteria-field {
+  grid-column: 2;
+  grid-row: 5;
 }
 
 .submit-btn {
   grid-column: 2;
-  grid-row: 5;
-  justify-self: end;
+  grid-row: 6;
 }
 
 .text-error {
@@ -224,6 +266,7 @@ function handleSubmit() {
 
   .start-date-field,
   .end-date-field,
+  .criteria-field,
   .submit-btn {
     grid-column: 1;
     grid-row: auto;

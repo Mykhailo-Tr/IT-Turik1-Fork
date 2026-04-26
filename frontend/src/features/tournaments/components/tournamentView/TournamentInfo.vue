@@ -34,7 +34,11 @@
             </template>
 
             <p>
-              {{ tournament?.startAt ? formatDate(tournament?.startAt) : '-' }}
+              {{
+                tournament?.start_date
+                  ? formatDate(tournament.start_date, { showHours: true })
+                  : '-'
+              }}
             </p>
           </ui-skeleton-loader>
         </div>
@@ -45,7 +49,7 @@
           <ui-skeleton variant="rect" width="100px" />
         </template>
 
-        <ui-badge>Running</ui-badge>
+        <ui-badge :variant="statusBadgeVariant">{{ tournament?.status }}</ui-badge>
       </ui-skeleton-loader>
     </div>
 
@@ -64,11 +68,12 @@
         <p
           :title="tournament?.description"
           @click="toggleDescriptionModal"
-          class="tournament-description"
+          :class="['tournament-description', { large: isDescriptionLarge }]"
         >
           {{ truncateText(tournament?.description ?? '', 190) }}
 
           <full-screen-icon
+            v-if="isDescriptionLarge"
             class="text-muted"
             width="15px"
             height="15px"
@@ -107,20 +112,12 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
-import { useQuery } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
 import DescriptionModal from './modals/DescriptionModal.vue'
 import { truncateText } from '@/lib/utils'
 import { formatDate } from '@/lib/date'
 import FullScreenIcon from '@/icons/FullScreenIcon.vue'
-
-interface Response {
-  id: number
-  name: string
-  description: string
-  status: string
-  startAt: Date
-}
+import { useTournamentInfo } from '@/queries/tournaments'
 
 interface Props {
   tournamentId: number
@@ -129,32 +126,28 @@ interface Props {
 const props = defineProps<Props>()
 const isDesciptionOpen = ref(false)
 
-const toggleDescriptionModal = () => {
-  isDesciptionOpen.value = !isDesciptionOpen.value
-}
-
-const fetchItem = async (id: number): Promise<Response> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  return {
-    id: id,
-    name: `Item ${id}`,
-    description: `"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."`,
-    status: Math.random() > 0.5 ? 'Running' : 'Registration open',
-    startAt: new Date(),
-  }
-}
-
 const {
   data: tournament,
   isLoading,
   error: tournamentInfoError,
   isError,
-} = useQuery({
-  queryKey: ['tournaments', props.tournamentId],
-  queryFn: () => fetchItem(props.tournamentId),
-})
+} = useTournamentInfo({ id: props.tournamentId })
 const error = computed(() => parseApiError(tournamentInfoError.value))
+
+const isDescriptionLarge = computed(() => (tournament.value?.description.length ?? 0) > 190)
+const statusBadgeVariant = computed(() => {
+  if (tournament.value?.status === 'draft') return 'gray'
+  if (tournament.value?.status === 'finished') return 'gray'
+  if (tournament.value?.status === 'running') return 'green'
+  if (tournament.value?.status === 'registration') return 'orange'
+
+  return 'gray'
+})
+
+const toggleDescriptionModal = () => {
+  if (!isDescriptionLarge.value) return
+  isDesciptionOpen.value = !isDesciptionOpen.value
+}
 </script>
 
 <style scoped>
@@ -172,7 +165,7 @@ const error = computed(() => parseApiError(tournamentInfoError.value))
   transition: baclground 2s ease-in;
 }
 
-.tournament-description:hover {
+.tournament-description.large:hover {
   cursor: pointer;
   background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }

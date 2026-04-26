@@ -63,6 +63,21 @@ export const CreateRoundSchema = v.pipe(
       10,
       'Must have must be at least 10 characters long',
     ),
+    criteria: v.pipe(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.pipe(v.string(), v.minLength(1, 'Criterion name is required')),
+          description: v.pipe(v.string(), v.minLength(1, 'Criterion description is required')),
+          max_score: v.pipe(
+            v.number('must be a number'),
+            v.minValue(1, 'Max score must be at least 1'),
+          ),
+        }),
+      ),
+      v.minLength(1, 'At least one criterion is required'),
+    ),
+
     start_date: v.date(),
     end_date: v.date(),
   }),

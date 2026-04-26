@@ -96,6 +96,13 @@ interface Tournament {
 type RoundId = number
 type RoundStatus = 'draft' | 'active' | 'submission_closed' | 'evaluated'
 
+interface CriteriaItem {
+  id: string
+  name: string
+  description: string
+  max_score: number
+}
+
 interface Round {
   id: RoundId
   name: string
@@ -107,4 +114,5 @@ interface Round {
   must_have_requirements: JSONContent
   tech_requirements: JSONContent
   passing_count: number
+  criteria: CriteriaItem[]
 }

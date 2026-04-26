@@ -1,114 +1,112 @@
 <template>
-  <div class="description-root">
-    <ui-button variant="secondary" @click="openModal">
-      {{ hasValue ? editTextComputed : addTextComputed }}
-    </ui-button>
+  <ui-button variant="secondary" @click="openModal">
+    {{ hasValue ? editTextComputed : addTextComputed }}
+  </ui-button>
 
-    <ui-modal
-      v-model="isOpen"
-      :maxWidth="props.maxWidth"
-      :close-on-backdrop="false"
-      @close="handleClose"
-    >
-      <template #title>
-        <h2>{{ title }}</h2>
-      </template>
+  <ui-modal
+    v-model="isOpen"
+    :maxWidth="props.maxWidth"
+    :close-on-backdrop="false"
+    @close="handleClose"
+  >
+    <template #title>
+      <h2>{{ title }}</h2>
+    </template>
 
-      <div class="editor-shell">
-        <ui-card>
-          <div class="toolbar" role="toolbar" aria-label="Text editor toolbar">
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              @click="toggleH1"
-              :aria-pressed="editor?.isActive('heading', { level: 1 }) ?? false"
-              :class="{ 'is-active': editor?.isActive('heading', { level: 1 }) }"
-            >
-              <heading1-icon width="20px" height="20" />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              @click="toggleH2"
-              :aria-pressed="editor?.isActive('heading', { level: 2 }) ?? false"
-              :class="{ 'is-active': editor?.isActive('heading', { level: 2 }) }"
-            >
-              <heading2-icon width="20px" height="20" />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              @click="toggleBold"
-              :aria-pressed="editor?.isActive('bold') ?? false"
-              :class="{ 'is-active': editor?.isActive('bold') }"
-            >
-              <bold-icon width="20" height="20" />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              :aria-pressed="editor?.isActive('bold') ?? false"
-              @click="toggleUnderline"
-              :class="{ 'is-active': editor?.isActive('underline') }"
-            >
-              <underline-icon />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              :aria-pressed="editor?.isActive('bold') ?? false"
-              @click="toggleHighlight"
-              :class="{ 'is-active': editor?.isActive('highlight') }"
-            >
-              <highlight-icon />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              @click="toggleItalic"
-              :aria-pressed="editor?.isActive('italic') ?? false"
-              :class="{ 'is-active': editor?.isActive('italic') }"
-            >
-              <italic-icon width="20" height="20" />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              @click="toggleBulletList"
-              :aria-pressed="editor?.isActive('bulletList') ?? false"
-              :class="{ 'is-active': editor?.isActive('bulletList') }"
-            >
-              <bullet-list-icon width="20px" height="20" />
-            </ui-button>
-            <ui-button
-              size="sm"
-              variant="secondary"
-              :disabled="!editor"
-              @click="toggleOrderedList"
-              :aria-pressed="editor?.isActive('orderedList') ?? false"
-              :class="{ 'is-active': editor?.isActive('orderedList') }"
-            >
-              <numeric-list-icon width="20px" height="20" />
-            </ui-button>
-          </div>
-        </ui-card>
+    <div class="editor-shell">
+      <ui-card>
+        <div class="toolbar" role="toolbar" aria-label="Text editor toolbar">
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            @click="toggleH1"
+            :aria-pressed="editor?.isActive('heading', { level: 1 }) ?? false"
+            :class="{ 'is-active': editor?.isActive('heading', { level: 1 }) }"
+          >
+            <heading1-icon width="20px" height="20" />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            @click="toggleH2"
+            :aria-pressed="editor?.isActive('heading', { level: 2 }) ?? false"
+            :class="{ 'is-active': editor?.isActive('heading', { level: 2 }) }"
+          >
+            <heading2-icon width="20px" height="20" />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            @click="toggleBold"
+            :aria-pressed="editor?.isActive('bold') ?? false"
+            :class="{ 'is-active': editor?.isActive('bold') }"
+          >
+            <bold-icon width="20" height="20" />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            :aria-pressed="editor?.isActive('bold') ?? false"
+            @click="toggleUnderline"
+            :class="{ 'is-active': editor?.isActive('underline') }"
+          >
+            <underline-icon />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            :aria-pressed="editor?.isActive('bold') ?? false"
+            @click="toggleHighlight"
+            :class="{ 'is-active': editor?.isActive('highlight') }"
+          >
+            <highlight-icon />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            @click="toggleItalic"
+            :aria-pressed="editor?.isActive('italic') ?? false"
+            :class="{ 'is-active': editor?.isActive('italic') }"
+          >
+            <italic-icon width="20" height="20" />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            @click="toggleBulletList"
+            :aria-pressed="editor?.isActive('bulletList') ?? false"
+            :class="{ 'is-active': editor?.isActive('bulletList') }"
+          >
+            <bullet-list-icon width="20px" height="20" />
+          </ui-button>
+          <ui-button
+            size="sm"
+            variant="secondary"
+            :disabled="!editor"
+            @click="toggleOrderedList"
+            :aria-pressed="editor?.isActive('orderedList') ?? false"
+            :class="{ 'is-active': editor?.isActive('orderedList') }"
+          >
+            <numeric-list-icon width="20px" height="20" />
+          </ui-button>
+        </div>
+      </ui-card>
 
-        <editor-content class="editor" :editor="editor" />
-      </div>
+      <editor-content class="editor" :editor="editor" />
+    </div>
 
-      <template #footer>
-        <ui-button variant="secondary" @click="cancel">Cancel</ui-button>
-        <ui-button @click="save">Save</ui-button>
-      </template>
-    </ui-modal>
-  </div>
+    <template #footer>
+      <ui-button variant="secondary" @click="cancel">Cancel</ui-button>
+      <ui-button @click="save">Save</ui-button>
+    </template>
+  </ui-modal>
 </template>
 
 <script setup lang="ts">
@@ -181,6 +179,7 @@ function openModal() {
 
 function handleClose() {
   isOpen.value = false
+  emit('blur')
 }
 
 function cancel() {
@@ -228,12 +227,6 @@ function toggleH2() {
 </script>
 
 <style scoped>
-.description-root {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
 .editor-shell {
   display: flex;
   flex-direction: column;

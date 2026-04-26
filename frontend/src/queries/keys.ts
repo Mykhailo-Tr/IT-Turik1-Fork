@@ -1,5 +1,5 @@
 import type { GetRoleCodesFilter } from '@/api/services/accounts/types'
-import type { TeamId } from '@/api/dbTypes'
+import type { TeamId, TournamentId } from '@/api/dbTypes'
 
 export const teamKeys = {
   allTeams: () => ['teams'],
@@ -16,4 +16,5 @@ export const accountKeys = {
 
 export const touranmentsKeys = {
   allTouranments: () => ['tournaments'],
+  touranment: (id: TournamentId) => ['tournaments', id],
 }
