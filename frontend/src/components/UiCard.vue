@@ -31,7 +31,7 @@ const props = defineProps<Props>()
   padding: 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   background: var(--card);
   color: var(--card-foreground);
 }

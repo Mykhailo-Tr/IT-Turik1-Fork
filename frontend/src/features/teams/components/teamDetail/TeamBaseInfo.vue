@@ -21,7 +21,7 @@
       <div class="info-grid">
         <ui-card title="Name" class="info-item">
           <template #header>
-            <span class="card-text-title">Name</span>
+            <span class="card-label">Name</span>
           </template>
 
           <ui-skeleton-loader :loading="props.loading">
@@ -37,7 +37,7 @@
 
         <ui-card title="Email" class="info-item">
           <template #header>
-            <span class="card-text-title">Email</span>
+            <span class="card-label">Email</span>
           </template>
 
           <ui-skeleton-loader :loading="props.loading">
@@ -51,7 +51,7 @@
 
         <ui-card title="Organization" class="info-item">
           <template #header>
-            <span class="card-text-title">Organization</span>
+            <span class="card-label">Organization</span>
           </template>
 
           <ui-skeleton-loader :loading="props.loading">
@@ -65,7 +65,7 @@
 
         <ui-card title="Captain" class="info-item">
           <template #header>
-            <span class="card-text-title">Captain</span>
+            <span class="card-label">Captain</span>
           </template>
 
           <ui-skeleton-loader :loading="props.loading">
@@ -79,7 +79,7 @@
 
         <ui-card title="Members count" class="info-item">
           <template #header>
-            <span class="card-text-title">Members count</span>
+            <span class="card-label">Members count</span>
           </template>
 
           <ui-skeleton-loader :loading="props.loading">
@@ -93,7 +93,7 @@
 
         <ui-card title="Visibility" class="info-item">
           <template #header>
-            <span class="card-text-title">Visibility</span>
+            <span class="card-label">Visibility</span>
           </template>
 
           <ui-skeleton-loader :loading="props.loading">
@@ -234,12 +234,6 @@ const leaveTeam = () => {
 .info-item span {
   display: block;
   font-size: 0.8rem;
-}
-
-.card-text-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.2;
 }
 
 .info-actions {

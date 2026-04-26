@@ -18,7 +18,7 @@
         </div>
 
         <div class="danger-zone-box">
-          <div class="manage-row danger">
+          <div class="manage-row danger-zone-row">
             <div>
               <h3>Change visibility</h3>
               <p class="text-muted">
@@ -41,7 +41,7 @@
             />
           </div>
 
-          <div class="manage-row danger">
+          <div class="manage-row danger-zone-row">
             <div>
               <h3>Delete team</h3>
               <p class="text-muted">
@@ -128,10 +128,13 @@ const emit = defineEmits<{
   gap: 0.9rem;
 }
 
+.danger-zone-row:not(:last-child) {
+  border-bottom: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
+}
+
 .manage-row:not(:last-child) {
   margin-bottom: 1rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
 }
 
 .manage-row h3 {
@@ -142,7 +145,7 @@ const emit = defineEmits<{
   margin-top: 0.3rem;
 }
 
-.manage-row.danger h3 {
+.danger-zone-row h3 {
   color: color-mix(in srgb, var(--destructive) 80%, transparent);
 }
 </style>

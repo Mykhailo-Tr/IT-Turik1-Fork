@@ -15,7 +15,7 @@
         <div class="counts">
           <ui-card v-for="role in restrictedRoles" :key="role" class="statistic-card">
             <template #header>
-              <span class="card-text-title">{{ role }}</span>
+              <span class="card-label">{{ role }}</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">

@@ -23,7 +23,7 @@
         <div class="details">
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">Username</span>
+              <span class="card-label">Username</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">
@@ -37,7 +37,7 @@
 
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">Email</span>
+              <span class="card-label">Email</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">
@@ -51,7 +51,7 @@
 
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">Role</span>
+              <span class="card-label">Role</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">
@@ -65,7 +65,7 @@
 
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">Full name</span>
+              <span class="card-label">Full name</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">
@@ -79,7 +79,7 @@
 
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">City</span>
+              <span class="card-label">City</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">
@@ -93,7 +93,7 @@
 
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">Phone</span>
+              <span class="card-label">Phone</span>
             </template>
 
             <ui-skeleton-loader :loading="isLoading">
@@ -107,7 +107,7 @@
 
           <ui-card class="field-card">
             <template #header>
-              <span class="card-text-title">Teams</span>
+              <span class="card-label">Teams</span>
             </template>
 
             <div>
@@ -215,12 +215,6 @@ const formatDate = (date: Date) => {
 .field-card {
   background: var(--muted);
   gap: 5px;
-}
-
-.card-text-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  line-height: 1.2;
 }
 
 .card-content {
