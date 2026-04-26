@@ -828,3 +828,21 @@ class TeamApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.member).exists())
         self.assertFalse(TeamMember.objects.filter(team_id=team['id'], user=self.other_user).exists())
+
+    def test_team_detail_contains_is_in_active_tournament_flag(self):
+        team = self._create_team({'name': 'Flag Team', 'email': 'flag-team@example.com'})
+
+        self.client.force_authenticate(user=self.captain)
+        detail_before = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_before.status_code, status.HTTP_200_OK)
+        self.assertIn('is_in_active_tournament', detail_before.data)
+        self.assertFalse(detail_before.data['is_in_active_tournament'])
+
+        self._register_team_in_active_tournament(
+            team_id=team['id'],
+            tournament_status=Tournament.STATUS_REGISTRATION,
+        )
+
+        detail_after = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+        self.assertEqual(detail_after.status_code, status.HTTP_200_OK)
+        self.assertTrue(detail_after.data['is_in_active_tournament'])
