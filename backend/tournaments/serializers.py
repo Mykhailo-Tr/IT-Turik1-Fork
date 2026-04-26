@@ -129,6 +129,15 @@ class RoundSerializer(serializers.ModelSerializer):
         if tournament and position and winners_count is not None and position != (Round.objects.filter(tournament=tournament).order_by('-position').values_list('position', flat=True).first() or 0):
             errors['winners_count'] = 'winners_count is allowed only for the last round.'
 
+        passing_count = attrs.get('passing_count', getattr(instance, 'passing_count', None))
+        if passing_count is not None and tournament:
+            registered_teams_count = tournament.team_registrations.count()
+            if registered_teams_count > 0 and passing_count > registered_teams_count:
+                errors['passing_count'] = (
+                    f'passing_count ({passing_count}) cannot exceed '
+                    f'the number of registered teams ({registered_teams_count}).'
+                )
+
         for field in ['tech_requirements', 'must_have_requirements', 'description']:
             val = attrs.get(field)
             if val is not None and not isinstance(val, dict):
