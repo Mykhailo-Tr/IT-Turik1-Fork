@@ -162,6 +162,7 @@ def register_team_for_tournament(*, tournament, team, actor):
 
     already_registered = TournamentTeamRegistration.objects.filter(
         team=team,
+        is_active=True,
         tournament__status__in=[
             Tournament.STATUS_REGISTRATION,
             Tournament.STATUS_RUNNING,
@@ -179,6 +180,7 @@ def register_team_for_tournament(*, tournament, team, actor):
                 Tournament.STATUS_REGISTRATION,
                 Tournament.STATUS_RUNNING,
             ],
+            team__tournament_registrations__is_active=True,
             user_id__in=participant_ids,
         )
         .exclude(team=team)
