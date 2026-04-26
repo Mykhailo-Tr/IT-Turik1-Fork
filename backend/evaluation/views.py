@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 
 from tournaments.models import Round
 from tournaments.permissions import IsJuryPermission, IsPlatformAdminPermission
-from .services import assign_submissions_to_jury
+from .services import assign_submissions_to_jury, try_auto_evaluate_round
 
 from .models import JuryAssignment, SubmissionEvaluation
 from .serializers import (
@@ -32,6 +32,8 @@ class JuryEvaluationCreateView(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save()
+        round_obj = serializer.instance.assignment.submission.round
+        try_auto_evaluate_round(round_obj)
 
 
 class JuryEvaluationDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -41,6 +43,11 @@ class JuryEvaluationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return SubmissionEvaluation.objects.filter(assignment__jury=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        round_obj = serializer.instance.assignment.submission.round
+        try_auto_evaluate_round(round_obj)
 
 
 class AdminRoundAssignmentView(APIView):

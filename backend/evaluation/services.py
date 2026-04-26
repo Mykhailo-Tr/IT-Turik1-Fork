@@ -55,3 +55,22 @@ def assign_submissions_to_jury(round_obj, k=2):
         JuryAssignment.objects.bulk_create(new_assignments, ignore_conflicts=True)
 
     return round_obj
+
+
+def try_auto_evaluate_round(round_obj):
+    """Auto-mark a round as evaluated when all jury assignments have evaluations."""
+    if round_obj.status != Round.STATUS_SUBMISSION_CLOSED:
+        return
+
+    total = JuryAssignment.objects.filter(submission__round=round_obj).count()
+    if total == 0:
+        return
+
+    evaluated = JuryAssignment.objects.filter(
+        submission__round=round_obj,
+        evaluation__isnull=False,
+    ).count()
+
+    if total == evaluated:
+        from tournaments.services import mark_round_evaluated
+        mark_round_evaluated(round_obj)
