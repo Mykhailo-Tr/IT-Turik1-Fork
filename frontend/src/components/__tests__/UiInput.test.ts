@@ -4,7 +4,6 @@ import { render } from 'vitest-browser-vue'
 import UiInput from '../UiInput.vue'
 
 describe('UiInput', () => {
-  // ── Text input ────────────────────────────────────────────────
   describe('type: text (default)', () => {
     it('renders the provided modelValue', async () => {
       const screen = await render(UiInput, {
@@ -67,7 +66,6 @@ describe('UiInput', () => {
     })
   })
 
-  // ── Number input ──────────────────────────────────────────────
   describe('type: number', () => {
     it('renders increment and decrement buttons', async () => {
       const screen = await render(UiInput, {

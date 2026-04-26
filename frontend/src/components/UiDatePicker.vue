@@ -396,7 +396,6 @@ function getCellClasses(cell: CalendarCell) {
 }
 
 // UI Logic
-
 function toggleOpen() {
   if (!props.disabled) {
     isOpen.value = !isOpen.value

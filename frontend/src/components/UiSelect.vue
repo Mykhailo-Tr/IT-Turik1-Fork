@@ -39,13 +39,17 @@
         <ul
           class="select-list"
           role="listbox"
-          data-testid="select-list"
           :aria-multiselectable="multiple"
           :aria-activedescendant="activeDescendant"
           ref="listRef"
           tabindex="-1"
         >
+          <li v-if="isError" role="alert" class="select-error">{{ error }}</li>
+          <li v-else-if="!filteredOptions.length" data-testid="select-empty" class="select-empty">
+            No options found
+          </li>
           <li
+            v-else
             v-for="(option, index) in filteredOptions"
             :key="option.value"
             :id="`option-${option.value}`"
@@ -61,11 +65,6 @@
           >
             {{ option.label }}
             <selected-icon v-if="isSelected(option)" class="select-check" />
-          </li>
-
-          <li v-if="isError" role="alert" class="select-error">{{ error }}</li>
-          <li v-else-if="!filteredOptions.length" data-testid="select-empty" class="select-empty">
-            No options found
           </li>
         </ul>
       </div>
