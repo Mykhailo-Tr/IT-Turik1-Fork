@@ -21,7 +21,6 @@ class Tournament(models.Model):
     description = models.TextField()
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
-    criteria = models.JSONField(default=list, blank=True)
     max_teams = models.PositiveIntegerField(blank=True, null=True)
     min_team_members = models.PositiveIntegerField(blank=True, null=True)
     status = models.CharField(max_length=24, choices=STATUS_CHOICES, default=STATUS_DRAFT)
@@ -57,34 +56,6 @@ class Tournament(models.Model):
         if self.max_teams is not None and self.max_teams < 1:
             errors['max_teams'] = 'max_teams must be at least 1.'
 
-        if not isinstance(self.criteria, list):
-            errors['criteria'] = 'Criteria must be a list.'
-        else:
-            seen_ids = set()
-            for idx, c in enumerate(self.criteria):
-                if not isinstance(c, dict):
-                    errors['criteria'] = f'Item at index {idx} must be an object.'
-                    break
-                
-                c_id = c.get('id')
-                name = c.get('name')
-                max_score = c.get('max_score')
-                
-                if not c_id or not isinstance(c_id, str):
-                    errors['criteria'] = f'Item at index {idx} must have a valid string "id".'
-                    break
-                if not name or not isinstance(name, str):
-                    errors['criteria'] = f'Item "{c_id}" must have a valid string "name".'
-                    break
-                if max_score is None or not isinstance(max_score, (int, float)) or max_score <= 0:
-                    errors['criteria'] = f'Item "{c_id}" must have a positive "max_score".'
-                    break
-                    
-                if c_id in seen_ids:
-                    errors['criteria'] = f'Duplicate criteria id: "{c_id}".'
-                    break
-                seen_ids.add(c_id)
-
         if errors:
             raise ValidationError(errors)
 
@@ -114,6 +85,7 @@ class Round(models.Model):
     description = models.JSONField(default=dict, blank=True)
     tech_requirements = models.JSONField(default=dict, blank=True)
     must_have_requirements = models.JSONField(default=dict, blank=True)
+    criteria = models.JSONField(default=list, blank=True)
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     passing_count = models.PositiveIntegerField(blank=True, null=True)
@@ -175,6 +147,34 @@ class Round(models.Model):
 
         if tournament and self.winners_count is not None and self.position != (Round.objects.filter(tournament=tournament).order_by('-position').values_list('position', flat=True).first() or 0):
             errors['winners_count'] = 'winners_count is allowed only for the last round.'
+
+        if not isinstance(self.criteria, list):
+            errors['criteria'] = 'Criteria must be a list.'
+        else:
+            seen_ids = set()
+            for idx, c in enumerate(self.criteria):
+                if not isinstance(c, dict):
+                    errors['criteria'] = f'Item at index {idx} must be an object.'
+                    break
+                
+                c_id = c.get('id')
+                name = c.get('name')
+                max_score = c.get('max_score')
+                
+                if not c_id or not isinstance(c_id, str):
+                    errors['criteria'] = f'Item at index {idx} must have a valid string "id".'
+                    break
+                if not name or not isinstance(name, str):
+                    errors['criteria'] = f'Item "{c_id}" must have a valid string "name".'
+                    break
+                if max_score is None or not isinstance(max_score, (int, float)) or max_score <= 0:
+                    errors['criteria'] = f'Item "{c_id}" must have a positive "max_score".'
+                    break
+                    
+                if c_id in seen_ids:
+                    errors['criteria'] = f'Duplicate criteria id: "{c_id}".'
+                    break
+                seen_ids.add(c_id)
 
         if errors:
             raise ValidationError(errors)

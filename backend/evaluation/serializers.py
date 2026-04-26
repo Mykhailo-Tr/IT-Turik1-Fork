@@ -42,11 +42,11 @@ class SubmissionEvaluationSerializer(serializers.ModelSerializer):
         scores = attrs.get('scores')
         
         if scores is not None and assignment:
-            tournament = assignment.submission.round.tournament
-            criteria = tournament.criteria
+            round_obj = assignment.submission.round
+            criteria = round_obj.criteria
             
             if not criteria:
-                raise serializers.ValidationError({"scores": "Tournament has no evaluation criteria."})
+                raise serializers.ValidationError({"scores": "Round has no evaluation criteria."})
             
             criteria_dict = {c['id']: c for c in criteria}
             score_ids = set()
