@@ -47,15 +47,7 @@
   "start_date": "2026-05-01T10:00:00Z",
   "end_date": "2026-05-10T10:00:00Z",
   "max_teams": 20,
-  "min_team_members": 2,
-  "criteria": [
-    {
-      "id": "backend",
-      "name": "Backend Quality",
-      "description": "Code quality",
-      "max_score": 10
-    }
-  ]
+  "min_team_members": 2
 }
 ```
 
@@ -85,7 +77,15 @@
   "passing_count": 5,
   "tech_requirements": {},
   "must_have_requirements": {},
-  "description": {}
+  "description": {},
+  "criteria": [
+    {
+      "id": "backend",
+      "name": "Backend Quality",
+      "description": "Code quality",
+      "max_score": 10
+    }
+  ]
 }
 ```
 
@@ -169,7 +169,7 @@
 ```
 
 > **Важливо для оцінювання:**
-> - Кожен `criterion_id` має точно збігатися з id критерію з турніру.
+> - Кожен `criterion_id` має точно збігатися з id критерію з раунду.
 > - Оцінка `score` має бути $\ge 0$ та $\le$ `max_score` критерію.
 > - Дублікати `criterion_id` не допускаються.
-> - Необхідно передати оцінки для **всіх** критеріїв турніру. Якщо потрібен 0, його потрібно передати явно (`"score": 0`).
+> - Необхідно передати оцінки для **всіх** критеріїв раунду. Якщо потрібен 0, його потрібно передати явно (`"score": 0`).
