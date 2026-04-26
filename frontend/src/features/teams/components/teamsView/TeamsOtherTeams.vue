@@ -111,21 +111,21 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useNotification } from '@/composables/useNotification'
 import type { TeamId } from '@/api/dbTypes'
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import { computed, ref } from 'vue'
 import { useSendJoinRequest, useTeams } from '@/queries/teams'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useProfile } from '@/queries/accounts'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { truncateText } from '@/lib/utils'
 
 const OTHER_TEAMS_PER_PAGE = 8
 
 const { data: user } = useProfile()
 const { data: teams, isLoading: isLoadingTeams, isLoadingError, error: teamsError } = useTeams()
-const error = computed(() => parseError(teamsError.value))
+const error = computed(() => parseApiError(teamsError.value))
 
 const { showNotification } = useNotification()
 

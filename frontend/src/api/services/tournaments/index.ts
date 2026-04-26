@@ -1,4 +1,4 @@
-import { apiClient } from '../apiClient'
+import { apiClient } from '@/api'
 import type { CreateRoundArgs, CreateTournamentArgs } from './types'
 
 const prefix = '/api/tournaments'

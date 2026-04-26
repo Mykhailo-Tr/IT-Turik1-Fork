@@ -133,14 +133,14 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiInput from '@/components/UiInput.vue'
 import { useNotification } from '@/composables/useNotification'
-import type { CreateTeamBody } from '@/api/teams/types'
+import type { CreateTeamBody } from '@/api/services/teams/types'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCreateTeam } from '@/queries/teams'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import { useProfile, useUsers } from '@/queries/accounts'
 import UiSelect from '@/components/UiSelect.vue'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import UiSwitch from '@/components/UiSwitch.vue'
 import { useForm } from '@/composables/useForm'
 import { CreateTeamSchema } from '@/schemas/teams.schema'
@@ -174,7 +174,7 @@ const createCandidateUsers = computed(() => {
 })
 
 const { data: users, isLoading: isLoadingUsers, error: usersError, isLoadingError } = useUsers()
-const getUsersError = computed(() => parseError(usersError.value))
+const getUsersError = computed(() => parseApiError(usersError.value))
 
 const { mutate: createTeam, isPending: isCreatingTeam } = useCreateTeam()
 
@@ -191,7 +191,7 @@ const handleFormSubmit = () => {
         router.push(`/teams/${data.id}`)
       },
       onError: (error) => {
-        const parsedError = parseError(error)
+        const parsedError = parseApiError(error)
         for (const [field, errors] of Object.entries(parsedError?.details || {})) {
           form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
         }

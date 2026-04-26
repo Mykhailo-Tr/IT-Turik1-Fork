@@ -109,7 +109,7 @@
 
 <script setup lang="ts">
 import type { Invitation, UserId } from '@/api/dbTypes'
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'

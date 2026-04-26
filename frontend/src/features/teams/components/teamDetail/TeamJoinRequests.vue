@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import type { JoinRequestId } from '@/api/dbTypes'
-import type { ManageJoinRequestAction } from '@/api/teams/types'
+import type { ManageJoinRequestAction } from '@/api/services/teams/types'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'

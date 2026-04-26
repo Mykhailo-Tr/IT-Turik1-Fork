@@ -141,7 +141,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { RoleCodesUserRole } from '@/api/accounts/types'
+import type { RoleCodesUserRole } from '@/api/services/accounts/types'
+import { parseApiError } from '@/api'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
@@ -150,7 +151,6 @@ import { useGenerateCodes, useRoleCodes } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useNotification } from '@/composables/useNotification'
-import { parseError } from '@/api'
 import UiBadge from '@/components/UiBadge.vue'
 
 interface Errors {
@@ -179,7 +179,7 @@ const {
 } = useRoleCodes({
   filter: computed(() => ({ role: selectedRoleFilter.value })),
 })
-const error = computed(() => parseError(getRoleCodesError.value))
+const error = computed(() => parseApiError(getRoleCodesError.value))
 
 const codes = computed(() => data.value?.codes || [])
 const activeCounts = computed(() => data.value?.active_counts)

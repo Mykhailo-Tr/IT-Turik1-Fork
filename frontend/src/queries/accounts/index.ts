@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import type { AxiosError } from 'axios'
-import $api from '@/api'
+import { $api } from '@/api'
 import { accountKeys } from '../keys'
 import { computed, toValue, type MaybeRef } from 'vue'
 import type {
@@ -24,7 +24,7 @@ import type {
   UpdateProfileArgs,
   ValidateResetLinkArgs,
   ValidateResetLinkResponse,
-} from '@/api/accounts/types'
+} from '@/api/services/accounts/types'
 import type { ApiError } from '@/api'
 import type { MutationConfig, QueryConfig } from '../types'
 

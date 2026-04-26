@@ -66,8 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import type { GetProfileResponse } from '@/api/accounts/types'
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetProfileResponse } from '@/api/services/accounts/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import UiBadge from '@/components/UiBadge.vue'
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'

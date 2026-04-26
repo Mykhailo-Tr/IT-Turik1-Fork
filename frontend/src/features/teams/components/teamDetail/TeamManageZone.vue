@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import DeleteTeamModal from './modals/DeleteTeamModal.vue'
 import TeamVisibilityModal from './modals/TeamVisibilityModal.vue'
 import UiCard from '@/components/UiCard.vue'

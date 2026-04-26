@@ -153,7 +153,7 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiInput from '@/components/UiInput.vue'
 import ArrowRight from '@/icons/ArrowRight.vue'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { truncateText } from '@/lib/utils'
 import { useProfile } from '@/queries/accounts'
 
@@ -224,7 +224,7 @@ const {
   queryFn: () => fetchItems(currentPage.value, searchQuery.value),
   staleTime: 1000 * 60 * 5,
 })
-const error = computed(() => parseError(tournamentsError.value))
+const error = computed(() => parseApiError(tournamentsError.value))
 
 const pageItems = computed(() => data.value?.data ?? [])
 const totalPages = computed(() => Math.ceil((data.value?.total ?? 0) / pageSize))

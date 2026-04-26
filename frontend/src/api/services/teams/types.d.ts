@@ -6,7 +6,7 @@ import type {
   Team,
   TeamId,
   UserId,
-} from '../dbTypes'
+} from '@/api/dbTypes'
 
 // GetTeamInfo
 export interface GetTeamInfoArgs {

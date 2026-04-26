@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
@@ -154,7 +154,7 @@ const {
   queryKey: ['tournaments', props.tournamentId],
   queryFn: () => fetchItem(props.tournamentId),
 })
-const error = computed(() => parseError(tournamentInfoError.value))
+const error = computed(() => parseApiError(tournamentInfoError.value))
 </script>
 
 <style scoped>

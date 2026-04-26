@@ -85,20 +85,20 @@
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import { computed, ref } from 'vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import { useTeams } from '@/queries/teams'
 import { useProfile } from '@/queries/accounts'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { truncateText } from '@/lib/utils'
 
 const TEAMS_PER_PAGE = 8
 
 const { data: user } = useProfile()
 const { data: teams, isLoading: isLoadingTeams, isLoadingError, error: teamsError } = useTeams()
-const error = computed(() => parseError(teamsError.value))
+const error = computed(() => parseApiError(teamsError.value))
 
 const myTeams = computed(() => teams.value?.filter((team) => isAcceptedMember(team)))
 const myTeamsPageItems = computed(() => {

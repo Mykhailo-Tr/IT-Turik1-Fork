@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import UiButton from '@/components/UiButton.vue'
 import UiModal from '@/components/UiModal.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
@@ -103,7 +103,7 @@ const handlePasswordChange = () => {
         showNotification('Password updated successfully.', 'success')
       },
       onError(error) {
-        const parsedError = parseError(error)
+        const parsedError = parseApiError(error)
         for (const [field, errors] of Object.entries(parsedError?.details || {})) {
           form.setError(field as keyof PasswordForm, errors?.[0] ?? 'Invalid value')
         }

@@ -136,7 +136,7 @@ import { useNotification } from '@/composables/useNotification'
 import { useLeaveTeam, useSendJoinRequest } from '@/queries/teams'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import { truncateText } from '@/lib/utils'
 
 interface Props {

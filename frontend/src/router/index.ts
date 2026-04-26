@@ -19,7 +19,7 @@ import TournamentsCreateView from '@/features/tournaments/views/TournamentsCreat
 import TournamentsListView from '@/features/tournaments/views/TournamentsListView.vue'
 import TournamentView from '@/features/tournaments/views/TournamentView.vue'
 import TournamentsCreateRoundView from '@/features/tournaments/views/TournamentsCreateRoundView.vue'
-import { accountsService } from '@/api/accounts'
+import { accountsService } from '@/api/services/accounts'
 import NotFoundView from '@/features/not-found-page/NotFoundView.vue'
 
 const router = createRouter({

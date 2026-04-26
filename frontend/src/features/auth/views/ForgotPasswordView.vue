@@ -41,7 +41,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useForgotPassword } from '@/queries/accounts'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { useNotification } from '@/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 
@@ -53,7 +53,7 @@ const {
   isPending: isLoading,
   error: forgotPasswordError,
 } = useForgotPassword()
-const error = computed(() => parseError(forgotPasswordError.value))
+const error = computed(() => parseApiError(forgotPasswordError.value))
 
 const handleSubmit = () => {
   forgotPassword(

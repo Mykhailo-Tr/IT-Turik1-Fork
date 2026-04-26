@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import UiInput from '@/components/UiInput.vue'
 import UiModal from '@/components/UiModal.vue'
 import UiButton from '@/components/UiButton.vue'
@@ -49,7 +49,7 @@ const {
   isPending: isRecoveringPassword,
   error: forgotPasswordError,
 } = useForgotPassword()
-const error = computed(() => parseError(forgotPasswordError.value))
+const error = computed(() => parseApiError(forgotPasswordError.value))
 
 const handleRecoveryRequest = () => {
   forgotPassword(

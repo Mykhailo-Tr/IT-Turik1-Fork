@@ -78,8 +78,8 @@ import { useUserStore } from '@/stores/user'
 import { useLogin } from '@/queries/accounts'
 import { useQueryClient } from '@tanstack/vue-query'
 import { accountKeys } from '@/queries/keys'
-import type { LoginResponse } from '@/api/accounts/types'
-import { parseError } from '@/api'
+import type { LoginResponse } from '@/api/services/accounts/types'
+import { parseApiError } from '@/api'
 import { useForm } from '@/composables/useForm'
 import { LoginSchema } from '@/schemas/auth.schema'
 
@@ -95,7 +95,7 @@ const saveAndRedirect = (data: LoginResponse) => {
 }
 
 const { mutate: login, isPending, error: loginError } = useLogin()
-const error = computed(() => parseError(loginError.value))
+const error = computed(() => parseApiError(loginError.value))
 
 const handleLogin = async () => {
   if (!form.validate()) return

@@ -147,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import type { CreateTournamentBody } from '@/api/tournaments/types'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
@@ -222,7 +222,7 @@ const handleSubmit = () => {
       },
 
       onError: (error) => {
-        const parsedError = parseError(error)
+        const parsedError = parseApiError(error)
 
         for (const [apiField, errors] of Object.entries(parsedError?.details || {})) {
           const formField = apiToFormFieldMap[apiField] ?? apiField

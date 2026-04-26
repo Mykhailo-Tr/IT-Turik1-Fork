@@ -155,7 +155,7 @@ import { useRouter } from 'vue-router'
 import GoogleAuthButton from '@/components/shared/GoogleAuthButton.vue'
 import UiPasswordField from '@/components/UiPasswordField.vue'
 import PhoneField from '@/components/shared/PhoneField.vue'
-import type { RegisterResponse } from '@/api/accounts/types'
+import type { RegisterResponse } from '@/api/services/accounts/types'
 import UiButton from '@/components/UiButton.vue'
 import UiInput from '@/components/UiInput.vue'
 import UiSelect from '@/components/UiSelect.vue'
@@ -164,7 +164,7 @@ import { useRegister } from '@/queries/accounts'
 import type { UserRole } from '@/api/dbTypes'
 import { useNotification } from '@/composables/useNotification'
 import { useUserStore } from '@/stores/user'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { useForm } from '@/composables/useForm'
 import { RegisterSchema } from '@/schemas/auth.schema'
 
@@ -211,7 +211,7 @@ const handleRegister = () => {
     { body: form.fields.value },
     {
       onError: (err) => {
-        const parsedError = parseError(err)
+        const parsedError = parseApiError(err)
         for (const [field, errors] of Object.entries(parsedError?.details || {})) {
           form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
         }

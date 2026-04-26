@@ -1,4 +1,4 @@
-import type { Invatation, RoleActivationCode, Team, User, UserId } from '../dbTypes'
+import type { RoleActivationCode, Team, User } from '@/api/dbTypes'
 
 export type GetProfileResponse = User & {
   teams: Pick<Team, 'id' | 'name' | 'contact_discord' | 'contact_telegram'>[]

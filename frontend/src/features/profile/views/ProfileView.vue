@@ -168,12 +168,12 @@ import { useProfile } from '@/queries/accounts'
 import { useUserStore } from '@/stores/user'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { truncateText } from '@/lib/utils'
 
 const store = useUserStore()
 const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
-const error = computed(() => parseError(profileError.value))
+const error = computed(() => parseApiError(profileError.value))
 
 const router = useRouter()
 const isDeleting = ref(false)

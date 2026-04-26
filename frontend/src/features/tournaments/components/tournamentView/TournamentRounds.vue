@@ -72,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
@@ -420,7 +420,7 @@ const {
   queryKey: ['tournament-rounds', props.tournamentId],
   queryFn: () => fetchRounds(props.tournamentId),
 })
-const error = computed(() => parseError(roundsError.value))
+const error = computed(() => parseApiError(roundsError.value))
 const rounds = computed(() => data.value ?? [])
 
 const isDetailsOpen = ref(false)

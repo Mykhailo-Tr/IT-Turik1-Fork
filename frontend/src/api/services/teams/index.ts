@@ -1,5 +1,5 @@
-import { apiClient } from '../apiClient'
-import type { TeamId } from '../dbTypes'
+import { apiClient } from '@/api'
+import type { TeamId } from '@/api/dbTypes'
 import type {
   AddMemberArgs,
   ChangeTeamVisibilityArgs,

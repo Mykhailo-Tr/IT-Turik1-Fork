@@ -1,4 +1,4 @@
-import $api from '@/api'
+import { $api } from '@/api'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { teamKeys } from '../keys'
 import type { AxiosError } from 'axios'
@@ -24,7 +24,7 @@ import type {
   RespondToInvitationArgs,
   SendJoinRequestArgs,
   UpdateTeamInfoArgs,
-} from '@/api/teams/types'
+} from '@/api/services/teams/types'
 import type { ApiError } from '@/api'
 import type { MutationConfig, QueryConfig } from '../types'
 

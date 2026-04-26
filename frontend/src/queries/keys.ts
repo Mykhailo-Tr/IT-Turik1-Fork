@@ -1,4 +1,4 @@
-import type { GetRoleCodesFilter } from '@/api/accounts/types'
+import type { GetRoleCodesFilter } from '@/api/services/accounts/types'
 import type { TeamId } from '@/api/dbTypes'
 
 export const teamKeys = {

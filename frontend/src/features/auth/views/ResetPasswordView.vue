@@ -66,7 +66,7 @@ import UiButton from '@/components/UiButton.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useResetPassword, useValidateResetLink } from '@/queries/accounts'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 
 const route = useRoute()
 const form = ref({
@@ -78,7 +78,7 @@ const uid = computed(() => String(route.params.uid))
 const token = computed(() => String(route.params.token))
 
 const { isLoading, error } = useValidateResetLink({ uid: uid.value, token: token.value })
-const validationError = computed(() => parseError(error.value))
+const validationError = computed(() => parseApiError(error.value))
 
 const {
   mutate: resetPassword,
@@ -86,7 +86,7 @@ const {
   isSuccess,
   error: resetError,
 } = useResetPassword()
-const resetingError = computed(() => parseError(resetError.value))
+const resetingError = computed(() => parseApiError(resetError.value))
 
 const handleReset = () => {
   resetPassword({

@@ -96,7 +96,7 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiBadge from '@/components/UiBadge.vue'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 
 const { showNotification } = useNotification()
 
@@ -106,7 +106,7 @@ const {
   isLoadingError,
   error: invitationsError,
 } = useInvitations()
-const error = computed(() => parseError(invitationsError.value))
+const error = computed(() => parseApiError(invitationsError.value))
 
 const pendingInboxInvitations = computed(() =>
   inboxInvitations.value?.filter((invitation) => invitation.status === 'invited'),
@@ -128,7 +128,7 @@ const respondToInvitation = (invitationId: InvitationId, action: 'accept' | 'dec
         )
       },
       onError: (err) => {
-        showNotification(parseError(err)?.message, 'error')
+        showNotification(parseApiError(err)?.message, 'error')
       },
       onSettled: () => {
         loadingIds.value.delete(invitationId)

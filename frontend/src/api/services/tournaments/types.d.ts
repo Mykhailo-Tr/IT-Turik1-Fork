@@ -1,4 +1,4 @@
-import type { Round, Tournament, TournamentId } from '../dbTypes'
+import type { Round, Tournament, TournamentId } from '@/api/dbTypes'
 
 // Create tournament
 export type CreateTournamentBody = Pick<
@@ -16,14 +16,7 @@ export interface CreateTournamentArgs {
   body: CreateTournamentBody
 }
 
-// Create Round
-//  "tournament": 1,
-//   "position": 2,
-//   "name": "Final Stage",
-//   "start_date": "2026-05-05T10:00:00Z",
-//   "end_date": "2026-05-07T18:00:00Z",
-//   "passing_count": 5
-
+// Create round
 export type CreateRoundBody = Pick<
   Round,
   | 'name'

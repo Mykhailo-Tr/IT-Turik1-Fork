@@ -115,10 +115,10 @@ import DangerIcon from '@/icons/DangerIcon.vue'
 import EyeInCircle from '@/icons/EyeInCircle.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 import LockIcon from '@/icons/LockIcon.vue'
-import type { GetTeamInfoResponse } from '@/api/teams/types'
+import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import { computed, ref } from 'vue'
 import { useChangeTeamVisibility } from '@/queries/teams'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { truncateText } from '@/lib/utils'
 
 interface Props {
@@ -144,7 +144,7 @@ const {
   isPending: isChangingVisibility,
   error,
 } = useChangeTeamVisibility()
-const changeVisibilityError = computed(() => parseError(error.value))
+const changeVisibilityError = computed(() => parseApiError(error.value))
 
 const confirmChangeVisibility = async () => {
   if (!props.team?.id || selectedVisibility.value === undefined) return

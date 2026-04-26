@@ -141,7 +141,7 @@ import { useProfile, useUpdateProfile } from '@/queries/accounts'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import ChangePasswordModal from '../components/modals/ChangePasswordModal.vue'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 import { useForm } from '@/composables/useForm'
 import { EditProfileSchema } from '@/schemas/profile.schema'
 
@@ -177,7 +177,7 @@ const handleSubmit = () => {
         router.push('/profile')
       },
       onError: (err) => {
-        const parsedError = parseError(err)
+        const parsedError = parseApiError(err)
         for (const [field, errors] of Object.entries(parsedError?.details || {})) {
           form.setError(field as keyof ProfileForm, errors?.[0] ?? 'Invalid value')
         }

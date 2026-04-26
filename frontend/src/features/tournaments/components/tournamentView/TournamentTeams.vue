@@ -73,7 +73,7 @@ import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import TeamIcon from '@/icons/TeamIcon.vue'
 import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
-import { parseError } from '@/api'
+import { parseApiError } from '@/api'
 
 interface Team {
   id: number
@@ -112,7 +112,7 @@ const {
   queryKey: ['tournament-teams', props.tournamentId],
   queryFn: fetchTeams,
 })
-const error = computed(() => parseError(teamsError.value))
+const error = computed(() => parseApiError(teamsError.value))
 
 const filteredTeams = computed(() => {
   if (!teams.value) return []

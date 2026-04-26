@@ -1,4 +1,4 @@
-import type { LoginResponse } from '@/api/accounts/types'
+import type { LoginResponse } from '@/api/services/accounts/types'
 import { accountKeys } from '@/queries/keys'
 import { useQueryClient } from '@tanstack/vue-query'
 import { defineStore } from 'pinia'

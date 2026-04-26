@@ -1,9 +1,8 @@
 import type { AxiosError } from 'axios'
 import type { MutationConfig } from '../types'
-import type { ApiError } from '@/api'
-import type { CreateRoundArgs, CreateTournamentArgs } from '@/api/tournaments/types'
+import type { CreateRoundArgs, CreateTournamentArgs } from '@/api/services/tournaments/types'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
-import $api from '@/api'
+import { $api, type ApiError } from '@/api'
 import { touranmentsKeys } from '../keys'
 
 export const useCreateTournament = (
