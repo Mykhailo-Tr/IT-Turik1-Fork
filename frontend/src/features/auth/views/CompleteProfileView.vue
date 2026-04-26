@@ -14,8 +14,15 @@
       <form class="form-grid" @submit.prevent="handleSubmit">
         <div class="form-item">
           <label class="form-label"> Username </label>
-          <ui-input v-model="form.username" required />
-          <small v-if="errors?.username" class="text-error">{{ errors.username[0] }}</small>
+          <ui-input
+            v-model="form.fields.value.username"
+            required
+            :is-invalid="!!form.errors.value.username"
+            @blur="form.validateField('username')"
+          />
+          <small v-if="form.errors.value.username" class="text-error">{{
+            form.errors.value.username
+          }}</small>
         </div>
 
         <div class="form-item">
@@ -27,51 +34,79 @@
               { value: 'jury', label: 'Jury' },
               { value: 'admin', label: 'Admin' },
             ]"
-            v-model="form.role"
+            v-model="form.fields.value.role"
             required
           />
-          <small v-if="errors?.role" class="text-error">{{ errors.role[0] }}</small>
+          <small v-if="form.errors.value.role" class="text-error">{{
+            form.errors.value.role
+          }}</small>
         </div>
 
-        <div>
+        <div style="display: flex; flex-direction: column; gap: 1rem">
           <div class="form-item" v-if="isRestrictedRole">
             <label class="form-label full-width"> Redeem code </label>
             <ui-input
-              v-model="form.redeem_code"
+              v-model="form.fields.value.redeem_code"
               placeholder="Enter one-time activation code"
               required
+              :is-invalid="!!form.errors.value.redeem_code"
+              @blur="form.validateField('redeem_code')"
             />
-            <small v-if="errors?.redeem_code" class="text-error">{{ errors.redeem_code[0] }}</small>
+            <small v-if="form.errors.value.redeem_code" class="text-error">{{
+              form.errors.value.redeem_code
+            }}</small>
           </div>
 
           <div class="form-item">
             <label class="form-label full-width"> Password </label>
             <ui-password-field
-              v-model="form.password"
+              v-model="form.fields.value.password"
               autocomplete="new-password"
               placeholder="Create a strong password"
+              :is-invalid="!!form.errors.value.password"
               required
+              @blur="form.validateField('password')"
             />
-            <small v-if="errors?.password" class="text-error">{{ errors.password[0] }}</small>
+            <small v-if="form.errors.value.password" class="text-error">{{
+              form.errors.value.password
+            }}</small>
           </div>
         </div>
 
         <div class="form-item">
           <label class="form-label full-width"> Full name </label>
-          <ui-input v-model="form.full_name" />
-          <small v-if="errors?.full_name" class="text-error">{{ errors.full_name[0] }}</small>
+          <ui-input
+            v-model="form.fields.value.full_name"
+            :is-invalid="!!form.errors.value.full_name"
+            @blur="form.validateField('full_name')"
+          />
+          <small v-if="form.errors.value.full_name" class="text-error">{{
+            form.errors.value.full_name
+          }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> Phone </label>
-          <PhoneField v-model="form.phone" placeholder="Enter phone number" />
-          <small v-if="errors?.phone" class="text-error">{{ errors.phone[0] }}</small>
+          <PhoneField
+            v-model="form.fields.value.phone"
+            placeholder="Enter phone number"
+            :is-invalid="!!form.errors.value.phone"
+          />
+          <small v-if="form.errors.value.phone" class="text-error">{{
+            form.errors.value.phone
+          }}</small>
         </div>
 
         <div class="form-item">
           <label class="form-label"> City </label>
-          <ui-input v-model="form.city" />
-          <small v-if="errors?.city" class="text-error">{{ errors.city[0] }}</small>
+          <ui-input
+            v-model="form.fields.value.city"
+            :is-invalid="!!form.errors.value.city"
+            @blur="form.validateField('city')"
+          />
+          <small v-if="form.errors.value.city" class="text-error">{{
+            form.errors.value.city
+          }}</small>
         </div>
 
         <ui-button class="submit-btn" :disabled="isUpdatingProfile" type="submit">
@@ -84,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import PhoneField from '@/components/shared/PhoneField.vue'
@@ -95,8 +130,10 @@ import UiSelect from '@/components/UiSelect.vue'
 import UiCard from '@/components/UiCard.vue'
 import { useProfile, useUpdateProfile } from '@/queries/accounts'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import { useNotification } from '@/composables/useNotification'
 import type { UserRole } from '@/api/dbTypes'
+import { useForm } from '@/composables/useForm'
+import { CompleteProfileSchema } from '@/schemas/profile.schema'
+import { parseApiError } from '@/api'
 
 interface Form {
   username: string
@@ -109,16 +146,9 @@ interface Form {
 }
 
 const router = useRouter()
-const { showNotification } = useNotification()
 const { data: user } = useProfile()
 
-type Errors = Partial<Record<keyof Form, string[]>>
-const errors = ref<Partial<Errors>>({})
-const resetErrors = () => {
-  errors.value = {}
-}
-
-const form = reactive<Form>({
+const form = useForm<Form>(CompleteProfileSchema, {
   username: user.value?.username ?? '',
   role: user.value?.role ?? 'team',
   redeem_code: '',
@@ -129,52 +159,33 @@ const form = reactive<Form>({
 })
 
 const restrictedRoles = ['jury', 'organizer', 'admin']
-const isRestrictedRole = computed(() => restrictedRoles.includes(form.role))
+const isRestrictedRole = computed(() => restrictedRoles.includes(form.fields.value.role))
 
 watch(
-  () => form.role,
+  () => form.fields.value.role,
   (newRole) => {
     if (!restrictedRoles.includes(newRole)) {
-      form.redeem_code = ''
+      form.fields.value.redeem_code = ''
     }
   },
 )
 
-const getPasswordError = (password: string) => {
-  if (!password) return 'Password is required to complete registration.'
-  if (password.length < 8) return 'Password must be at least 8 characters long.'
-  if (!/[A-Z]/.test(password)) return 'Password must include at least one uppercase letter.'
-  if (!/[a-z]/.test(password)) return 'Password must include at least one lowercase letter.'
-  if (!/\d/.test(password)) return 'Password must include at least one digit.'
-  if (!/[^A-Za-z0-9]/.test(password)) return 'Password must include at least one special character.'
-  return null
-}
-
 const { mutate: updateProfile, isPending: isUpdatingProfile } = useUpdateProfile()
 
 const handleSubmit = async () => {
-  resetErrors()
-
-  const passwordError = getPasswordError(form.password)
-  if (passwordError) {
-    errors.value = { password: [passwordError] }
-    return
-  }
+  if (!form.validate()) return
 
   updateProfile(
-    { body: form },
+    { body: form.fields.value },
     {
       onSuccess: () => {
         localStorage.removeItem('needs_onboarding')
         router.push('/')
       },
-      onError: (err) => {
-        if (err.response) {
-          Object.entries(err.response.data.details).forEach(([key, messages]) => {
-            errors.value[key as keyof Errors] = messages
-          })
-        } else {
-          showNotification('Network error. Try again later', 'error')
+      onError: (error) => {
+        const parsedError = parseApiError(error)
+        for (const [field, errors] of Object.entries(parsedError?.details || {})) {
+          form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
         }
       },
     },
