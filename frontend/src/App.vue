@@ -16,6 +16,7 @@
       >
         <span>{{ notification.message }}</span>
         <ui-button
+          class="close-notice-btn"
           :variant="notification.type === 'success' ? 'default' : 'danger'"
           size="sm"
           type="button"
@@ -107,6 +108,11 @@ applyTheme()
   z-index: 2000;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
   backdrop-filter: blur(20px);
+}
+
+.close-notice-btn {
+  background: transparent;
+  border: none;
 }
 
 .type-info {
