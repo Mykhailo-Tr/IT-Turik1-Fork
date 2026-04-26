@@ -191,7 +191,7 @@ function handleKeydown(event: KeyboardEvent) {
   height: 100%;
   padding: 0.75rem 0;
   min-height: 2.625rem;
-  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  background: color-mix(in srgb, var(--foreground) 20%, transparent);
   border: none;
   color: var(--foreground);
   cursor: pointer;
