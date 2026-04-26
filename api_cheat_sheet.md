@@ -12,6 +12,7 @@
 | **Створити турнір** | POST | `/api/tournaments/manage/` | Admin |
 | **Редагувати турнір** | PATCH/DEL| `/api/tournaments/manage/{id}/` | Admin |
 | **Відкрити реєстрацію**| POST | `/api/tournaments/{id}/start-registration/` | Admin |
+| **Доступні команди капітана** | GET | `/api/tournaments/{id}/eligible-teams/` | Auth |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
 | **Деталі/Зміна реєстрації**| GET/PATCH | `/api/tournaments/{id}/registrations/{reg_id}/` | Admin |
 | **Список раундів** | GET | `/api/tournaments/rounds/` | Всі (Auth) |
@@ -65,11 +66,25 @@
 { "team_id": 10 }
 ```
 
+**Доступні команди капітана — GET `/api/tournaments/{id}/eligible-teams/`**
+```json
+[
+  { "id": 10, "name": "Team Alpha", "members_count": 3 },
+  { "id": 14, "name": "Team Beta", "members_count": 2 }
+]
+```
+> Повертає тільки команди, де `team.captain_id == request.user.id`.
+> Додаткових перевірок eligibility тут немає (перевірки колізій виконуються на етапі реєстрації).
+
 **Дисквалификація/Активація команди (Admin) — PATCH `/api/tournaments/{id}/registrations/{reg_id}/`**
 ```json
 { "is_active": false }
 ```
 > Деактивовані команди (`is_active: false`) не можуть подавати роботи. Запис не видаляється.
+
+> **Обмеження під час активного турніру (`registration` або `running`):**
+> - Заборонені: інвайти в команду, join-request, прийняття інвайту/заявки, зміна `name`, зміна `is_public`.
+> - Дозволено: видалення учасника капітаном, але тільки коли поточний розмір команди **строго більший** за `tournament.min_team_members`.
 
 ### 2. Раунди
 
