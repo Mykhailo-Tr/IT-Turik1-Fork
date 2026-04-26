@@ -44,6 +44,10 @@ class Tournament(models.Model):
     def rounds_count(self):
         return self.__dict__.get('rounds_count') or self.rounds.count()
 
+    @rounds_count.setter
+    def rounds_count(self, value):
+        self.__dict__['rounds_count'] = value
+
     def clean(self):
         errors = {}
 

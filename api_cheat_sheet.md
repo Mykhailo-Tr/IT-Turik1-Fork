@@ -13,6 +13,7 @@
 | **Редагувати турнір** | PATCH/DEL| `/api/tournaments/manage/{id}/` | Admin |
 | **Відкрити реєстрацію**| POST | `/api/tournaments/{id}/start-registration/` | Admin |
 | **Доступні команди капітана** | GET | `/api/tournaments/{id}/eligible-teams/` | Auth |
+| **Зареєстровані команди турніру** | GET | `/api/tournaments/{id}/teams/` | Auth |
 | **Активний турнір команди** | GET | `/api/tournaments/active/?team_id={id}` | Auth |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
 | **Деталі/Зміна реєстрації**| GET/PATCH | `/api/tournaments/{id}/registrations/{reg_id}/` | Admin |
@@ -25,7 +26,14 @@
 | **Мої роботи** | GET | `/api/tournaments/submissions/` | Команда |
 | **Подати роботу** | POST | `/api/tournaments/submissions/` | Команда |
 | **Деталі/Зміна роботи** | GET/PATCH | `/api/tournaments/submissions/{id}/` | Команда |
-| **Поточне завдання** | GET | `/api/tournaments/current-task/` | Учасники |
+| **Поточне завдання** | GET | `/api/tournaments/current-task/?tournament_id={id}` *(опц.)* | Учасники |
+
+> **`GET /api/tournaments/current-task/`**
+> - Повертає перший активний раунд (`status=active`) серед турнірів зі статусом `running`, відсортований за `end_date`, `id`.
+> - Опційний фільтр: `tournament_id` (query param).
+> - Доступ: лише авторизовані користувачі, які є `admin` або учасниками/капітанами команди.
+> - Якщо активного раунду немає — `404` (`No active round is available right now.`).
+> - Поля відповіді: `id`, `tournament_id`, `tournament_name`, `name`, `task`, `deadline`, `must_have_requirements`, `tech_requirements`.
 
 ### 2. Раунди 
 
@@ -80,6 +88,33 @@
 ```
 > Повертає тільки команди, де `team.captain_id == request.user.id`.
 > Додаткових перевірок eligibility тут немає (перевірки колізій виконуються на етапі реєстрації).
+
+**Зареєстровані команди турніру — GET `/api/tournaments/{id}/teams/`**
+```json
+[
+  {
+    "id": 1,
+    "team": {
+      "id": 10,
+      "name": "Team Alpha",
+      "is_public": true
+    },
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "team": {
+      "id": 11,
+      "name": "Team Beta",
+      "is_public": false
+    },
+    "is_active": false
+  }
+]
+```
+> Повертає всі реєстрації команд у конкретному турнірі з ознакою активності `is_active`.
+> Доступний query-параметр `?only_active=true`, щоб повернути тільки активні команди (`is_active=true`).
+> Якщо турнір не існує — `404`.
 
 **Активний турнір команди — GET `/api/tournaments/active/?team_id={id}`**
 ```json
