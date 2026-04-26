@@ -111,7 +111,7 @@ class Round(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='rounds')
     position = models.PositiveIntegerField()
     name = models.CharField(max_length=255, blank=True)
-    description = models.TextField(blank=True)
+    description = models.JSONField(default=dict, blank=True)
     tech_requirements = models.JSONField(default=dict, blank=True)
     must_have_requirements = models.JSONField(default=dict, blank=True)
     start_date = models.DateTimeField()

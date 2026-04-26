@@ -86,7 +86,7 @@
   "passing_count": 5,
   "tech_requirements": {},
   "must_have_requirements": {},
-  "description": "Round description text"
+  "description": {}
 }
 ```
 
@@ -97,7 +97,9 @@
   "tech_requirements": {
     "db": "PostgreSQL"
   },
-  "description": "Updated description"
+  "description": {
+    "text": "Updated description"
+  }
 }
 ```
 

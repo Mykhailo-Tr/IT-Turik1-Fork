@@ -138,7 +138,7 @@ class RoundSerializer(serializers.ModelSerializer):
         if tournament and position and winners_count is not None and position != tournament.rounds_count:
             errors['winners_count'] = 'winners_count is allowed only for the last round.'
 
-        for field in ['tech_requirements', 'must_have_requirements']:
+        for field in ['tech_requirements', 'must_have_requirements', 'description']:
             val = attrs.get(field)
             if val is not None and not isinstance(val, dict):
                 errors[field] = f'{field} must be a JSON object (dict).'
