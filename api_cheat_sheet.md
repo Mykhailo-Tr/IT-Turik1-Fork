@@ -3,9 +3,7 @@
 
 ---
 
-
-
-
+### 1. Турніри
 
 | Дія | Метод | Шлях | Доступ |
 | :--- | :--- | :--- | :--- |
@@ -25,6 +23,11 @@
 | **Подати роботу** | POST | `/api/tournaments/submissions/` | Команда |
 | **Деталі/Зміна роботи** | GET/PATCH | `/api/tournaments/submissions/{id}/` | Команда |
 | **Поточне завдання** | GET | `/api/tournaments/current-task/` | Учасники |
+
+### 2. Раунди 
+
+| Дія | Метод | Шлях | Доступ |
+| :--- | :--- | :--- | :--- |
 | **Розподіл робіт (журі)**| POST | `/api/evaluation/rounds/{id}/assign-jury/` | Admin |
 | **Призначені роботи** | GET | `/api/evaluation/assignments/` | Jury |
 | **Відправити оцінку** | POST | `/api/evaluation/evaluate/` | Jury |
