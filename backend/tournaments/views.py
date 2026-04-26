@@ -68,12 +68,12 @@ class SyncStatusesMixin:
         return super().initial(request, *args, **kwargs)
 
 
-class TournamentListView(SyncStatusesMixin, generics.ListAPIView):
-    queryset = get_tournament_queryset()
+class TournamentListView(SyncStatusesMixin, APIView):
     permission_classes = [AllowAny]
-    serializer_class = TournamentPublicSerializer
+    DEFAULT_PAGE_SIZE = 20
+    MAX_PAGE_SIZE = 100
 
-    def get_queryset(self):
+    def _get_base_queryset(self):
         user = self.request.user
         base_queryset = get_tournament_queryset()
         published_filter = ~Q(status=Tournament.STATUS_DRAFT)
@@ -85,6 +85,52 @@ class TournamentListView(SyncStatusesMixin, generics.ListAPIView):
             return base_queryset.filter(published_filter | Q(created_by=user))
 
         return base_queryset.filter(published_filter)
+
+    def _apply_filters(self, queryset):
+        params = self.request.query_params
+
+        search_query = params.get('searchQuery')
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | Q(description__icontains=search_query)
+            )
+
+        status_param = params.get('status')
+        if status_param:
+            statuses = [s.strip() for s in status_param.split(',') if s.strip()]
+            if statuses:
+                queryset = queryset.filter(status__in=statuses)
+
+        start_at = params.get('startAt')
+        if start_at:
+            queryset = queryset.filter(start_date__date=start_at)
+
+        end_at = params.get('endAt')
+        if end_at:
+            queryset = queryset.filter(end_date__date=end_at)
+
+        created_at = params.get('createdAt')
+        if created_at:
+            queryset = queryset.filter(created_at__date=created_at)
+
+        return queryset
+
+    def get(self, request):
+        queryset = self._get_base_queryset()
+        queryset = self._apply_filters(queryset)
+
+        total = queryset.count()
+
+        page = int(request.query_params.get('page', 1))
+        page_size = min(
+            int(request.query_params.get('pageSize', self.DEFAULT_PAGE_SIZE)),
+            self.MAX_PAGE_SIZE,
+        )
+        offset = (page - 1) * page_size
+        page_queryset = queryset[offset:offset + page_size]
+
+        serializer = TournamentPublicSerializer(page_queryset, many=True)
+        return Response({'data': serializer.data, 'total': total})
 
 
 class TournamentDetailView(SyncStatusesMixin, generics.RetrieveAPIView):
