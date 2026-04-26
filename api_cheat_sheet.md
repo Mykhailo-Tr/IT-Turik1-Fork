@@ -49,8 +49,6 @@
   "rounds_count": 2,
   "max_teams": 20,
   "min_team_members": 2,
-  "tech_requirements": "Django + PostgreSQL",
-  "must_have_requirements": ["Requirement 1"],
   "criteria": [
     {
       "id": "backend",
@@ -85,15 +83,21 @@
   "name": "Final Stage",
   "start_date": "2026-05-05T10:00:00Z",
   "end_date": "2026-05-07T18:00:00Z",
-  "passing_count": 5
+  "passing_count": 5,
+  "tech_requirements": {},
+  "must_have_requirements": {},
+  "description": "Round description text"
 }
 ```
 
 **Редагування раунду — PATCH `/api/tournaments/rounds/{id}/`**
 ```json
 {
-  "tech_requirements": "FastAPI + MongoDB",
-  "passing_count": 8
+  "passing_count": 8,
+  "tech_requirements": {
+    "db": "PostgreSQL"
+  },
+  "description": "Updated description"
 }
 ```
 
