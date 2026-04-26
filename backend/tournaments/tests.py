@@ -423,6 +423,107 @@ class TournamentApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_tournament_teams_returns_registrations_with_is_active(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            **self.tournament_data
+        )
+        second_user = User.objects.create_user(
+            username='second-captain',
+            email='second-captain@example.com',
+            password='StrongPass123!',
+        )
+        second_team = Team.objects.create(
+            name='Second Team',
+            email='second-team@example.com',
+            captain=second_user,
+        )
+        TeamMember.objects.create(team=second_team, user=second_user)
+
+        TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=self.team,
+            created_by=self.captain,
+            is_active=True,
+        )
+        inactive_registration = TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=second_team,
+            created_by=second_user,
+            is_active=False,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_teams', kwargs={'pk': tournament.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['team']['id'], self.team.id)
+        self.assertEqual(response.data[0]['team']['name'], self.team.name)
+        self.assertTrue(response.data[0]['is_active'])
+        self.assertEqual(response.data[1]['id'], inactive_registration.id)
+        self.assertFalse(response.data[1]['is_active'])
+
+    def test_tournament_teams_filters_only_active(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            **self.tournament_data
+        )
+        second_user = User.objects.create_user(
+            username='third-captain',
+            email='third-captain@example.com',
+            password='StrongPass123!',
+        )
+        second_team = Team.objects.create(
+            name='Third Team',
+            email='third-team@example.com',
+            captain=second_user,
+        )
+        TeamMember.objects.create(team=second_team, user=second_user)
+
+        active_registration = TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=self.team,
+            created_by=self.captain,
+            is_active=True,
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=second_team,
+            created_by=second_user,
+            is_active=False,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_teams', kwargs={'pk': tournament.id})
+        response = self.client.get(url, {'only_active': 'true'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], active_registration.id)
+        self.assertTrue(response.data[0]['is_active'])
+
+    def test_tournament_teams_returns_404_for_missing_tournament(self):
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_teams', kwargs={'pk': 999999})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_tournament_teams_requires_authentication(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            **self.tournament_data
+        )
+        url = reverse('tournament_teams', kwargs={'pk': tournament.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
     def test_sync_time_based_statuses(self):
         from .services import sync_time_based_statuses
         
