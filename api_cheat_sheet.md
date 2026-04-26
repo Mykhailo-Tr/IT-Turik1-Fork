@@ -13,6 +13,7 @@
 | **Редагувати турнір** | PATCH/DEL| `/api/tournaments/manage/{id}/` | Admin |
 | **Відкрити реєстрацію**| POST | `/api/tournaments/{id}/start-registration/` | Admin |
 | **Доступні команди капітана** | GET | `/api/tournaments/{id}/eligible-teams/` | Auth |
+| **Активний турнір команди** | GET | `/api/tournaments/active/?team_id={id}` | Auth |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
 | **Деталі/Зміна реєстрації**| GET/PATCH | `/api/tournaments/{id}/registrations/{reg_id}/` | Admin |
 | **Список раундів** | GET | `/api/tournaments/rounds/` | Всі (Auth) |
@@ -79,6 +80,18 @@
 ```
 > Повертає тільки команди, де `team.captain_id == request.user.id`.
 > Додаткових перевірок eligibility тут немає (перевірки колізій виконуються на етапі реєстрації).
+
+**Активний турнір команди — GET `/api/tournaments/active/?team_id={id}`**
+```json
+{
+  "id": 3,
+  "name": "Hack 2026",
+  "status": "registration",
+  "start_date": "2026-05-01T10:00:00Z"
+}
+```
+> Повертає активний турнір команди (статус `registration` або `running`).
+> Якщо активної участі для `team_id` немає — повертає `404`.
 
 **Дисквалификація/Активація команди (Admin) — PATCH `/api/tournaments/{id}/registrations/{reg_id}/`**
 ```json
