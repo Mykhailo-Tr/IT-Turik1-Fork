@@ -271,6 +271,83 @@ class TournamentApiTests(APITestCase):
         self.assertIn('team', response.data['details'])
         self.assertIn(shared_user.email, response.data['details']['team'])
 
+    def test_inactive_registration_does_not_block_reregistration(self):
+        """
+        A team with is_active=False registration must be allowed to register
+        for another tournament without hitting 'already participating'.
+        """
+        old_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=old_tournament,
+            team=self.team,
+            created_by=self.captain,
+            is_active=False,
+        )
+
+        new_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_register_team', kwargs={'pk': new_tournament.id})
+        response = self.client.post(url, {'team_id': self.team.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_inactive_registration_does_not_cause_shared_member_conflict(self):
+        """
+        Shared member between two teams must NOT trigger a conflict error
+        if the first team's registration is inactive (is_active=False).
+        """
+        shared_user = User.objects.create_user(
+            username='shared-member2',
+            email='shared-member2@example.com',
+            password='StrongPass123!',
+        )
+        TeamMember.objects.create(team=self.team, user=shared_user)
+
+        other_captain = User.objects.create_user(
+            username='other-captain2',
+            email='other-captain2@example.com',
+            password='StrongPass123!',
+        )
+        other_team = Team.objects.create(
+            name='Other Team 2',
+            email='other-team2@example.com',
+            captain=other_captain,
+        )
+        TeamMember.objects.create(team=other_team, user=shared_user)
+
+        old_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=old_tournament,
+            team=self.team,
+            created_by=self.captain,
+            is_active=False,  # deactivated; must not count as conflict
+        )
+
+        new_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+
+        self.client.force_authenticate(user=other_captain)
+        url = reverse('tournament_register_team', kwargs={'pk': new_tournament.id})
+        response = self.client.post(url, {'team_id': other_team.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_eligible_teams_returns_only_captain_teams_with_members_count(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,
@@ -384,3 +461,5 @@ class TournamentApiTests(APITestCase):
         response = self.client.post(url, round_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start_date', response.data['details'])
+
+    
