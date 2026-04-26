@@ -306,6 +306,46 @@ class TournamentApiTests(APITestCase):
         self.assertEqual(response.data[0]['name'], self.team.name)
         self.assertEqual(response.data[0]['members_count'], 3)
 
+    def test_team_active_tournament_returns_registration_or_running_tournament(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=self.team,
+            created_by=self.captain,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('team_active_tournament')
+        response = self.client.get(url, {'team_id': self.team.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], tournament.id)
+        self.assertEqual(response.data['name'], tournament.name)
+        self.assertEqual(response.data['status'], tournament.status)
+        self.assertIn('start_date', response.data)
+
+    def test_team_active_tournament_returns_404_when_not_found(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_FINISHED,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=self.team,
+            created_by=self.captain,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('team_active_tournament')
+        response = self.client.get(url, {'team_id': self.team.id})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_sync_time_based_statuses(self):
         from .services import sync_time_based_statuses
         

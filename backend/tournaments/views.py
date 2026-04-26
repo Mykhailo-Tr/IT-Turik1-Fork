@@ -17,6 +17,7 @@ from .permissions import (
     IsPlatformAdminOrReadOnly,
 )
 from .serializers import (
+    ActiveTournamentSerializer,
     CurrentTaskSerializer,
     
     OwnSubmissionSerializer,
@@ -191,6 +192,29 @@ class TournamentEligibleTeamsView(APIView):
             .order_by('id')
         )
         return Response(list(teams), status=status.HTTP_200_OK)
+
+
+class TeamActiveTournamentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        team_id = request.query_params.get('team_id')
+        registration = (
+            TournamentTeamRegistration.objects.select_related('tournament')
+            .filter(
+                team_id=team_id,
+                tournament__status__in=[
+                    Tournament.STATUS_REGISTRATION,
+                    Tournament.STATUS_RUNNING,
+                ],
+            )
+            .first()
+        )
+        if registration is None:
+            raise NotFound('Active tournament not found for this team.')
+
+        serializer = ActiveTournamentSerializer(registration.tournament)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class RoundListCreateView(generics.ListCreateAPIView):

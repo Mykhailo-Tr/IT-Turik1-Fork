@@ -43,6 +43,12 @@ class TournamentPublicSerializer(serializers.ModelSerializer):
         )
 
 
+class ActiveTournamentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tournament
+        fields = ('id', 'name', 'status', 'start_date')
+
+
 class TournamentAdminSerializer(TournamentPublicSerializer):
     class Meta(TournamentPublicSerializer.Meta):
         read_only_fields = ('status',)
