@@ -1,5 +1,4 @@
 from django.db import models, transaction
-from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
@@ -161,20 +160,35 @@ def register_team_for_tournament(*, tournament, team, actor):
         if current_registered_count >= tournament.max_teams:
             raise ValidationError({'tournament': 'Tournament registration limit has been reached.'})
 
-    conflict_registration = (
-        TournamentTeamRegistration.objects.select_related('team')
-        .filter(tournament=tournament)
+    already_registered = TournamentTeamRegistration.objects.filter(
+        team=team,
+        tournament__status__in=[
+            Tournament.STATUS_REGISTRATION,
+            Tournament.STATUS_RUNNING,
+        ],
+    ).exclude(tournament=tournament).exists()
+
+    if already_registered:
+        raise ValidationError({
+            'team': 'This team is already participating in another tournament.'
+        })
+
+    conflicting = (
+        TeamMember.objects.filter(
+            team__tournament_registrations__tournament__status__in=[
+                Tournament.STATUS_REGISTRATION,
+                Tournament.STATUS_RUNNING,
+            ],
+            user_id__in=participant_ids,
+        )
         .exclude(team=team)
-        .filter(
-            Q(team__captain_id__in=participant_ids)
-            | Q(team__team_members__user_id__in=participant_ids)
-        )
-        .first()
+        .select_related('user')
     )
-    if conflict_registration is not None:
-        raise ValidationError(
-            {'team': f'Cannot register: team shares participants with "{conflict_registration.team.name}".'}
-        )
+    if conflicting.exists():
+        emails = ', '.join(m.user.email for m in conflicting)
+        raise ValidationError({
+            'team': f'Cannot register. The following members are already participating in another tournament: {emails}'
+        })
 
     return TournamentTeamRegistration.objects.create(
         tournament=tournament,
