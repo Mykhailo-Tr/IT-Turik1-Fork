@@ -846,3 +846,78 @@ class TeamApiTests(APITestCase):
         detail_after = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_after.status_code, status.HTTP_200_OK)
         self.assertTrue(detail_after.data['is_in_active_tournament'])
+
+    def test_inactive_registration_does_not_block_invite(self):
+        """
+        Deactivated tournament registration (is_active=False) must NOT prevent
+        the captain from sending invitations.
+        """
+        team = self._create_team({
+            'name': 'Inactive Reg Invite Team',
+            'email': 'inactive-reg-invite@example.com',
+        })
+        tournament = self._register_team_in_active_tournament(
+            team_id=team['id'],
+            tournament_status=Tournament.STATUS_REGISTRATION,
+        )
+        TournamentTeamRegistration.objects.filter(
+            tournament=tournament, team_id=team['id']
+        ).update(is_active=False)
+
+        self.client.force_authenticate(user=self.captain)
+        response = self.client.post(
+            reverse('team_members', kwargs={'pk': team['id']}),
+            {'user_id': self.member.id},
+            format='json',
+        )
+
+        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED))
+        self.assertTrue(TeamInvitation.objects.filter(team_id=team['id'], user=self.member).exists())
+
+    def test_inactive_registration_does_not_block_join_request(self):
+        """
+        Deactivated tournament registration (is_active=False) must NOT prevent
+        a user from submitting a join request.
+        """
+        team = self._create_team({
+            'name': 'Inactive Reg Join Team',
+            'email': 'inactive-reg-join@example.com',
+            'is_public': True,
+        })
+        tournament = self._register_team_in_active_tournament(
+            team_id=team['id'],
+            tournament_status=Tournament.STATUS_RUNNING,
+        )
+        TournamentTeamRegistration.objects.filter(
+            tournament=tournament, team_id=team['id']
+        ).update(is_active=False)
+
+        self.client.force_authenticate(user=self.member)
+        response = self.client.post(
+            reverse('team_join_request_create', kwargs={'pk': team['id']}),
+            {},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(TeamJoinRequest.objects.filter(team_id=team['id'], user=self.member).exists())
+
+    def test_is_in_active_tournament_flag_is_false_when_registration_inactive(self):
+        """
+        is_in_active_tournament must return False when the team's only
+        registration has is_active=False.
+        """
+        team = self._create_team({'name': 'Inactive Flag Team', 'email': 'inactive-flag@example.com'})
+        tournament = self._register_team_in_active_tournament(
+            team_id=team['id'],
+            tournament_status=Tournament.STATUS_REGISTRATION,
+        )
+        TournamentTeamRegistration.objects.filter(
+            tournament=tournament, team_id=team['id']
+        ).update(is_active=False)
+
+        self.client.force_authenticate(user=self.captain)
+        response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['is_in_active_tournament'])
