@@ -579,6 +579,41 @@ class TournamentApiTests(APITestCase):
         response2 = self.client.get(url, {'page': '2'})
         self.assertEqual(len(response2.data['data']), 5)
 
+    def test_tournament_list_pagination_custom_page_size(self):
+        for i in range(15):
+            Tournament.objects.create(
+                created_by=self.admin,
+                status=Tournament.STATUS_REGISTRATION,
+                name=f'Tournament {i}',
+                description=f'Desc {i}',
+                start_date=timezone.now() + timezone.timedelta(days=1),
+                end_date=timezone.now() + timezone.timedelta(days=10),
+            )
+
+        url = reverse('tournaments')
+        response = self.client.get(url, {'page': '1', 'pageSize': '5'})
+        self.assertEqual(response.data['total'], 15)
+        self.assertEqual(len(response.data['data']), 5)
+
+        response2 = self.client.get(url, {'page': '3', 'pageSize': '5'})
+        self.assertEqual(len(response2.data['data']), 5)
+
+    def test_tournament_list_pagination_max_page_size(self):
+        for i in range(150):
+            Tournament.objects.create(
+                created_by=self.admin,
+                status=Tournament.STATUS_REGISTRATION,
+                name=f'Tournament {i}',
+                description=f'Desc {i}',
+                start_date=timezone.now() + timezone.timedelta(days=1),
+                end_date=timezone.now() + timezone.timedelta(days=10),
+            )
+
+        url = reverse('tournaments')
+        response = self.client.get(url, {'page': '1', 'pageSize': '9999'})
+        self.assertEqual(response.data['total'], 150)
+        self.assertEqual(len(response.data['data']), 100)
+
     def test_tournament_list_pagination_default_page(self):
         Tournament.objects.create(
             created_by=self.admin,

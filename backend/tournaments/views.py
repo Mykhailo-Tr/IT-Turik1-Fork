@@ -70,7 +70,8 @@ class SyncStatusesMixin:
 
 class TournamentListView(SyncStatusesMixin, APIView):
     permission_classes = [AllowAny]
-    PAGE_SIZE = 20
+    DEFAULT_PAGE_SIZE = 20
+    MAX_PAGE_SIZE = 100
 
     def _get_base_queryset(self):
         user = self.request.user
@@ -121,8 +122,12 @@ class TournamentListView(SyncStatusesMixin, APIView):
         total = queryset.count()
 
         page = int(request.query_params.get('page', 1))
-        offset = (page - 1) * self.PAGE_SIZE
-        page_queryset = queryset[offset:offset + self.PAGE_SIZE]
+        page_size = min(
+            int(request.query_params.get('pageSize', self.DEFAULT_PAGE_SIZE)),
+            self.MAX_PAGE_SIZE,
+        )
+        offset = (page - 1) * page_size
+        page_queryset = queryset[offset:offset + page_size]
 
         serializer = TournamentPublicSerializer(page_queryset, many=True)
         return Response({'data': serializer.data, 'total': total})
