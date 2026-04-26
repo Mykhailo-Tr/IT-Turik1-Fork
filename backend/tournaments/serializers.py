@@ -332,3 +332,11 @@ class TournamentTeamRegistrationUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TournamentTeamRegistration
         fields = ('is_active',)
+
+
+class TournamentTeamRegistrationListSerializer(serializers.ModelSerializer):
+    team = TeamSummarySerializer(read_only=True)
+
+    class Meta:
+        model = TournamentTeamRegistration
+        fields = ('id', 'team', 'is_active')
