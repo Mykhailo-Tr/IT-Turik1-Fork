@@ -13,9 +13,9 @@
 | **Редагувати турнір** | PATCH/DEL| `/api/tournaments/manage/{id}/` | Admin |
 | **Відкрити реєстрацію**| POST | `/api/tournaments/{id}/start-registration/` | Admin |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
-| **Список раундів** | GET | `/api/tournaments/rounds/` | Admin |
+| **Список раундів** | GET | `/api/tournaments/rounds/` | Всі (Auth) |
 | **Створити раунд** | POST | `/api/tournaments/rounds/` | Admin |
-| **Деталі/Зміна раунду**| GET/PATCH | `/api/tournaments/rounds/{id}/` | Admin |
+| **Деталі/Зміна раунду**| GET/PATCH | `/api/tournaments/rounds/{id}/` | GET: Всі, PATCH: Admin |
 | **Почати раунд** | POST | `/api/tournaments/rounds/{id}/start/` | Admin |
 | **Закрити прийом робіт**| POST | `/api/tournaments/rounds/{id}/close-submissions/` | Admin |
 | **Фіналізація оцінок** | POST | `/api/tournaments/rounds/{id}/mark-evaluated/` | Admin |
@@ -64,9 +64,13 @@
 { "team_id": 10 }
 ```
 
-### 2. Раунди (Admin)
+### 2. Раунди
 
-**Створення раунду — POST `/api/tournaments/rounds/`**
+**Список раундів — GET `/api/tournaments/rounds/`**
+- Доступні фільтри: `?tournament_id=1`, `?status=active,submission_closed`
+- Звичайні користувачі бачать тільки раунди, які не мають статусу `draft`. Адміни бачать всі.
+
+**Створення раунду (Admin) — POST `/api/tournaments/rounds/`**
 ```json
 {
   "tournament": 1,

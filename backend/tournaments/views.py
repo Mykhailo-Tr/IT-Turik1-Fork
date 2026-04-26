@@ -7,10 +7,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Round, Submission, Tournament
+from accounts.utils.permissions import is_platform_admin
+
 from .permissions import (
     IsJuryPermission,
     IsPlatformAdminOrTeamMemberPermission,
     IsPlatformAdminPermission,
+    IsPlatformAdminOrReadOnly,
 )
 from .serializers import (
     CurrentTaskSerializer,
@@ -155,23 +158,41 @@ class TournamentTeamRegistrationCreateView(SyncStatusesMixin, APIView):
 
 
 class RoundListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
         queryset = get_round_queryset()
+        user = self.request.user
+
+        if not is_platform_admin(user):
+            queryset = queryset.exclude(status=Round.STATUS_DRAFT)
+
         tournament_id = self.request.query_params.get('tournament_id')
         if tournament_id:
             queryset = queryset.filter(tournament_id=tournament_id)
+
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            statuses = [s.strip() for s in status_param.split(',') if s.strip()]
+            if statuses:
+                queryset = queryset.filter(status__in=statuses)
+
         return queryset
 
 
 class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
-        return get_round_queryset()
+        queryset = get_round_queryset()
+        user = self.request.user
+
+        if not is_platform_admin(user):
+            queryset = queryset.exclude(status=Round.STATUS_DRAFT)
+
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         round_obj = self.get_object()

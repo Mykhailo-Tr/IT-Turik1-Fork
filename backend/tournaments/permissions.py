@@ -1,4 +1,4 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.db.models import Q
 
 from accounts.utils.permissions import is_platform_admin
@@ -9,6 +9,15 @@ class IsPlatformAdminPermission(BasePermission):
     message = 'Admin access required.'
 
     def has_permission(self, request, view):
+        return is_platform_admin(request.user)
+
+
+class IsPlatformAdminOrReadOnly(BasePermission):
+    message = 'Admin access required.'
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
         return is_platform_admin(request.user)
 
 
