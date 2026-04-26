@@ -30,7 +30,7 @@
 | **Відправити оцінку** | POST | `/api/evaluation/evaluate/` | Jury |
 | **Перегл/Зміна/Вид. оцінки**| GET/PATCH/DEL| `/api/evaluation/evaluate/{id}/` | Jury |
 
----
+
 
 ---
 
@@ -47,7 +47,15 @@
   "max_teams": 20,
   "min_team_members": 2,
   "tech_requirements": "Django + PostgreSQL",
-  "must_have_requirements": ["Requirement 1"]
+  "must_have_requirements": ["Requirement 1"],
+  "criteria": [
+    {
+      "id": "backend",
+      "name": "Backend Quality",
+      "description": "Code quality",
+      "max_score": 10
+    }
+  ]
 }
 ```
 
@@ -118,20 +126,42 @@
 ```json
 {
   "assignment": 1,
-  "score_backend": 10,
-  "score_db": 8,
-  "score_frontend": 9,
-  "score_completeness": 10,
-  "score_stability": 9,
-  "score_usability": 10,
+  "scores": [
+    { "criterion_id": "backend", "score": 10 },
+    { "criterion_id": "db", "score": 8 }
+  ],
   "comment": "Excellent work!"
+}
+```
+*Response Example:*
+```json
+{
+  "id": 12,
+  "assignment": 1,
+  "scores": [
+    { "criterion_id": "backend", "score": 10 },
+    { "criterion_id": "db", "score": 8 }
+  ],
+  "comment": "Excellent work!",
+  "total_score": 18,
+  "final_score": 9.0,
+  "created_at": "2026-04-26T10:00:00Z"
 }
 ```
 
 **Оновлення оцінки (Jury) — PATCH `/api/evaluation/evaluate/{id}/`**
 ```json
 {
-  "score_backend": 9,
+  "scores": [
+    { "criterion_id": "backend", "score": 9 },
+    { "criterion_id": "db", "score": 8 }
+  ],
   "comment": "Revised score after check"
 }
 ```
+
+> **Важливо для оцінювання:**
+> - Кожен `criterion_id` має точно збігатися з id критерію з турніру.
+> - Оцінка `score` має бути $\ge 0$ та $\le$ `max_score` критерію.
+> - Дублікати `criterion_id` не допускаються.
+> - Необхідно передати оцінки для **всіх** критеріїв турніру. Якщо потрібен 0, його потрібно передати явно (`"score": 0`).
