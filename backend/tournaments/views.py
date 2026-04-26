@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -37,6 +37,8 @@ from .services import (
 def get_tournament_queryset():
     return Tournament.objects.prefetch_related(
         Prefetch('rounds', queryset=Round.objects.order_by('position'))
+    ).annotate(
+        rounds_count=Count('rounds')
     ).order_by('-created_at')
 
 

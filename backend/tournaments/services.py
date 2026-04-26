@@ -22,22 +22,6 @@ def _set_tournament_finished_if_all_rounds_evaluated(*, tournament):
 
 
 @transaction.atomic
-def ensure_round_placeholders(tournament):
-    existing_count = tournament.rounds.count()
-    if existing_count > tournament.rounds_count:
-        raise ValidationError({'rounds_count': 'Cannot be less than existing rounds count.'})
-
-    for position in range(existing_count + 1, tournament.rounds_count + 1):
-        Round.objects.create(
-            tournament=tournament,
-            position=position,
-            start_date=tournament.start_date,
-            end_date=tournament.end_date,
-            status=Round.STATUS_DRAFT,
-        )
-
-
-@transaction.atomic
 def start_registration(tournament):
     if tournament.status != Tournament.STATUS_DRAFT:
         raise ValidationError({'status': 'Only draft tournaments can be moved to registration.'})
@@ -212,11 +196,10 @@ def delete_round(round_obj):
     deleted_position = round_obj.position
     round_obj.delete()
 
-    # Keep round sequence dense and synchronized with tournament.rounds_count.
+    # Keep round sequence dense and synchronized with tournament.rounds.count().
     rounds_qs.filter(position__gt=deleted_position).update(position=models.F('position') - 1)
 
-    tournament.rounds_count = rounds_count - 1
-    tournament.save(update_fields=['rounds_count', 'updated_at'])
+    tournament.save(update_fields=['updated_at'])
 
     return tournament
 

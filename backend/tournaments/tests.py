@@ -35,7 +35,6 @@ class TournamentApiTests(APITestCase):
             'description': 'Test description',
             'start_date': timezone.now() + timezone.timedelta(days=1),
             'end_date': timezone.now() + timezone.timedelta(days=10),
-            'rounds_count': 2,
         }
 
     def test_admin_can_create_tournament(self):
@@ -45,7 +44,7 @@ class TournamentApiTests(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Tournament.objects.count(), 1)
-        self.assertEqual(Round.objects.count(), 2)
+        self.assertEqual(Round.objects.count(), 0)
 
     def test_non_admin_cannot_create_tournament(self):
         self.client.force_authenticate(user=self.captain)

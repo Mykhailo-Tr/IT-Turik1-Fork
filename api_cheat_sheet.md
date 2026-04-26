@@ -46,7 +46,6 @@
   "description": "Build a scalable backend",
   "start_date": "2026-05-01T10:00:00Z",
   "end_date": "2026-05-10T10:00:00Z",
-  "rounds_count": 2,
   "max_teams": 20,
   "min_team_members": 2,
   "criteria": [
