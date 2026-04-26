@@ -35,7 +35,6 @@ class TournamentApiTests(APITestCase):
             'description': 'Test description',
             'start_date': timezone.now() + timezone.timedelta(days=1),
             'end_date': timezone.now() + timezone.timedelta(days=10),
-            'rounds_count': 2,
         }
 
     def test_admin_can_create_tournament(self):
@@ -45,7 +44,7 @@ class TournamentApiTests(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Tournament.objects.count(), 1)
-        self.assertEqual(Round.objects.count(), 2)
+        self.assertEqual(Round.objects.count(), 0)
 
     def test_non_admin_cannot_create_tournament(self):
         self.client.force_authenticate(user=self.captain)
@@ -198,6 +197,232 @@ class TournamentApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('tournament', response.data['details'])
 
+    def test_registration_fails_when_team_already_in_another_active_tournament(self):
+        active_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=active_tournament,
+            team=self.team,
+            created_by=self.captain,
+        )
+
+        target_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_register_team', kwargs={'pk': target_tournament.id})
+        response = self.client.post(url, {'team_id': self.team.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['details'].get('team'),
+            'This team is already participating in another tournament.',
+        )
+
+    def test_registration_fails_when_team_shares_members_with_active_tournament_team(self):
+        shared_user = User.objects.create_user(
+            username='shared-member',
+            email='shared-member@example.com',
+            password='StrongPass123!',
+        )
+        TeamMember.objects.create(team=self.team, user=shared_user)
+
+        other_captain = User.objects.create_user(
+            username='other-captain',
+            email='other-captain@example.com',
+            password='StrongPass123!',
+        )
+        other_team = Team.objects.create(
+            name='Other Team',
+            email='other-team@example.com',
+            captain=other_captain,
+        )
+        TeamMember.objects.create(team=other_team, user=other_captain)
+        TeamMember.objects.create(team=other_team, user=shared_user)
+
+        active_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=active_tournament,
+            team=other_team,
+            created_by=other_captain,
+        )
+
+        target_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_register_team', kwargs={'pk': target_tournament.id})
+        response = self.client.post(url, {'team_id': self.team.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('team', response.data['details'])
+        self.assertIn(shared_user.email, response.data['details']['team'])
+
+    def test_inactive_registration_does_not_block_reregistration(self):
+        """
+        A team with is_active=False registration must be allowed to register
+        for another tournament without hitting 'already participating'.
+        """
+        old_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=old_tournament,
+            team=self.team,
+            created_by=self.captain,
+            is_active=False,
+        )
+
+        new_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_register_team', kwargs={'pk': new_tournament.id})
+        response = self.client.post(url, {'team_id': self.team.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_inactive_registration_does_not_cause_shared_member_conflict(self):
+        """
+        Shared member between two teams must NOT trigger a conflict error
+        if the first team's registration is inactive (is_active=False).
+        """
+        shared_user = User.objects.create_user(
+            username='shared-member2',
+            email='shared-member2@example.com',
+            password='StrongPass123!',
+        )
+        TeamMember.objects.create(team=self.team, user=shared_user)
+
+        other_captain = User.objects.create_user(
+            username='other-captain2',
+            email='other-captain2@example.com',
+            password='StrongPass123!',
+        )
+        other_team = Team.objects.create(
+            name='Other Team 2',
+            email='other-team2@example.com',
+            captain=other_captain,
+        )
+        TeamMember.objects.create(team=other_team, user=shared_user)
+
+        old_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=old_tournament,
+            team=self.team,
+            created_by=self.captain,
+            is_active=False,  # deactivated; must not count as conflict
+        )
+
+        new_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+
+        self.client.force_authenticate(user=other_captain)
+        url = reverse('tournament_register_team', kwargs={'pk': new_tournament.id})
+        response = self.client.post(url, {'team_id': other_team.id}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_eligible_teams_returns_only_captain_teams_with_members_count(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        other_captain = User.objects.create_user(
+            username='another-captain',
+            email='another-captain@example.com',
+            password='StrongPass123!',
+        )
+        other_team = Team.objects.create(
+            name='Other Captain Team',
+            email='other-captain-team@example.com',
+            captain=other_captain,
+        )
+        TeamMember.objects.create(team=other_team, user=other_captain)
+
+        extra_member = User.objects.create_user(
+            username='extra-member',
+            email='extra-member@example.com',
+            password='StrongPass123!',
+        )
+        TeamMember.objects.create(team=self.team, user=extra_member)
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_eligible_teams', kwargs={'pk': tournament.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], self.team.id)
+        self.assertEqual(response.data[0]['name'], self.team.name)
+        self.assertEqual(response.data[0]['members_count'], 3)
+
+    def test_team_active_tournament_returns_registration_or_running_tournament(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=self.team,
+            created_by=self.captain,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('team_active_tournament')
+        response = self.client.get(url, {'team_id': self.team.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], tournament.id)
+        self.assertEqual(response.data['name'], tournament.name)
+        self.assertEqual(response.data['status'], tournament.status)
+        self.assertIn('start_date', response.data)
+
+    def test_team_active_tournament_returns_404_when_not_found(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_FINISHED,
+            **self.tournament_data
+        )
+        TournamentTeamRegistration.objects.create(
+            tournament=tournament,
+            team=self.team,
+            created_by=self.captain,
+        )
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('team_active_tournament')
+        response = self.client.get(url, {'team_id': self.team.id})
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_sync_time_based_statuses(self):
         from .services import sync_time_based_statuses
         
@@ -236,3 +461,5 @@ class TournamentApiTests(APITestCase):
         response = self.client.post(url, round_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start_date', response.data['details'])
+
+    
