@@ -89,18 +89,12 @@
     </div>
 
     <div class="tournament-action">
-      <ui-skeleton-loader :loading="isLoading">
-        <template #skeleton>
-          <ui-button variant="ghost" class="tournament-action-btn">
-            <ui-skeleton variant="rect" width="100%" />
-          </ui-button>
-        </template>
+      <!-- TODO add link to round info -->
+      <ui-button v-if="currentRound" variant="ghost" class="tournament-action-btn">
+        Current round: {{ currentRound.name }}
+      </ui-button>
 
-        <ui-button variant="ghost" class="tournament-action-btn">
-          Current round: Round 2 (Active)
-        </ui-button>
-      </ui-skeleton-loader>
-      <ui-button :disabled="isLoading">Join tournament</ui-button>
+      <join-tournament-btn :tournament-id="props.tournamentId" />
     </div>
   </ui-card>
 </template>
@@ -117,7 +111,8 @@ import DescriptionModal from './modals/DescriptionModal.vue'
 import { truncateText } from '@/lib/utils'
 import { formatDate } from '@/lib/date'
 import FullScreenIcon from '@/icons/FullScreenIcon.vue'
-import { useTournamentInfo } from '@/queries/tournaments'
+import { useCurrentRound, useTournamentInfo } from '@/queries/tournaments'
+import JoinTournamentBtn from './JoinTournamentBtn.vue'
 
 interface Props {
   tournamentId: number
@@ -133,6 +128,7 @@ const {
   isError,
 } = useTournamentInfo({ id: props.tournamentId })
 const error = computed(() => parseApiError(tournamentInfoError.value))
+const { data: currentRound } = useCurrentRound({ id: props.tournamentId })
 
 const isDescriptionLarge = computed(() => (tournament.value?.description.length ?? 0) > 190)
 const statusBadgeVariant = computed(() => {

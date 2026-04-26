@@ -11,7 +11,9 @@
     <div>
       <p class="modal-text">
         This action cannot be undone. Enter
-        <ui-badge variant="red">{{ props.team?.name }}</ui-badge>
+        <ui-badge :title="props.team?.name" variant="red">{{
+          truncateText(props.team?.name ?? '', 15)
+        }}</ui-badge>
         to confirm.
       </p>
 
@@ -48,6 +50,7 @@ import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import { computed, ref } from 'vue'
 import { useDeleteTeam } from '@/queries/teams'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
+import { truncateText } from '@/lib/utils'
 
 interface Props {
   team?: GetTeamInfoResponse

@@ -1,4 +1,4 @@
-import type { Round, Tournament, TournamentId } from '@/api/dbTypes'
+import type { Round, Team, TeamId, Tournament, TournamentId } from '@/api/dbTypes'
 
 // Create tournament
 export type CreateTournamentBody = Pick<
@@ -21,11 +21,18 @@ export interface GetTournamentInfoArgs {
   id: TournamentId
 }
 
-// TODO
-
 export type GetTournamentInfoResponse = Tournament & {
   rounds: [] // TODO
 }
+
+// Get eligible teams
+export interface GetEligibleTeamsArgs {
+  id: TournamentId
+}
+
+export type GetEligibleTeamsResponse = (Pick<Team, 'id' | 'name'> & {
+  members_count: number
+})[]
 
 // Create round
 export type CreateRoundBody = Pick<
@@ -44,4 +51,31 @@ export type CreateRoundBody = Pick<
 
 export interface CreateRoundArgs {
   body: CreateRoundBody
+}
+
+// Get current round
+
+export interface GetCurrentRoundArgs {
+  id: TournamentId
+}
+
+export type GetCurrentRoundResponse = Pick<
+  Round,
+  'id' | 'name' | 'must_have_requirements' | 'tech_requirements'
+> & {
+  tournament_id: TournamentId
+  tournamnet_name: Pick<Tournament, 'name'>
+  task: Pick<Round, 'description'>
+  deadline: string
+}
+
+// Register team
+
+export interface RegisterTeamBody {
+  team_id: TeamId
+}
+
+export interface RegisterTeamArgs {
+  id: TournamentId
+  body: RegisterTeamBody
 }
