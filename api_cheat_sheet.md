@@ -25,7 +25,14 @@
 | **Мої роботи** | GET | `/api/tournaments/submissions/` | Команда |
 | **Подати роботу** | POST | `/api/tournaments/submissions/` | Команда |
 | **Деталі/Зміна роботи** | GET/PATCH | `/api/tournaments/submissions/{id}/` | Команда |
-| **Поточне завдання** | GET | `/api/tournaments/current-task/` | Учасники |
+| **Поточне завдання** | GET | `/api/tournaments/current-task/?tournament_id={id}` *(опц.)* | Учасники |
+
+> **`GET /api/tournaments/current-task/`**
+> - Повертає перший активний раунд (`status=active`) серед турнірів зі статусом `running`, відсортований за `end_date`, `id`.
+> - Опційний фільтр: `tournament_id` (query param).
+> - Доступ: лише авторизовані користувачі, які є `admin` або учасниками/капітанами команди.
+> - Якщо активного раунду немає — `404` (`No active round is available right now.`).
+> - Поля відповіді: `id`, `tournament_id`, `tournament_name`, `name`, `task`, `deadline`, `must_have_requirements`, `tech_requirements`.
 
 ### 2. Раунди 
 
