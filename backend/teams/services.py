@@ -9,6 +9,7 @@ def get_active_tournament_registration(team):
         TournamentTeamRegistration.objects.select_related('tournament')
         .filter(
             team=team,
+            is_active=True,
             tournament__status__in=[
                 Tournament.STATUS_REGISTRATION,
                 Tournament.STATUS_RUNNING,
