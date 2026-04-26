@@ -544,6 +544,214 @@ class TournamentApiTests(APITestCase):
         round_obj.refresh_from_db()
         self.assertEqual(round_obj.status, Round.STATUS_SUBMISSION_CLOSED)
 
+    def test_tournament_list_pagination_response_shape(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('data', response.data)
+        self.assertIn('total', response.data)
+        self.assertIsInstance(response.data['data'], list)
+        self.assertIsInstance(response.data['total'], int)
+
+    def test_tournament_list_pagination_page_size(self):
+        for i in range(25):
+            Tournament.objects.create(
+                created_by=self.admin,
+                status=Tournament.STATUS_REGISTRATION,
+                name=f'Tournament {i}',
+                description=f'Desc {i}',
+                start_date=timezone.now() + timezone.timedelta(days=1),
+                end_date=timezone.now() + timezone.timedelta(days=10),
+            )
+
+        url = reverse('tournaments')
+        response = self.client.get(url, {'page': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['total'], 25)
+        self.assertEqual(len(response.data['data']), 20)
+
+        response2 = self.client.get(url, {'page': '2'})
+        self.assertEqual(len(response2.data['data']), 5)
+
+    def test_tournament_list_pagination_default_page(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url)
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(len(response.data['data']), 1)
+
+    def test_tournament_list_filter_by_search_query(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Alpha Cup',
+            description='First tournament',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Beta Cup',
+            description='Second tournament',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url, {'searchQuery': 'Alpha'})
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['data'][0]['name'], 'Alpha Cup')
+
+    def test_tournament_list_filter_by_search_query_description(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Alpha Cup',
+            description='Unique keyword here',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Beta Cup',
+            description='Other description',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url, {'searchQuery': 'Unique keyword'})
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['data'][0]['name'], 'Alpha Cup')
+
+    def test_tournament_list_filter_by_status(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Reg Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            name='Running Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url, {'status': 'registration'})
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['data'][0]['name'], 'Reg Tournament')
+
+    def test_tournament_list_filter_by_multiple_statuses(self):
+        reg_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Reg Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        running_tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_RUNNING,
+            name='Running Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        Round.objects.create(
+            tournament=running_tournament,
+            position=1,
+            status=Round.STATUS_ACTIVE,
+            start_date=timezone.now() - timezone.timedelta(hours=1),
+            end_date=timezone.now() + timezone.timedelta(days=5),
+        )
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_FINISHED,
+            name='Finished Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url, {'status': 'registration,running'})
+        self.assertEqual(response.data['total'], 2)
+
+    def test_tournament_list_filter_by_start_at(self):
+        today = timezone.now().date()
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Today Start',
+            description='desc',
+            start_date=timezone.now().replace(hour=10, minute=0, second=0),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Tomorrow Start',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url, {'startAt': today.isoformat()})
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['data'][0]['name'], 'Today Start')
+
+    def test_tournament_list_hides_draft_for_anonymous(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_DRAFT,
+            name='Draft Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            name='Public Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        url = reverse('tournaments')
+        response = self.client.get(url)
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['data'][0]['name'], 'Public Tournament')
+
+    def test_tournament_list_shows_draft_to_admin(self):
+        Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_DRAFT,
+            name='Draft Tournament',
+            description='desc',
+            start_date=timezone.now() + timezone.timedelta(days=1),
+            end_date=timezone.now() + timezone.timedelta(days=10),
+        )
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('tournaments')
+        response = self.client.get(url)
+        self.assertEqual(response.data['total'], 1)
+        self.assertEqual(response.data['data'][0]['name'], 'Draft Tournament')
+
     def test_round_dates_validation(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,
