@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Round, Submission, Tournament
+from .models import Round, Submission, Tournament, TournamentTeamRegistration
 from accounts.utils.permissions import is_platform_admin
 
 from .permissions import (
@@ -26,6 +26,7 @@ from .serializers import (
     TournamentPublicSerializer,
     TournamentTeamRegistrationCreateSerializer,
     TournamentTeamRegistrationSerializer,
+    TournamentTeamRegistrationUpdateSerializer,
 )
 from .services import (
     close_submissions_on_round,
@@ -155,6 +156,24 @@ class TournamentTeamRegistrationCreateView(SyncStatusesMixin, APIView):
         serializer.is_valid(raise_exception=True)
         registration = serializer.save()
         return Response(TournamentTeamRegistrationSerializer(registration).data, status=status.HTTP_201_CREATED)
+
+
+class TournamentTeamRegistrationDetailView(generics.RetrieveUpdateAPIView):
+    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+
+    def get_queryset(self):
+        return TournamentTeamRegistration.objects.filter(
+            tournament_id=self.kwargs['pk'],
+        ).select_related('team')
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        return get_object_or_404(queryset, pk=self.kwargs['registration_pk'])
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TournamentTeamRegistrationSerializer
+        return TournamentTeamRegistrationUpdateSerializer
 
 
 class RoundListCreateView(generics.ListCreateAPIView):
