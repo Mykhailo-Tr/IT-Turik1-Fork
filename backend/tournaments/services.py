@@ -1,5 +1,4 @@
 from django.db import models, transaction
-from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
@@ -19,22 +18,6 @@ def _set_tournament_finished_if_all_rounds_evaluated(*, tournament):
     tournament.status = Tournament.STATUS_FINISHED
     tournament.save(update_fields=['status', 'updated_at'])
     return True
-
-
-@transaction.atomic
-def ensure_round_placeholders(tournament):
-    existing_count = tournament.rounds.count()
-    if existing_count > tournament.rounds_count:
-        raise ValidationError({'rounds_count': 'Cannot be less than existing rounds count.'})
-
-    for position in range(existing_count + 1, tournament.rounds_count + 1):
-        Round.objects.create(
-            tournament=tournament,
-            position=position,
-            start_date=tournament.start_date,
-            end_date=tournament.end_date,
-            status=Round.STATUS_DRAFT,
-        )
 
 
 @transaction.atomic
@@ -149,9 +132,9 @@ def get_team_participant_ids(*, team):
 
 
 def ensure_team_registered_for_tournament(*, tournament, team):
-    if TournamentTeamRegistration.objects.filter(tournament=tournament, team=team).exists():
+    if TournamentTeamRegistration.objects.filter(tournament=tournament, team=team, is_active=True).exists():
         return
-    raise ValidationError({'team': 'Team must be registered for this tournament before submitting.'})
+    raise ValidationError({'team': 'Team must be registered and active for this tournament.'})
 
 
 @transaction.atomic
@@ -177,20 +160,37 @@ def register_team_for_tournament(*, tournament, team, actor):
         if current_registered_count >= tournament.max_teams:
             raise ValidationError({'tournament': 'Tournament registration limit has been reached.'})
 
-    conflict_registration = (
-        TournamentTeamRegistration.objects.select_related('team')
-        .filter(tournament=tournament)
+    already_registered = TournamentTeamRegistration.objects.filter(
+        team=team,
+        is_active=True,
+        tournament__status__in=[
+            Tournament.STATUS_REGISTRATION,
+            Tournament.STATUS_RUNNING,
+        ],
+    ).exclude(tournament=tournament).exists()
+
+    if already_registered:
+        raise ValidationError({
+            'team': 'This team is already participating in another tournament.'
+        })
+
+    conflicting = (
+        TeamMember.objects.filter(
+            team__tournament_registrations__tournament__status__in=[
+                Tournament.STATUS_REGISTRATION,
+                Tournament.STATUS_RUNNING,
+            ],
+            team__tournament_registrations__is_active=True,
+            user_id__in=participant_ids,
+        )
         .exclude(team=team)
-        .filter(
-            Q(team__captain_id__in=participant_ids)
-            | Q(team__team_members__user_id__in=participant_ids)
-        )
-        .first()
+        .select_related('user')
     )
-    if conflict_registration is not None:
-        raise ValidationError(
-            {'team': f'Cannot register: team shares participants with "{conflict_registration.team.name}".'}
-        )
+    if conflicting.exists():
+        emails = ', '.join(m.user.email for m in conflicting)
+        raise ValidationError({
+            'team': f'Cannot register. The following members are already participating in another tournament: {emails}'
+        })
 
     return TournamentTeamRegistration.objects.create(
         tournament=tournament,
@@ -212,11 +212,10 @@ def delete_round(round_obj):
     deleted_position = round_obj.position
     round_obj.delete()
 
-    # Keep round sequence dense and synchronized with tournament.rounds_count.
+    # Keep round sequence dense and synchronized with tournament.rounds.count().
     rounds_qs.filter(position__gt=deleted_position).update(position=models.F('position') - 1)
 
-    tournament.rounds_count = rounds_count - 1
-    tournament.save(update_fields=['rounds_count', 'updated_at'])
+    tournament.save(update_fields=['updated_at'])
 
     return tournament
 

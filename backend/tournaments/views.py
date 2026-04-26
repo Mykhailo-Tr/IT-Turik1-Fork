@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Count, IntegerField, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -6,13 +6,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Round, Submission, Tournament
+from teams.models import Team
+from .models import Round, Submission, Tournament, TournamentTeamRegistration
+from accounts.utils.permissions import is_platform_admin
+
 from .permissions import (
     IsJuryPermission,
     IsPlatformAdminOrTeamMemberPermission,
     IsPlatformAdminPermission,
+    IsPlatformAdminOrReadOnly,
 )
 from .serializers import (
+    ActiveTournamentSerializer,
     CurrentTaskSerializer,
     
     OwnSubmissionSerializer,
@@ -23,6 +28,7 @@ from .serializers import (
     TournamentPublicSerializer,
     TournamentTeamRegistrationCreateSerializer,
     TournamentTeamRegistrationSerializer,
+    TournamentTeamRegistrationUpdateSerializer,
 )
 from .services import (
     close_submissions_on_round,
@@ -37,6 +43,8 @@ from .services import (
 def get_tournament_queryset():
     return Tournament.objects.prefetch_related(
         Prefetch('rounds', queryset=Round.objects.order_by('position'))
+    ).annotate(
+        rounds_count=Count('rounds')
     ).order_by('-created_at')
 
 
@@ -152,24 +160,99 @@ class TournamentTeamRegistrationCreateView(SyncStatusesMixin, APIView):
         return Response(TournamentTeamRegistrationSerializer(registration).data, status=status.HTTP_201_CREATED)
 
 
-class RoundListCreateView(generics.ListCreateAPIView):
+class TournamentTeamRegistrationDetailView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+
+    def get_queryset(self):
+        return TournamentTeamRegistration.objects.filter(
+            tournament_id=self.kwargs['pk'],
+        ).select_related('team')
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        return get_object_or_404(queryset, pk=self.kwargs['registration_pk'])
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TournamentTeamRegistrationSerializer
+        return TournamentTeamRegistrationUpdateSerializer
+
+
+class TournamentEligibleTeamsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        get_object_or_404(Tournament, pk=pk)
+        teams = (
+            Team.objects.filter(captain_id=request.user.id)
+            .annotate(
+                members_count=Count('team_members', distinct=True) + Value(1, output_field=IntegerField())
+            )
+            .values('id', 'name', 'members_count')
+            .order_by('id')
+        )
+        return Response(list(teams), status=status.HTTP_200_OK)
+
+
+class TeamActiveTournamentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        team_id = request.query_params.get('team_id')
+        registration = (
+            TournamentTeamRegistration.objects.select_related('tournament')
+            .filter(
+                team_id=team_id,
+                tournament__status__in=[
+                    Tournament.STATUS_REGISTRATION,
+                    Tournament.STATUS_RUNNING,
+                ],
+            )
+            .first()
+        )
+        if registration is None:
+            raise NotFound('Active tournament not found for this team.')
+
+        serializer = ActiveTournamentSerializer(registration.tournament)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class RoundListCreateView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
         queryset = get_round_queryset()
+        user = self.request.user
+
+        if not is_platform_admin(user):
+            queryset = queryset.exclude(status=Round.STATUS_DRAFT)
+
         tournament_id = self.request.query_params.get('tournament_id')
         if tournament_id:
             queryset = queryset.filter(tournament_id=tournament_id)
+
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            statuses = [s.strip() for s in status_param.split(',') if s.strip()]
+            if statuses:
+                queryset = queryset.filter(status__in=statuses)
+
         return queryset
 
 
 class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
-        return get_round_queryset()
+        queryset = get_round_queryset()
+        user = self.request.user
+
+        if not is_platform_admin(user):
+            queryset = queryset.exclude(status=Round.STATUS_DRAFT)
+
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         round_obj = self.get_object()
