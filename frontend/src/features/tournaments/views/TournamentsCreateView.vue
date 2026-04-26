@@ -59,8 +59,7 @@
             id="maxTeams"
             type="number"
             v-model.number="form.fields.value.max_teams"
-            min="1"
-            max="10"
+            min="2"
             required
             :isInvalid="!!form.errors.value.max_teams"
             @blur="form.validateField('max_teams')"
@@ -73,11 +72,9 @@
         <label class="form-item">
           <span class="form-label">Min team members</span>
           <ui-input
-            id="maxTeams"
             type="number"
             v-model.number="form.fields.value.min_team_members"
-            min="1"
-            max="10"
+            min="2"
             required
             :isInvalid="!!form.errors.value.min_team_members"
             @blur="form.validateField('min_team_members')"

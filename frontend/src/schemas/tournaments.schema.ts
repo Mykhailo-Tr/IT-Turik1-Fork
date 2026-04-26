@@ -10,26 +10,20 @@ export const TimeSchema = v.pipe(
 export const CreateTournamentSchema = v.pipe(
   v.object({
     name: v.pipe(v.string(), v.minLength(1, 'Tournament name is required')),
-
     description: v.pipe(
       v.string(),
       v.minLength(20, 'Description must be at least 20 characters long'),
     ),
-
     startDate: v.date(),
     startTime: TimeSchema,
-
     endDate: v.date(),
     endTime: TimeSchema,
-
-    rounds: v.pipe(v.number('must be a number'), v.minValue(1, 'Rounds must be at least 1')),
-
-    maxTeams: v.pipe(
+    rounds_count: v.pipe(v.number('must be a number'), v.minValue(1, 'Rounds must be at least 1')),
+    max_teams: v.pipe(
       v.number('must be a number'),
       v.minValue(2, 'Maximum teams must be at least 2'),
     ),
-
-    minTeamMembers: v.pipe(
+    min_team_members: v.pipe(
       v.number('must be a number'),
       v.minValue(2, 'Minimum team members must be at least 2'),
     ),
