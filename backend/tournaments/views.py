@@ -1,4 +1,4 @@
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, IntegerField, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, PermissionDenied
@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from teams.models import Team
 from .models import Round, Submission, Tournament, TournamentTeamRegistration
 from accounts.utils.permissions import is_platform_admin
 
@@ -174,6 +175,22 @@ class TournamentTeamRegistrationDetailView(generics.RetrieveUpdateAPIView):
         if self.request.method == 'GET':
             return TournamentTeamRegistrationSerializer
         return TournamentTeamRegistrationUpdateSerializer
+
+
+class TournamentEligibleTeamsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        get_object_or_404(Tournament, pk=pk)
+        teams = (
+            Team.objects.filter(captain_id=request.user.id)
+            .annotate(
+                members_count=Count('team_members', distinct=True) + Value(1, output_field=IntegerField())
+            )
+            .values('id', 'name', 'members_count')
+            .order_by('id')
+        )
+        return Response(list(teams), status=status.HTTP_200_OK)
 
 
 class RoundListCreateView(generics.ListCreateAPIView):

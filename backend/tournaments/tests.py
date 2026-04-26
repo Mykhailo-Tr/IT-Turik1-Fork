@@ -197,6 +197,41 @@ class TournamentApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('tournament', response.data['details'])
 
+    def test_eligible_teams_returns_only_captain_teams_with_members_count(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            status=Tournament.STATUS_REGISTRATION,
+            **self.tournament_data
+        )
+        other_captain = User.objects.create_user(
+            username='another-captain',
+            email='another-captain@example.com',
+            password='StrongPass123!',
+        )
+        other_team = Team.objects.create(
+            name='Other Captain Team',
+            email='other-captain-team@example.com',
+            captain=other_captain,
+        )
+        TeamMember.objects.create(team=other_team, user=other_captain)
+
+        extra_member = User.objects.create_user(
+            username='extra-member',
+            email='extra-member@example.com',
+            password='StrongPass123!',
+        )
+        TeamMember.objects.create(team=self.team, user=extra_member)
+
+        self.client.force_authenticate(user=self.captain)
+        url = reverse('tournament_eligible_teams', kwargs={'pk': tournament.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], self.team.id)
+        self.assertEqual(response.data[0]['name'], self.team.name)
+        self.assertEqual(response.data[0]['members_count'], 3)
+
     def test_sync_time_based_statuses(self):
         from .services import sync_time_based_statuses
         
