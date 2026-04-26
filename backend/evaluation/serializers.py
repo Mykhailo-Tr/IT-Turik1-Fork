@@ -13,17 +13,13 @@ class SubmissionEvaluationSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'assignment',
-            'score_backend',
-            'score_db',
-            'score_frontend',
-            'score_completeness',
-            'score_stability',
-            'score_usability',
-            'comment',
+            'scores',
+            'total_score',
             'final_score',
+            'comment',
             'created_at',
         )
-        read_only_fields = ('final_score', 'created_at')
+        read_only_fields = ('total_score', 'final_score', 'created_at')
 
     def validate_assignment(self, value):
         request = self.context.get('request')
@@ -37,6 +33,43 @@ class SubmissionEvaluationSerializer(serializers.ModelSerializer):
         if qs.exists():
             raise serializers.ValidationError('This submission is already evaluated.')
         return value
+
+    def validate(self, attrs):
+        assignment = attrs.get('assignment')
+        if not assignment and self.instance:
+            assignment = self.instance.assignment
+        
+        scores = attrs.get('scores')
+        
+        if scores is not None and assignment:
+            tournament = assignment.submission.round.tournament
+            criteria = tournament.criteria
+            
+            if not criteria:
+                raise serializers.ValidationError({"scores": "Tournament has no evaluation criteria."})
+            
+            criteria_dict = {c['id']: c for c in criteria}
+            score_ids = set()
+            
+            for s in scores:
+                c_id = s.get('criterion_id')
+                if not c_id:
+                     raise serializers.ValidationError({"scores": "Each score must have a criterion_id."})
+                if c_id not in criteria_dict:
+                     raise serializers.ValidationError({"scores": f"Invalid criterion_id: {c_id}"})
+                if c_id in score_ids:
+                     raise serializers.ValidationError({"scores": f"Duplicate criterion_id: {c_id}"})
+                     
+                score = s.get('score')
+                if score is None or not isinstance(score, (int, float)) or score < 0 or score > criteria_dict[c_id]['max_score']:
+                     raise serializers.ValidationError({"scores": f"Invalid score for {c_id}. Must be between 0 and {criteria_dict[c_id]['max_score']}"})
+                score_ids.add(c_id)
+                
+            missing = set(criteria_dict.keys()) - score_ids
+            if missing:
+                raise serializers.ValidationError({"scores": f"Missing scores for criteria: {', '.join(missing)}"})
+
+        return attrs
 
 
 class JuryAssignmentSerializer(serializers.ModelSerializer):

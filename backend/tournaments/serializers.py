@@ -39,6 +39,7 @@ class TournamentPublicSerializer(serializers.ModelSerializer):
             'end_date',
             'tech_requirements',
             'must_have_requirements',
+            'criteria',
             'max_teams',
             'min_team_members',
             'rounds_count',
