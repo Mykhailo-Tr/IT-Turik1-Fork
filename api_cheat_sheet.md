@@ -13,6 +13,7 @@
 | **Редагувати турнір** | PATCH/DEL| `/api/tournaments/manage/{id}/` | Admin |
 | **Відкрити реєстрацію**| POST | `/api/tournaments/{id}/start-registration/` | Admin |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
+| **Деталі/Зміна реєстрації**| GET/PATCH | `/api/tournaments/{id}/registrations/{reg_id}/` | Admin |
 | **Список раундів** | GET | `/api/tournaments/rounds/` | Всі (Auth) |
 | **Створити раунд** | POST | `/api/tournaments/rounds/` | Admin |
 | **Деталі/Зміна раунду**| GET/PATCH | `/api/tournaments/rounds/{id}/` | GET: Всі, PATCH: Admin |
@@ -63,6 +64,12 @@
 ```json
 { "team_id": 10 }
 ```
+
+**Дисквалификація/Активація команди (Admin) — PATCH `/api/tournaments/{id}/registrations/{reg_id}/`**
+```json
+{ "is_active": false }
+```
+> Деактивовані команди (`is_active: false`) не можуть подавати роботи. Запис не видаляється.
 
 ### 2. Раунди
 
