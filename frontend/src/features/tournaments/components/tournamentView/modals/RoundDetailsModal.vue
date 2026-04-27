@@ -55,7 +55,7 @@ import UiCard from '@/components/UiCard.vue'
 import UiModal from '@/components/UiModal.vue'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, useEditor, type JSONContent } from '@tiptap/vue-3'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 interface Props {
   modelValue: boolean
@@ -112,6 +112,27 @@ const mustHaveEditor = useEditor({
     },
   },
 })
+
+watch(
+  () => props.description,
+  (value) => {
+    descriptionEditor.value?.commands.setContent(value)
+  },
+)
+
+watch(
+  () => props.technicalRequirements,
+  (value) => {
+    requirementsEditor.value?.commands.setContent(value)
+  },
+)
+
+watch(
+  () => props.mustHave,
+  (value) => {
+    mustHaveEditor.value?.commands.setContent(value)
+  },
+)
 
 const handleClose = () => {
   activeSection.value = 'description'
