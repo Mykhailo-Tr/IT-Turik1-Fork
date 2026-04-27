@@ -796,4 +796,162 @@ class TournamentApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('start_date', response.data['details'])
 
+    def test_round_date_overlap_validation(self):
+        """Test that rounds cannot have overlapping dates within the same tournament"""
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        
+        # Create first round directly with model (bypasses single-round validation)
+        round1 = Round.objects.create(
+            tournament=tournament,
+            name='Round 1',
+            start_date=tournament.start_date,
+            end_date=tournament.start_date + timezone.timedelta(days=3),
+        )
+        
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('rounds')
+        
+        # Try to create overlapping round via API (starts during first round)
+        round2_data = {
+            'tournament': tournament.id,
+            'name': 'Round 2',
+            'start_date': (tournament.start_date + timezone.timedelta(days=2)).isoformat(),
+            'end_date': (tournament.start_date + timezone.timedelta(days=5)).isoformat(),
+        }
+        response = self.client.post(url, round2_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data['details'])
+        self.assertIn('overlap', response.data['details']['start_date'][0].lower())
+        
+        # Try to create round that ends during first round
+        round3_data = {
+            'tournament': tournament.id,
+            'name': 'Round 3',
+            'start_date': (tournament.start_date - timezone.timedelta(days=1)).isoformat(),
+            'end_date': (tournament.start_date + timezone.timedelta(days=1)).isoformat(),
+        }
+        response = self.client.post(url, round3_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data['details'])
+        
+        # Create non-overlapping round (should work)
+        round4_data = {
+            'tournament': tournament.id,
+            'name': 'Round 4',
+            'start_date': (tournament.start_date + timezone.timedelta(days=4)).isoformat(),
+            'end_date': (tournament.start_date + timezone.timedelta(days=6)).isoformat(),
+        }
+        response = self.client.post(url, round4_data, format='json')
+        print(f"Round4 response: {response.status_code}, {response.data}")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_round_date_overlap_update_validation(self):
+        """Test that updating a round cannot cause date overlaps"""
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        
+        # Create two non-overlapping rounds
+        round1 = Round.objects.create(
+            tournament=tournament,
+            name='Round 1',
+            start_date=tournament.start_date,
+            end_date=tournament.start_date + timezone.timedelta(days=2),
+        )
+        round2 = Round.objects.create(
+            tournament=tournament,
+            name='Round 2',
+            start_date=tournament.start_date + timezone.timedelta(days=3),
+            end_date=tournament.start_date + timezone.timedelta(days=5),
+        )
+        
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('round_detail', kwargs={'pk': round2.id})
+        
+        # Try to update round2 to overlap with round1
+        update_data = {
+            'tournament': tournament.id,
+            'name': 'Round 2 Updated',
+            'start_date': (tournament.start_date + timezone.timedelta(days=1)).isoformat(),
+            'end_date': (tournament.start_date + timezone.timedelta(days=4)).isoformat(),
+        }
+        response = self.client.put(url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data['details'])
+        self.assertIn('overlap', response.data['details']['start_date'][0].lower())
+
+    def test_round_date_overlap_when_first_round_extended_into_second(self):
+        """Test that first round cannot be updated to end inside second round."""
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+
+        round1 = Round.objects.create(
+            tournament=tournament,
+            name='Round 1',
+            start_date=tournament.start_date,
+            end_date=tournament.start_date + timezone.timedelta(days=2),
+        )
+        Round.objects.create(
+            tournament=tournament,
+            name='Round 2',
+            start_date=tournament.start_date + timezone.timedelta(days=3),
+            end_date=tournament.start_date + timezone.timedelta(days=6),
+        )
+
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('round_detail', kwargs={'pk': round1.id})
+        update_data = {
+            'tournament': tournament.id,
+            'name': 'Round 1',
+            'start_date': tournament.start_date.isoformat(),
+            'end_date': (tournament.start_date + timezone.timedelta(days=4)).isoformat(),
+        }
+
+        response = self.client.put(url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data['details'])
+        self.assertIn('overlap', response.data['details']['start_date'][0].lower())
+
+    def test_round_date_overlap_update_validation(self):
+        """Test that updating a round cannot cause date overlaps"""
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        
+        # Create two non-overlapping rounds
+        round1 = Round.objects.create(
+            tournament=tournament,
+            name='Round 1',
+            start_date=tournament.start_date,
+            end_date=tournament.start_date + timezone.timedelta(hours=2),
+        )
+        round2 = Round.objects.create(
+            tournament=tournament,
+            name='Round 2',
+            start_date=tournament.start_date + timezone.timedelta(hours=3),
+            end_date=tournament.start_date + timezone.timedelta(hours=5),
+        )
+        
+        self.client.force_authenticate(user=self.admin)
+        url = reverse('round_detail', kwargs={'pk': round2.id})
+        
+        # Try to update round2 to overlap with round1
+        update_data = {
+            'tournament': tournament.id,
+            'name': 'Round 2 Updated',
+            'start_date': tournament.start_date + timezone.timedelta(hours=1),
+            'end_date': tournament.start_date + timezone.timedelta(hours=4),
+        }
+        response = self.client.put(url, update_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('start_date', response.data['details'])
+        self.assertIn('overlap', response.data['details']['start_date'][0].lower())
+
     

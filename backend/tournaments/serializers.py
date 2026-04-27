@@ -120,11 +120,6 @@ class RoundSerializer(serializers.ModelSerializer):
             if start_date < tournament.start_date or end_date > tournament.end_date:
                 errors['start_date'] = 'Round dates must be within tournament dates.'
 
-            if tournament.rounds.count() == 1 and (
-                start_date != tournament.start_date or end_date != tournament.end_date
-            ):
-                errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
-
         if tournament and winners_count is not None:
             end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
             last_end = (

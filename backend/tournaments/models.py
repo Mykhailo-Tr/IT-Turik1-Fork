@@ -141,6 +141,19 @@ class Round(models.Model):
     def is_submission_open(self):
         return self.status == self.STATUS_ACTIVE
 
+    def _validate_date_overlaps(self, errors):
+        if not self.tournament_id or not self.start_date or not self.end_date:
+            return
+
+        overlaps = Round.objects.filter(
+            tournament_id=self.tournament_id,
+            start_date__lt=self.end_date,
+            end_date__gt=self.start_date,
+        ).exclude(pk=self.pk)
+
+        if overlaps.exists():
+            errors['start_date'] = 'Round dates overlap with another round in this tournament.'
+
     def clean(self):
         errors = {}
 
@@ -165,6 +178,8 @@ class Round(models.Model):
             )
             if last_round and self.pk != last_round:
                 errors['winners_count'] = 'winners_count is allowed only for the last round.'
+
+        self._validate_date_overlaps(errors)
 
         if not isinstance(self.criteria, list):
             errors['criteria'] = 'Criteria must be a list.'
@@ -278,5 +293,4 @@ class TournamentTeamRegistration(models.Model):
 
     def __str__(self):
         return f'{self.tournament_id}:{self.team_id}'
-
 
