@@ -1,6 +1,7 @@
 import type { JSONContent } from '@tiptap/vue-3'
 
 export function truncateText(text: string, maxLength: number) {
+  if (typeof text !== 'string') return
   if (text.length > maxLength) return text.slice(0, maxLength) + '...'
   return text
 }

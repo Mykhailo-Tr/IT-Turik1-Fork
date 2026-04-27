@@ -56,7 +56,6 @@
     </div>
 
     <TournamentRounds :tournament-id="id" v-if="currentSection === 'rounds'" />
-
     <TournamentSchedule :tournament-id="id" v-if="currentSection === 'schedule'" />
   </section>
 </template>

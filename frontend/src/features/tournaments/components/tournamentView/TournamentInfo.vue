@@ -10,87 +10,89 @@
       </div>
     </template>
 
-    <div>
-      <p class="text-muted">Name</p>
-      <ui-skeleton-loader :loading="isLoading">
-        <template #skeleton>
-          <div style="display: flex; flex-direction: column; gap: 0.3rem">
-            <ui-skeleton variant="rect" width="100%" />
-            <ui-skeleton variant="rect" width="80%" />
-          </div>
-        </template>
+    <div class="tournament-info">
+      <div class="tournament-name">
+        <p class="text-muted">Name</p>
+        <ui-skeleton-loader :loading="isLoading">
+          <template #skeleton>
+            <div style="display: flex; flex-direction: column; gap: 0.3rem">
+              <ui-skeleton variant="rect" width="100%" />
+              <ui-skeleton variant="rect" width="80%" />
+            </div>
+          </template>
 
-        <p :title="tournament?.name">{{ truncateText(tournament?.name ?? '', 200) }}</p>
-      </ui-skeleton-loader>
-    </div>
-
-    <div class="tournament-start">
-      <div>
-        <p class="text-muted">Start / end date</p>
-        <div class="">
-          <ui-skeleton-loader :loading="isLoading">
-            <template #skeleton>
-              <ui-skeleton variant="rect" width="180px" />
-            </template>
-
-            <p>
-              {{
-                tournament?.start_date
-                  ? formatDate(tournament.start_date, { showHours: true })
-                  : '-'
-              }}
-            </p>
-            <p>
-              {{
-                tournament?.end_date ? formatDate(tournament.end_date, { showHours: true }) : '-'
-              }}
-            </p>
-          </ui-skeleton-loader>
-        </div>
+          <p :title="tournament?.name">{{ truncateText(tournament?.name ?? '', 200) }}</p>
+        </ui-skeleton-loader>
       </div>
 
-      <ui-skeleton-loader :loading="isLoading">
-        <template #skeleton>
-          <ui-skeleton variant="rect" width="100px" />
-        </template>
+      <div class="tournament-description">
+        <p class="text-muted">Description</p>
 
-        <ui-badge :variant="statusBadgeVariant">{{ tournament?.status }}</ui-badge>
-      </ui-skeleton-loader>
-    </div>
+        <ui-skeleton-loader :loading="isLoading">
+          <template #skeleton>
+            <div style="display: flex; flex-direction: column; gap: 0.4rem">
+              <ui-skeleton variant="rect" width="90%" />
+              <ui-skeleton variant="rect" width="70%" />
+              <ui-skeleton variant="rect" width="80%" />
+            </div>
+          </template>
 
-    <div>
-      <p class="text-muted">Description</p>
+          <p
+            :title="tournament?.description"
+            @click="toggleDescriptionModal"
+            :class="['tournament-description-text', { large: isDescriptionLarge }]"
+          >
+            {{ truncateText(tournament?.description ?? '', 190) }}
 
-      <ui-skeleton-loader :loading="isLoading">
-        <template #skeleton>
-          <div style="display: flex; flex-direction: column; gap: 0.4rem">
-            <ui-skeleton variant="rect" width="90%" />
-            <ui-skeleton variant="rect" width="70%" />
-            <ui-skeleton variant="rect" width="80%" />
-          </div>
-        </template>
+            <full-screen-icon
+              v-if="isDescriptionLarge"
+              class="text-muted"
+              width="15px"
+              height="15px"
+              style="display: inline; margin-left: 4px"
+            />
+          </p>
 
-        <p
-          :title="tournament?.description"
-          @click="toggleDescriptionModal"
-          :class="['tournament-description', { large: isDescriptionLarge }]"
-        >
-          {{ truncateText(tournament?.description ?? '', 190) }}
-
-          <full-screen-icon
-            v-if="isDescriptionLarge"
-            class="text-muted"
-            width="15px"
-            height="15px"
-            style="display: inline; margin-left: 4px"
+          <description-modal
+            v-model="isDesciptionOpen"
+            :description="tournament?.description ?? ''"
           />
-        </p>
+        </ui-skeleton-loader>
+      </div>
 
-        <description-modal
-          v-model="isDesciptionOpen"
-          :description="tournament?.description ?? ''"
-        />
-      </ui-skeleton-loader>
+      <div class="tournament-dates">
+        <div>
+          <p class="text-muted">Start / end date</p>
+          <div class="">
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <ui-skeleton variant="rect" width="180px" />
+              </template>
+
+              <p>
+                {{
+                  tournament?.start_date
+                    ? formatDate(tournament.start_date, { showHours: true })
+                    : '-'
+                }}
+              </p>
+              <p>
+                {{
+                  tournament?.end_date ? formatDate(tournament.end_date, { showHours: true }) : '-'
+                }}
+              </p>
+            </ui-skeleton-loader>
+          </div>
+        </div>
+
+        <ui-skeleton-loader :loading="isLoading">
+          <template #skeleton>
+            <ui-skeleton variant="rect" width="100px" />
+          </template>
+
+          <ui-badge :variant="statusBadgeVariant">{{ tournament?.status }}</ui-badge>
+        </ui-skeleton-loader>
+      </div>
     </div>
 
     <div class="tournament-action">
@@ -164,18 +166,31 @@ const toggleDescriptionModal = () => {
   border-bottom: 1px solid var(--border);
 }
 
+.tournament-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.tournament-name,
+.tournament-dates,
 .tournament-description {
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tournament-description-text {
   border-radius: 6px;
   transition: baclground 2s ease-in;
   word-break: break-word;
 }
 
-.tournament-description.large:hover {
+.tournament-description-text.large:hover {
   cursor: pointer;
   background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
-.tournament-start {
+.tournament-dates {
   display: flex;
   justify-content: space-between;
   align-items: center;

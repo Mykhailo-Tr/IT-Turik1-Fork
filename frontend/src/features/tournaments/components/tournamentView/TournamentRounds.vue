@@ -60,16 +60,16 @@
           </div>
         </ui-card>
       </div>
-
-      <round-details-modal
-        v-if="selectedRound"
-        v-model="isDetailsOpen"
-        :title="selectedRound?.name ?? ''"
-        :description="selectedRound?.description ?? {}"
-        :mustHave="selectedRound?.must_have_requirements ?? {}"
-        :technicalRequirements="selectedRound?.tech_requirements ?? {}"
-      />
     </ui-skeleton-loader>
+
+    <round-details-modal
+      v-if="selectedRound"
+      v-model="isDetailsOpen"
+      :title="selectedRound?.name ?? ''"
+      :description="selectedRound?.description ?? {}"
+      :mustHave="selectedRound?.must_have_requirements ?? {}"
+      :technicalRequirements="selectedRound?.tech_requirements ?? {}"
+    />
   </section>
 </template>
 
@@ -103,6 +103,8 @@ const {
   error: roundsError,
   isError,
 } = useTournamentRounds({ id: props.tournamentId })
+
+console.log(data.value)
 
 const error = computed(() => parseApiError(roundsError.value))
 const rounds = computed(() => data.value ?? [])

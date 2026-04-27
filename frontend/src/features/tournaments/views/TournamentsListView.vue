@@ -93,7 +93,7 @@
                     </h3>
                   </template>
 
-                  <div>
+                  <div class="tournament-info">
                     <p class="tournaments-description" :title="tournament.description">
                       {{ truncateText(tournament.description, 200) }}
                     </p>
@@ -292,7 +292,14 @@ const onStatusChange = () => {
   word-break: break-word;
 }
 
+.tournament-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .tournaments-description {
+  flex: 1;
   margin-bottom: 12px;
   line-height: 1.5;
   word-break: break-word;

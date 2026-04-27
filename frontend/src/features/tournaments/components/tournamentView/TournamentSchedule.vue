@@ -4,7 +4,7 @@
   </div>
 
   <section class="page-shell">
-    <ui-skeleton-loader :loading="isLoading">
+    <ui-skeleton-loader :loading="isEventsLoading">
       <template #skeleton>
         <div class="events-list">
           <ui-card v-for="i in 5" :key="i">
@@ -21,39 +21,35 @@
         </div>
       </template>
 
-      <ui-card v-if="isRoundsError || isEventsError">
+      <ui-card v-if="isEventsError">
         <div style="display: flex; height: 500px; justify-content: center; align-items: center">
           <p>Error while fetching tournament schedule</p>
         </div>
       </ui-card>
 
       <div v-else class="events-list">
-        <ui-card v-for="event in schedule" :key="event.title" class="event-card">
+        <ui-card v-for="event in events" :key="event.title" class="event-card">
           <div class="event-content">
             <div class="event-left-side">
               <div class="event-icon">
-                <CameraIcon v-if="event.type === 'event'" width="25px" height="25px" />
-                <FinishIcon v-else width="25px" height="25px" />
+                <FinishIcon width="25px" height="25px" />
               </div>
 
               <p>{{ event.title }}</p>
             </div>
 
             <div class="event-right-side">
-              <p v-if="event.type === 'event' && event.startDate" class="text-muted">
-                {{ formatDate(event.startDate, { showHours: true }) }}
-              </p>
-              <p v-if="event.type === 'round' && event.endDate" class="text-muted">
-                {{ formatDate(event.endDate, { showHours: true }) }}
+              <p class="text-muted">
+                {{ formatDate(event.startAt, { showHours: true }) }}
               </p>
             </div>
           </div>
 
-          <div class="event-actions" v-if="user?.role === 'admin' && event.type === 'event'">
+          <div class="event-actions" v-if="user?.role === 'admin'">
             <EditEventModal
               :event-id="event.id"
               :title="event.title"
-              :start-date="event.startDate!"
+              :start-date="event.startAt!"
             />
             <DeleteEventModal :event-id="event.id" :title="event.title" />
           </div>
@@ -67,21 +63,13 @@
 import UiCard from '@/components/UiCard.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
-import CameraIcon from '@/icons/CameraIcon.vue'
 import FinishIcon from '@/icons/FinishIcon.vue'
 import { formatDate } from '@/lib/date'
 import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
 import EditEventModal from './modals/EditEventModal.vue'
 import { useProfile } from '@/queries/accounts'
 import DeleteEventModal from './modals/DeleteEventModal.vue'
 import AddEventModal from './modals/AddEventModal.vue'
-
-interface Round {
-  id: number
-  title: string
-  endAt: Date
-}
 
 interface Event {
   id: number
@@ -95,23 +83,6 @@ interface Props {
 
 const props = defineProps<Props>()
 const { data: user } = useProfile()
-
-const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  return [
-    {
-      id: 1,
-      title: 'Round 2',
-      endAt: new Date('2026-04-20T18:00:00'),
-    },
-    {
-      id: 2,
-      title: 'Round 1',
-      endAt: new Date('2026-04-19T12:00:00'),
-    },
-  ]
-}
 
 const fetchEvents = async (_tournamentId: number): Promise<Event[]> => {
   await new Promise((resolve) => setTimeout(resolve, 200))
@@ -131,46 +102,12 @@ const fetchEvents = async (_tournamentId: number): Promise<Event[]> => {
 }
 
 const {
-  data: rounds,
-  isLoading: roundsLoading,
-  isError: isRoundsError,
-} = useQuery({
-  queryKey: ['rounds', props.tournamentId],
-  queryFn: () => fetchRounds(props.tournamentId),
-})
-
-const {
   data: events,
-  isLoading: eventsLoading,
+  isLoading: isEventsLoading,
   isError: isEventsError,
 } = useQuery({
   queryKey: ['events', props.tournamentId],
   queryFn: () => fetchEvents(props.tournamentId),
-})
-
-const isLoading = computed(() => roundsLoading.value || eventsLoading.value)
-
-const schedule = computed(() => {
-  const roundItems =
-    rounds.value?.map((round) => ({
-      id: round.id,
-      type: 'round' as const,
-      title: round.title,
-      startDate: null,
-      endDate: round.endAt,
-      sortDate: round.endAt,
-    })) ?? []
-
-  const eventItems =
-    events.value?.map((event) => ({
-      id: event.id,
-      type: 'event' as const,
-      title: event.title,
-      startDate: event.startAt,
-      sortDate: event.startAt,
-    })) ?? []
-
-  return [...roundItems, ...eventItems].sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
 })
 </script>
 
