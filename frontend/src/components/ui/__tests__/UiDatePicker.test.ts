@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { render } from 'vitest-browser-vue'
 import UiDatePicker from '../UiDatePicker.vue'
-import { formatDate } from '../../lib/date'
+import { formatDate } from '../../../lib/date'
 
 const FIXED_DATE = new Date(2026, 3, 10)
 const FIXED_DATE_2 = new Date(2026, 3, 20)
@@ -99,7 +99,6 @@ describe('UiDatePicker', () => {
       })
 
       await userEvent.keyboard('{Tab}{Enter}')
-
       expect(screen.getByRole('dialog')).toBeInTheDocument()
     })
 
