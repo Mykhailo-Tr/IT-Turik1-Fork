@@ -10,7 +10,7 @@
 
     <div class="criteria-panel">
       <ui-card v-if="criteriaCount === 0" class="empty-card">
-        <p>No criteria added</p>
+        <p class="empty-error">No criteria added</p>
       </ui-card>
 
       <div v-else class="criteria-list">
@@ -160,11 +160,6 @@ function removeCriterion(id: string) {
 .criteria-list {
   display: grid;
   gap: 0.95rem;
-}
-
-.empty-card {
-  border: 1px dashed var(--border);
-  color: var(--muted-foreground);
 }
 
 .criteria-card-info {

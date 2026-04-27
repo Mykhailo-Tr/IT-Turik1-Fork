@@ -107,7 +107,7 @@
                         </p>
                       </div>
 
-                      <ui-badge variant="green">
+                      <ui-badge :variant="statusBadgeVariant(tournament.status)">
                         {{ tournament.status }}
                       </ui-badge>
                     </div>
@@ -129,7 +129,7 @@
             </template>
 
             <ui-card v-if="!isError && pageItems.length === 0" class="empty-card"
-              ><p>No tournaments found</p></ui-card
+              ><p class="empty-error">No tournaments found</p></ui-card
             >
 
             <div v-if="totalPages > 1" class="pagination">
@@ -180,6 +180,7 @@ import { useProfile } from '@/queries/accounts'
 import { useTournaments } from '@/queries/tournaments'
 import { formatDate } from '@/lib/date'
 import type { GetTournamentsArgs } from '@/api/services/tournaments/types'
+import type { TournamentStatus } from '@/api/dbTypes'
 
 const statusOptions = [
   { label: 'Registration', value: 'registration' },
@@ -206,6 +207,14 @@ const error = computed(() => parseApiError(tournamentsError.value))
 
 const pageItems = computed(() => data.value?.data ?? [])
 const totalPages = computed(() => Math.ceil((data.value?.total ?? 0) / pageSize))
+const statusBadgeVariant = (status: TournamentStatus) => {
+  if (status === 'draft') return 'gray'
+  if (status === 'finished') return 'gray'
+  if (status === 'running') return 'green'
+  if (status === 'registration') return 'orange'
+
+  return 'gray'
+}
 
 const visiblePages = computed(() => {
   const total = totalPages.value
@@ -305,12 +314,6 @@ const onStatusChange = () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.empty-card {
-  border: 1px dashed var(--border);
-  background: var(--muted);
-  text-align: center;
 }
 
 .tournaments-date p {

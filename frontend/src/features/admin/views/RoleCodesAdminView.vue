@@ -128,9 +128,11 @@
                 </div>
               </ui-card>
 
-              <p v-if="!codes.length" class="text-muted empty-error">
-                No codes found for current filter.
-              </p>
+              <ui-card class="empty-card">
+                <p v-if="!codes.length" class="text-muted empty-error">
+                  No codes found for current filter.
+                </p>
+              </ui-card>
             </template>
           </div>
         </ui-skeleton-loader>

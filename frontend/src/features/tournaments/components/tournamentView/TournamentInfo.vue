@@ -159,6 +159,7 @@ const toggleDescriptionModal = () => {
 .tournament-description {
   border-radius: 6px;
   transition: baclground 2s ease-in;
+  word-break: break-word;
 }
 
 .tournament-description.large:hover {
