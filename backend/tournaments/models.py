@@ -165,10 +165,10 @@ class Round(models.Model):
             if self.start_date < tournament.start_date or self.end_date > tournament.end_date:
                 errors['start_date'] = 'Round dates must be within tournament dates.'
 
-            if tournament.rounds.count() == 1:
-                if self.start_date != tournament.start_date or self.end_date != tournament.end_date:
-                    errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
-
+        if tournament.rounds.exclude(pk=self.pk).count() == 0:
+            if self.start_date != tournament.start_date or self.end_date != tournament.end_date:
+                errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
+        
         if tournament and self.winners_count is not None:
             last_round = (
                 Round.objects.filter(tournament=tournament)
