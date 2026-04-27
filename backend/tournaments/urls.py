@@ -40,7 +40,7 @@ urlpatterns = [
         TournamentTeamRegistrationDetailView.as_view(),
         name='tournament_registration_detail',
     ),
-    path('rounds/', RoundListCreateView.as_view(), name='rounds'),
+    path('<int:tournament_pk>/rounds/', RoundListCreateView.as_view(), name='rounds'),
     path('rounds/<int:pk>/', RoundDetailView.as_view(), name='round_detail'),
     path('rounds/<int:pk>/start/', RoundStartView.as_view(), name='round_start'),
     path('rounds/<int:pk>/close-submissions/', RoundCloseSubmissionsView.as_view(), name='round_close_submissions'),

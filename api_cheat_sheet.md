@@ -17,8 +17,8 @@
 | **Активний турнір команди** | GET | `/api/tournaments/active/?team_id={id}` | Auth |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
 | **Деталі/Зміна реєстрації**| GET/PATCH | `/api/tournaments/{id}/registrations/{reg_id}/` | Admin |
-| **Список раундів** | GET | `/api/tournaments/rounds/` | Auth |
-| **Створити раунд** | POST | `/api/tournaments/rounds/` | Admin |
+| **Список раундів** | GET | `/api/tournaments/{id}/rounds/` | Auth |
+| **Створити раунд** | POST | `/api/tournaments/{id}/rounds/` | Admin |
 | **Деталі/Зміна/Видалення раунду**| GET/PATCH/DEL | `/api/tournaments/rounds/{id}/` | GET: Auth, PATCH/DEL: Admin |
 | **Почати раунд** | POST | `/api/tournaments/rounds/{id}/start/` | Admin |
 | **Закрити прийом робіт**| POST | `/api/tournaments/rounds/{id}/close-submissions/` | Admin |
@@ -141,14 +141,13 @@
 
 ### 2. Раунди
 
-**Список раундів — GET `/api/tournaments/rounds/`**
-- Доступні фільтри: `?tournament_id=1`, `?status=active,submission_closed`
+**Список раундів — GET `/api/tournaments/{id}/rounds/`**
+- Доступні фільтри: `?status=active,submission_closed`
 - Звичайні користувачі бачать тільки раунди, які не мають статусу `draft`. Адміни бачать всі.
 
-**Створення раунду (Admin) — POST `/api/tournaments/rounds/`**
+**Створення раунду (Admin) — POST `/api/tournaments/{id}/rounds/`**
 ```json
 {
-  "tournament": 1,
   "name": "Final Stage",
   "start_date": "2026-05-05T10:00:00Z",
   "end_date": "2026-05-07T18:00:00Z",
