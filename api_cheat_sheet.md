@@ -93,21 +93,16 @@
 ```json
 [
   {
-    "id": 1,
-    "team": {
-      "id": 10,
-      "name": "Team Alpha",
-      "is_public": true
-    },
+    "id": 10,
+    "name": "Team Alpha",
+    "members_count": 3,
+    "is_public": true,
     "is_active": true
   },
   {
-    "id": 2,
-    "team": {
-      "id": 11,
-      "name": "Team Beta",
-      "is_public": false
-    },
+    "id": 11,
+    "name": "Team Beta",
+    "is_public": false,
     "is_active": false
   }
 ]
