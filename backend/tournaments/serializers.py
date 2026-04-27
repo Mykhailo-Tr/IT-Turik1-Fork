@@ -335,8 +335,14 @@ class TournamentTeamRegistrationUpdateSerializer(serializers.ModelSerializer):
 
 
 class TournamentTeamRegistrationListSerializer(serializers.ModelSerializer):
-    team = TeamSummarySerializer(read_only=True)
-
+    id = serializers.IntegerField(source='team.id')
+    name = serializers.CharField(source='team.name')
+    is_public = serializers.BooleanField(source='team.is_public')
+    members_count = serializers.SerializerMethodField()
+ 
     class Meta:
         model = TournamentTeamRegistration
-        fields = ('id', 'team', 'is_active')
+        fields = ('id', 'name', 'members_count', 'is_public', 'is_active')
+ 
+    def get_members_count(self, obj):
+        return obj.team.team_members.count() + 1  # members + captain
