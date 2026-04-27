@@ -17,9 +17,9 @@
 | **Активний турнір команди** | GET | `/api/tournaments/active/?team_id={id}` | Auth |
 | **Реєстрація команди** | POST | `/api/tournaments/{id}/register-team/` | Капітан |
 | **Деталі/Зміна реєстрації**| GET/PATCH | `/api/tournaments/{id}/registrations/{reg_id}/` | Admin |
-| **Список раундів** | GET | `/api/tournaments/rounds/` | Всі (Auth) |
+| **Список раундів** | GET | `/api/tournaments/rounds/` | Auth |
 | **Створити раунд** | POST | `/api/tournaments/rounds/` | Admin |
-| **Деталі/Зміна раунду**| GET/PATCH | `/api/tournaments/rounds/{id}/` | GET: Всі, PATCH: Admin |
+| **Деталі/Зміна/Видалення раунду**| GET/PATCH/DEL | `/api/tournaments/rounds/{id}/` | GET: Auth, PATCH/DEL: Admin |
 | **Почати раунд** | POST | `/api/tournaments/rounds/{id}/start/` | Admin |
 | **Закрити прийом робіт**| POST | `/api/tournaments/rounds/{id}/close-submissions/` | Admin |
 | **Фіналізація оцінок** | POST | `/api/tournaments/rounds/{id}/mark-evaluated/` | Admin |
@@ -149,7 +149,6 @@
 ```json
 {
   "tournament": 1,
-  "position": 2,
   "name": "Final Stage",
   "start_date": "2026-05-05T10:00:00Z",
   "end_date": "2026-05-07T18:00:00Z",
@@ -168,6 +167,9 @@
 }
 ```
 
+**Видалення раунду (Admin) — DELETE `/api/tournaments/rounds/{id}/`**
+- Неможливо видалити останній раунд турніру.
+
 **Редагування раунду — PATCH `/api/tournaments/rounds/{id}/`**
 ```json
 {
@@ -181,6 +183,14 @@
 }
 ```
 
+> **Валідація раунду (актуальна бізнес-логіка):**
+> - `start_date < end_date` (інакше 400).
+> - Дати раунду мають бути в межах дат турніру.
+> - Раунди одного турніру не можуть перетинатися в часі. Перевірка виконується в бізнес-логіці моделі (`Round.clean()`), тому працює однаково для create/update.
+> - Кейс на кшталт `round1(21.04-24.04)` і `round2(23.04-27.04)` заборонений (перетин періодів).
+> - `winners_count` дозволено лише для останнього раунду.
+> - Для single-round турніру (коли в турнірі один раунд) дати раунду мають збігатися з датами турніру.
+>
 > **Валідація `passing_count`:**
 > Якщо вказано `passing_count` і в турнірі вже є зареєстровані команди, значення не може перевищувати кількість зареєстрованих команд. Якщо команд ще немає (реєстрація не відкрита), перевірка пропускається.
 

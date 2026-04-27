@@ -84,7 +84,6 @@ class Round(models.Model):
     )
 
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='rounds')
-    position = models.PositiveIntegerField()
     name = models.CharField(max_length=255, blank=True)
     description = models.JSONField(default=dict, blank=True)
     tech_requirements = models.JSONField(default=dict, blank=True)
@@ -105,11 +104,11 @@ class Round(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('tournament_id', 'position')
+        ordering = ('tournament_id', 'start_date')
         constraints = [
             models.UniqueConstraint(
-                fields=['tournament', 'position'],
-                name='uniq_round_tournament_position',
+                fields=['tournament', 'start_date'],
+                name='uniq_round_tournament_start_date',
             ),
             models.UniqueConstraint(
                 fields=['tournament'],
@@ -119,15 +118,41 @@ class Round(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.tournament_id}:{self.position}:{self.name or self.default_name}'
+        return f'{self.tournament_id}:{self.name or self.default_name}'
 
     @property
     def default_name(self):
-        return f'Round {self.position}'
+        pos = self.position
+        return f'Round {pos}' if pos else 'Round'
+
+    @property
+    def position(self):
+        ids = list(
+            Round.objects.filter(tournament_id=self.tournament_id)
+            .order_by('start_date')
+            .values_list('id', flat=True)
+        )
+        try:
+            return ids.index(self.pk) + 1
+        except ValueError:
+            return None
 
     @property
     def is_submission_open(self):
         return self.status == self.STATUS_ACTIVE
+
+    def _validate_date_overlaps(self, errors):
+        if not self.tournament_id or not self.start_date or not self.end_date:
+            return
+
+        overlaps = Round.objects.filter(
+            tournament_id=self.tournament_id,
+            start_date__lt=self.end_date,
+            end_date__gt=self.start_date,
+        ).exclude(pk=self.pk)
+
+        if overlaps.exists():
+            errors['start_date'] = 'Round dates overlap with another round in this tournament.'
 
     def clean(self):
         errors = {}
@@ -144,13 +169,17 @@ class Round(models.Model):
                 if self.start_date != tournament.start_date or self.end_date != tournament.end_date:
                     errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
 
-        if self.position < 1:
-            errors['position'] = 'position must be at least 1.'
-        if tournament and self.position > tournament.rounds.count() + 1:
-            errors['position'] = 'position must be less than or equal to tournament rounds.count() + 1.'
+        if tournament and self.winners_count is not None:
+            last_round = (
+                Round.objects.filter(tournament=tournament)
+                .order_by('-start_date')
+                .values_list('id', flat=True)
+                .first()
+            )
+            if last_round and self.pk != last_round:
+                errors['winners_count'] = 'winners_count is allowed only for the last round.'
 
-        if tournament and self.winners_count is not None and self.position != (Round.objects.filter(tournament=tournament).order_by('-position').values_list('position', flat=True).first() or 0):
-            errors['winners_count'] = 'winners_count is allowed only for the last round.'
+        self._validate_date_overlaps(errors)
 
         if not isinstance(self.criteria, list):
             errors['criteria'] = 'Criteria must be a list.'
@@ -264,5 +293,4 @@ class TournamentTeamRegistration(models.Model):
 
     def __str__(self):
         return f'{self.tournament_id}:{self.team_id}'
-
 
