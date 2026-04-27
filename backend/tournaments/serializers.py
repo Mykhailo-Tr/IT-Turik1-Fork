@@ -103,6 +103,9 @@ class RoundSerializer(serializers.ModelSerializer):
             'status',
         )
         read_only_fields = ('status',)
+        extra_kwargs = {
+            'tournament': {'required': False},
+        }
 
     def validate(self, attrs):
         instance = self.instance

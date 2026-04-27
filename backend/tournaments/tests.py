@@ -96,10 +96,9 @@ class TournamentApiTests(APITestCase):
             **self.tournament_data
         )
         self.client.force_authenticate(user=self.admin)
-        url = reverse('rounds')
+        url = reverse('rounds', kwargs={'tournament_pk': tournament.id})
         
         round_data = {
-            'tournament': tournament.id,
             'name': 'Extra Round',
             'start_date': self.tournament_data['start_date'],
             'end_date': self.tournament_data['end_date'],
@@ -784,10 +783,9 @@ class TournamentApiTests(APITestCase):
             **self.tournament_data
         )
         self.client.force_authenticate(user=self.admin)
-        url = reverse('rounds')
+        url = reverse('rounds', kwargs={'tournament_pk': tournament.id})
         
         round_data = {
-            'tournament': tournament.id,
             'name': 'Invalid Round',
             'start_date': tournament.start_date - timezone.timedelta(days=1),
             'end_date': tournament.end_date,
@@ -812,11 +810,10 @@ class TournamentApiTests(APITestCase):
         )
         
         self.client.force_authenticate(user=self.admin)
-        url = reverse('rounds')
+        url = reverse('rounds', kwargs={'tournament_pk': tournament.id})
         
         # Try to create overlapping round via API (starts during first round)
         round2_data = {
-            'tournament': tournament.id,
             'name': 'Round 2',
             'start_date': (tournament.start_date + timezone.timedelta(days=2)).isoformat(),
             'end_date': (tournament.start_date + timezone.timedelta(days=5)).isoformat(),
@@ -828,7 +825,6 @@ class TournamentApiTests(APITestCase):
         
         # Try to create round that ends during first round
         round3_data = {
-            'tournament': tournament.id,
             'name': 'Round 3',
             'start_date': (tournament.start_date - timezone.timedelta(days=1)).isoformat(),
             'end_date': (tournament.start_date + timezone.timedelta(days=1)).isoformat(),
@@ -839,7 +835,6 @@ class TournamentApiTests(APITestCase):
         
         # Create non-overlapping round (should work)
         round4_data = {
-            'tournament': tournament.id,
             'name': 'Round 4',
             'start_date': (tournament.start_date + timezone.timedelta(days=4)).isoformat(),
             'end_date': (tournament.start_date + timezone.timedelta(days=6)).isoformat(),
