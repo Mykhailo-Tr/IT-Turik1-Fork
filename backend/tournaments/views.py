@@ -1,7 +1,7 @@
 from django.db.models import Count, IntegerField, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -286,16 +286,19 @@ class RoundListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
     serializer_class = RoundSerializer
 
+    def _get_tournament(self):
+        if hasattr(self, '_tournament'):
+            return self._tournament
+        self._tournament = get_object_or_404(Tournament, pk=self.kwargs['tournament_pk'])
+        return self._tournament
+
     def get_queryset(self):
-        queryset = get_round_queryset()
+        tournament = self._get_tournament()
+        queryset = get_round_queryset().filter(tournament_id=tournament.id)
         user = self.request.user
 
         if not is_platform_admin(user):
             queryset = queryset.exclude(status=Round.STATUS_DRAFT)
-
-        tournament_id = self.request.query_params.get('tournament_id')
-        if tournament_id:
-            queryset = queryset.filter(tournament_id=tournament_id)
 
         status_param = self.request.query_params.get('status')
         if status_param:
@@ -304,6 +307,27 @@ class RoundListCreateView(generics.ListCreateAPIView):
                 queryset = queryset.filter(status__in=statuses)
 
         return queryset
+
+    def perform_create(self, serializer):
+        tournament = self._get_tournament()
+        request_tournament = serializer.validated_data.get('tournament')
+        if request_tournament and request_tournament.id != tournament.id:
+            raise ValidationError({'tournament': 'Tournament in URL and payload must match.'})
+        serializer.save(tournament=tournament)
+
+    def create(self, request, *args, **kwargs):
+        tournament = self._get_tournament()
+        data = request.data.copy()
+        if hasattr(data, 'setdefault'):
+            data.setdefault('tournament', tournament.id)
+        else:
+            data = {**data, 'tournament': tournament.id}
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -401,5 +425,3 @@ class CurrentTaskView(SyncStatusesMixin, APIView):
             raise NotFound('No active round is available right now.')
 
         return Response(CurrentTaskSerializer(active_round).data, status=status.HTTP_200_OK)
-
-
