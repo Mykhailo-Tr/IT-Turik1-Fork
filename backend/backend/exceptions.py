@@ -47,9 +47,12 @@ def _normalize_data(data):
 
 def _extract_message(normalized_data, status_code):
     if isinstance(normalized_data, dict):
+        reserved_keys = {'detail', 'message', 'status', 'error'}
+        validation_fields = {k: v for k, v in normalized_data.items() if k not in reserved_keys}
         return (
             _extract_first_string(normalized_data.get('message'))
             or _extract_first_string(normalized_data.get('detail'))
+            or _extract_first_string(validation_fields)
             or _default_message_for_status(status_code)
         )
     if isinstance(normalized_data, list):
