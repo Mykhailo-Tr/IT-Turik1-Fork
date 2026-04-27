@@ -100,15 +100,10 @@ class TournamentApiTests(APITestCase):
         
         round_data = {
             'tournament': tournament.id,
-            'position': 3,
             'name': 'Extra Round',
             'start_date': self.tournament_data['start_date'],
             'end_date': self.tournament_data['end_date'],
         }
-        response = self.client.post(url, round_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
-        round_data['position'] = 1
         response = self.client.post(url, round_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -120,7 +115,6 @@ class TournamentApiTests(APITestCase):
         )
         round_obj = Round.objects.create(
             tournament=tournament,
-            position=1,
             status=Round.STATUS_ACTIVE,
             start_date=timezone.now() - timezone.timedelta(hours=1),
             end_date=timezone.now() + timezone.timedelta(hours=1),
@@ -157,7 +151,6 @@ class TournamentApiTests(APITestCase):
         )
         round_obj = Round.objects.create(
             tournament=tournament,
-            position=1,
             status=Round.STATUS_ACTIVE,
             start_date=timezone.now() - timezone.timedelta(hours=1),
             end_date=timezone.now() + timezone.timedelta(hours=1),
@@ -534,7 +527,6 @@ class TournamentApiTests(APITestCase):
         )
         round_obj = Round.objects.create(
             tournament=tournament,
-            position=1,
             status=Round.STATUS_ACTIVE,
             start_date=timezone.now() - timezone.timedelta(days=2),
             end_date=timezone.now() - timezone.timedelta(days=1),
@@ -710,7 +702,6 @@ class TournamentApiTests(APITestCase):
         )
         Round.objects.create(
             tournament=running_tournament,
-            position=1,
             status=Round.STATUS_ACTIVE,
             start_date=timezone.now() - timezone.timedelta(hours=1),
             end_date=timezone.now() + timezone.timedelta(days=5),
@@ -797,7 +788,6 @@ class TournamentApiTests(APITestCase):
         
         round_data = {
             'tournament': tournament.id,
-            'position': 1,
             'name': 'Invalid Round',
             'start_date': tournament.start_date - timezone.timedelta(days=1),
             'end_date': tournament.end_date,

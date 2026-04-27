@@ -1,4 +1,4 @@
-from django.db import models, transaction
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
@@ -48,12 +48,17 @@ def start_round(round_obj):
     if tournament.status not in {Tournament.STATUS_REGISTRATION, Tournament.STATUS_RUNNING}:
         raise ValidationError({'tournament': 'Tournament must be in registration or running status.'})
 
-    if round_obj.position == 1 and tournament.status != Tournament.STATUS_REGISTRATION:
+    is_first_round = not Round.objects.filter(
+        tournament=tournament,
+        start_date__lt=round_obj.start_date,
+    ).exists()
+    if is_first_round and tournament.status != Tournament.STATUS_REGISTRATION:
         raise ValidationError({'tournament': 'First round can start only from registration status.'})
 
-    if round_obj.position > 1:
+    if not is_first_round:
         prev_round = (
-            Round.objects.filter(tournament=tournament, position=round_obj.position - 1)
+            Round.objects.filter(tournament=tournament, start_date__lt=round_obj.start_date)
+            .order_by('-start_date')
             .only('status')
             .first()
         )
@@ -204,19 +209,11 @@ def delete_round(round_obj):
     round_obj = Round.objects.select_for_update().select_related('tournament').get(id=round_obj.id)
     tournament = round_obj.tournament
 
-    rounds_qs = Round.objects.select_for_update().filter(tournament=tournament)
-    rounds_count = rounds_qs.count()
+    rounds_count = Round.objects.filter(tournament=tournament).count()
     if rounds_count <= 1:
         raise ValidationError({'round': 'Cannot delete the last remaining round.'})
-
-    deleted_position = round_obj.position
     round_obj.delete()
-
-    # Keep round sequence dense and synchronized with tournament.rounds.count().
-    rounds_qs.filter(position__gt=deleted_position).update(position=models.F('position') - 1)
-
     tournament.save(update_fields=['updated_at'])
-
     return tournament
 
 

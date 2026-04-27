@@ -43,14 +43,14 @@ from .services import (
 
 def get_tournament_queryset():
     return Tournament.objects.prefetch_related(
-        Prefetch('rounds', queryset=Round.objects.order_by('position'))
+        Prefetch('rounds', queryset=Round.objects.order_by('start_date'))
     ).annotate(
         rounds_count=Count('rounds')
     ).order_by('-created_at')
 
 
 def get_round_queryset():
-    return Round.objects.select_related('tournament').order_by('tournament_id', 'position')
+    return Round.objects.select_related('tournament').order_by('tournament_id', 'start_date')
 
 
 def get_own_submissions_queryset(user):

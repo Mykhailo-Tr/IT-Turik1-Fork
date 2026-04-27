@@ -12,7 +12,7 @@ class TournamentAdmin(admin.ModelAdmin):
 
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
-    list_display = ('id', 'tournament', 'position', 'name', 'status', 'start_date', 'end_date')
+    list_display = ('id', 'tournament', 'name', 'status', 'start_date', 'end_date')
     list_filter = ('status', 'evaluation_criteria')
     search_fields = ('name', 'tournament__name')
 
