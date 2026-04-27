@@ -35,7 +35,7 @@
 <script setup lang="ts">
 import { useNotification } from '@/composables/useNotification'
 import AppNavbar from './components/shared/AppNavbar.vue'
-import UiButton from './components/UiButton.vue'
+import UiButton from './components/ui/UiButton.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 import CrossIcon from './icons/CrossIcon.vue'
 

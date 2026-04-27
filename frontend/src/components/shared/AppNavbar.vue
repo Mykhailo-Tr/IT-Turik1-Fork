@@ -117,9 +117,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import UiButton from '../UiButton.vue'
+import UiButton from '../ui/UiButton.vue'
 import { useUserStore } from '@/stores/user'
-import { useProfile } from '@/queries/accounts'
+import { useProfile } from '@/api/queries/accounts'
 import SwitchThemeButton from './SwitchThemeButton.vue'
 
 const route = useRoute()
