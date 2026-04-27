@@ -109,7 +109,7 @@ import UiCard from '@/components/ui/UiCard.vue'
 import UiSkeleton from '@/components/ui/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import { useProfile } from '@/api/queries/accounts'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 
 const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
 const error = computed(() => parseApiError(profileError.value))

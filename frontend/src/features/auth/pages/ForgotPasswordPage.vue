@@ -41,7 +41,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import { useForgotPassword } from '@/api/queries/accounts'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 import { useNotification } from '@/composables/useNotification'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 

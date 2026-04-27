@@ -79,7 +79,7 @@ import { useLogin } from '@/api/queries/accounts'
 import { useQueryClient } from '@tanstack/vue-query'
 import { accountKeys } from '@/api/queries/keys'
 import type { LoginResponse } from '@/api/services/accounts/types'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 import { useForm } from '@/composables/useForm'
 import { LoginSchema } from '@/schemas/auth.schema'
 

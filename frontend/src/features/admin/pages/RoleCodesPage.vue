@@ -144,7 +144,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { RoleCodesUserRole } from '@/api/services/accounts/types'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiSelect from '@/components/ui/UiSelect.vue'

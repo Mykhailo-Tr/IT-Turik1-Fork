@@ -164,7 +164,7 @@ import { useRegister } from '@/api/queries/accounts'
 import type { UserRole } from '@/api/dbTypes'
 import { useNotification } from '@/composables/useNotification'
 import { useUserStore } from '@/stores/user'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 import { useForm } from '@/composables/useForm'
 import { RegisterSchema } from '@/schemas/auth.schema'
 

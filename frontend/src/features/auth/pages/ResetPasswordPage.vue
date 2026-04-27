@@ -66,7 +66,7 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiCard from '@/components/ui/UiCard.vue'
 import { useResetPassword, useValidateResetLink } from '@/api/queries/accounts'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 
 const route = useRoute()
 const form = ref({

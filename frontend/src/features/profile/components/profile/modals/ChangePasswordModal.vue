@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiPasswordField from '@/components/ui/UiPasswordField.vue'

@@ -133,7 +133,7 @@ import LoadingIcon from '@/icons/LoadingIcon.vue'
 import type { UserRole } from '@/api/dbTypes'
 import { useForm } from '@/composables/useForm'
 import { CompleteProfileSchema } from '@/schemas/profile.schema'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 
 interface Form {
   username: string

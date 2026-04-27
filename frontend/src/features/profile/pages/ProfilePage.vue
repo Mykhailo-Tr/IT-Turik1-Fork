@@ -168,7 +168,7 @@ import { useProfile } from '@/api/queries/accounts'
 import { useUserStore } from '@/stores/user'
 import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/ui/UiSkeleton.vue'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 import { truncateText } from '@/lib/utils'
 
 const store = useUserStore()

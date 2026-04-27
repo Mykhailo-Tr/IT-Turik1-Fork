@@ -26,7 +26,7 @@ import { useRoute } from 'vue-router'
 import UiCard from '@/components/ui/UiCard.vue'
 import { useActivateAccount } from '@/api/queries/accounts'
 import { useNotification } from '@/composables/useNotification'
-import { parseApiError } from '@/api'
+import { parseApiError } from '@/api/errors'
 
 const route = useRoute()
 const { showNotification } = useNotification()
