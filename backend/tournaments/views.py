@@ -243,21 +243,20 @@ class TournamentEligibleTeamsView(APIView):
 
 class TournamentTeamsView(APIView):
     permission_classes = [IsAuthenticated]
-
+ 
     def get(self, request, pk):
         get_object_or_404(Tournament, pk=pk)
-
+ 
         queryset = TournamentTeamRegistration.objects.filter(
             tournament_id=pk,
-        ).select_related('team')
-
+        ).select_related('team').prefetch_related('team__team_members')
+ 
         only_active = request.query_params.get('only_active')
         if only_active and only_active.lower() == 'true':
             queryset = queryset.filter(is_active=True)
-
+ 
         serializer = TournamentTeamRegistrationListSerializer(queryset.order_by('id'), many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 class TeamActiveTournamentView(APIView):
     permission_classes = [IsAuthenticated]
