@@ -7,6 +7,8 @@ import type {
   GetCurrentRoundResponse,
   GetEligibleTeamsArgs,
   GetEligibleTeamsResponse,
+  GetRegisteredTeamsArgs,
+  GetRegisteredTeamsResponse,
   GetTournamentInfoArgs,
   GetTournamentInfoResponse,
   GetTournamentsArgs,
@@ -41,6 +43,17 @@ export const useTournaments = (
         status: toValue(payload.status),
       }),
     staleTime: 1000 * 60 * 5,
+    ...config,
+  })
+}
+
+export const useRegisteredTeams = (
+  payload: GetRegisteredTeamsArgs,
+  config?: QueryConfig<GetRegisteredTeamsResponse>,
+) => {
+  return useQuery<GetRegisteredTeamsResponse, AxiosError<ApiError>>({
+    queryKey: touranmentsKeys['registered-teams'](payload.id),
+    queryFn: () => $api.tournaments.getRegisteredTeams({ id: payload.id }),
     ...config,
   })
 }

@@ -49,6 +49,17 @@ export type GetTournamentInfoResponse = Tournament & {
   rounds: [] // TODO
 }
 
+// Tournament info
+export interface GetRegisteredTeamsArgs {
+  id: TournamentId
+}
+
+export type GetRegisteredTeamsResponse = {
+  id: number
+  team: Pick<Team, 'id' | 'name' | 'is_public'> & { members_count: number }
+  is_active: true
+}[]
+
 // Get eligible teams
 export interface GetEligibleTeamsArgs {
   id: TournamentId

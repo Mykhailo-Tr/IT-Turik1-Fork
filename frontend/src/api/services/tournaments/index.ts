@@ -5,6 +5,9 @@ import type {
   GetCurrentRoundArgs,
   GetCurrentRoundResponse,
   GetEligibleTeamsArgs,
+  GetEligibleTeamsResponse,
+  GetRegisteredTeamsArgs,
+  GetRegisteredTeamsResponse,
   GetTournamentInfoArgs,
   GetTournamentInfoResponse,
   GetTournamentsArgs,
@@ -34,6 +37,11 @@ export const tournamentsService = {
     return data
   },
 
+  getRegisteredTeams: async (args: GetRegisteredTeamsArgs) => {
+    const { data } = await apiClient.get<GetRegisteredTeamsResponse>(`${prefix}/${args.id}/teams`)
+    return data
+  },
+
   createTournament: async (args: CreateTournamentArgs) => {
     const { data } = await apiClient.post(`${prefix}/manage/`, args.body)
     return data
@@ -45,7 +53,9 @@ export const tournamentsService = {
   },
 
   getEligibleTeams: async (args: GetEligibleTeamsArgs) => {
-    const { data } = await apiClient.get(`${prefix}/${args.id}/eligible-teams`)
+    const { data } = await apiClient.get<GetEligibleTeamsResponse>(
+      `${prefix}/${args.id}/eligible-teams`,
+    )
     return data
   },
 

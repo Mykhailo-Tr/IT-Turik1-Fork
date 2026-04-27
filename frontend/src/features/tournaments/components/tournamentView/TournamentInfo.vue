@@ -94,7 +94,10 @@
         Current round: {{ currentRound.name }}
       </ui-button>
 
-      <join-tournament-btn :tournament-id="props.tournamentId" />
+      <join-tournament-btn
+        v-if="tournament?.status === 'registration'"
+        :tournament-id="props.tournamentId"
+      />
     </div>
   </ui-card>
 </template>

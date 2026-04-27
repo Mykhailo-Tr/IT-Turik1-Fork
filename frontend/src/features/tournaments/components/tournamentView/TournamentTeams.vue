@@ -41,18 +41,21 @@
           </template>
 
           <template v-if="filteredTeams.length">
+            <!-- TODO: team.id -->
             <RouterLink
-              :to="`/teams/${team.id}`"
+              :to="`/teams/${team.team.id}`"
               v-for="team in filteredTeams"
               :key="team.id"
               class="team-item"
             >
               <div class="team-info">
                 <TeamIcon />
-                {{ team.name }}
+                <!-- team.name -->
+                {{ team.team.name }}
               </div>
 
-              <ui-badge variant="primary"> {{ team.members }} members </ui-badge>
+              <!-- TODO: team.members_count -->
+              <ui-badge variant="primary"> {{ 0 }} members </ui-badge>
             </RouterLink>
           </template>
 
@@ -71,15 +74,9 @@ import UiInput from '@/components/UiInput.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import TeamIcon from '@/icons/TeamIcon.vue'
-import { useQuery } from '@tanstack/vue-query'
 import { RouterLink } from 'vue-router'
 import { parseApiError } from '@/api'
-
-interface Team {
-  id: number
-  name: string
-  members: number
-}
+import { useRegisteredTeams } from '@/queries/tournaments'
 
 interface Props {
   tournamentId: number
@@ -89,29 +86,12 @@ const props = defineProps<Props>()
 
 const search = ref('')
 
-const fetchTeams = async (): Promise<Team[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  return Array.from({ length: 200 })
-    .fill(null)
-    .map((_, i) => {
-      return {
-        id: i + 1,
-        name: `Team ${i + 1}`,
-        members: i + 1,
-      }
-    })
-}
-
 const {
   data: teams,
   isLoading: isTeamsLoading,
   error: teamsError,
   isError,
-} = useQuery({
-  queryKey: ['tournament-teams', props.tournamentId],
-  queryFn: fetchTeams,
-})
+} = useRegisteredTeams({ id: props.tournamentId })
 const error = computed(() => parseApiError(teamsError.value))
 
 const filteredTeams = computed(() => {
@@ -121,7 +101,8 @@ const filteredTeams = computed(() => {
 
   if (!term) return teams.value
 
-  return teams.value.filter((team) => team.name.toLowerCase().includes(term))
+  // TODO: team.name
+  return teams.value.filter((team) => team.team.name.toLowerCase().includes(term))
 })
 </script>
 
