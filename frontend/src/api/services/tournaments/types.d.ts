@@ -29,6 +29,7 @@ export interface GetTournamentsArgs {
   page: number
   pageSize?: number
   searchQuery?: string
+  status: TournamentStatus
 }
 
 // Create tournament

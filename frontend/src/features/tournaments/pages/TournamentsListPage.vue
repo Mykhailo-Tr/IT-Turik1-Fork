@@ -182,11 +182,16 @@ import { formatDate } from '@/lib/date'
 import type { GetTournamentsArgs } from '@/api/services/tournaments/types'
 import type { TournamentStatus } from '@/api/dbTypes'
 
-const statusOptions = [
-  { label: 'Registration', value: 'registration' },
-  { label: 'Running', value: 'running' },
-  { label: 'Finished', value: 'finished' },
-]
+const statusOptions = computed(() => {
+  const base = [
+    { label: 'Draft', value: 'draft' },
+    { label: 'Registration', value: 'registration' },
+    { label: 'Running', value: 'running' },
+    { label: 'Finished', value: 'finished' },
+  ]
+
+  return user.value?.role === 'admin' ? base : base.filter((option) => option.value !== 'draft')
+})
 
 const pageSize = 12
 
