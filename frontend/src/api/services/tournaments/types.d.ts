@@ -61,11 +61,10 @@ export interface GetRegisteredTeamsArgs {
   id: TournamentId
 }
 
-export type GetRegisteredTeamsResponse = {
-  id: number
-  team: Pick<Team, 'id' | 'name' | 'is_public'> & { members_count: number }
-  is_active: true
-}[]
+export type GetRegisteredTeamsResponse = (Pick<Team, 'id' | 'name' | 'is_public'> & {
+  members_count: number
+  is_active: boolean
+})[]
 
 // Tournament rounds
 export interface GetRoundsArgs {

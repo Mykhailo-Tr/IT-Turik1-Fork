@@ -41,21 +41,18 @@
           </template>
 
           <template v-if="filteredTeams.length">
-            <!-- TODO: team.id -->
             <RouterLink
-              :to="`/teams/${team.team.id}`"
+              :to="`/teams/${team.id}`"
               v-for="team in filteredTeams"
               :key="team.id"
               class="team-item"
             >
               <div class="team-info">
                 <TeamIcon />
-                <!-- team.name -->
-                {{ team.team.name }}
+                {{ team.name }}
               </div>
 
-              <!-- TODO: team.members_count -->
-              <ui-badge variant="primary"> {{ 0 }} members </ui-badge>
+              <ui-badge variant="primary"> {{ team.members_count }} members </ui-badge>
             </RouterLink>
           </template>
 
@@ -98,11 +95,9 @@ const filteredTeams = computed(() => {
   if (!teams.value) return []
 
   const term = search.value.trim().toLowerCase()
-
   if (!term) return teams.value
 
-  // TODO: team.name
-  return teams.value.filter((team) => team.team.name.toLowerCase().includes(term))
+  return teams.value.filter((team) => team.name.toLowerCase().includes(term))
 })
 </script>
 
