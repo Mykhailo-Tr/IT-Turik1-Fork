@@ -315,6 +315,20 @@ class RoundListCreateView(generics.ListCreateAPIView):
             raise ValidationError({'tournament': 'Tournament in URL and payload must match.'})
         serializer.save(tournament=tournament)
 
+    def create(self, request, *args, **kwargs):
+        tournament = self._get_tournament()
+        data = request.data.copy()
+        if hasattr(data, 'setdefault'):
+            data.setdefault('tournament', tournament.id)
+        else:
+            data = {**data, 'tournament': tournament.id}
+
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
@@ -411,4 +425,3 @@ class CurrentTaskView(SyncStatusesMixin, APIView):
             raise NotFound('No active round is available right now.')
 
         return Response(CurrentTaskSerializer(active_round).data, status=status.HTTP_200_OK)
-
