@@ -36,7 +36,6 @@ export interface Team {
   id: TeamId
   name: string
   email: string
-  captain: User
   members: Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'>[]
   invitations: Invitation[]
   join_requests: JoinRequest[]

@@ -59,6 +59,43 @@
       </template>
     </ui-card>
 
+    <ui-card v-if="activeTournament">
+      <template #header>
+        <p class="section-eyebrow">Active tournament</p>
+      </template>
+
+      <div class="active-tournament">
+        <div class="active-tournament-info">
+          <p class="text-muted">Tournament name:</p>
+          <p :title="activeTournament.name">
+            {{ truncateText(activeTournament.name, 20) }}
+          </p>
+        </div>
+
+        <div class="active-tournament-info">
+          <p class="text-muted">Start date:</p>
+          <p>{{ formatDate(activeTournament.start_date, { showHours: true }) }}</p>
+        </div>
+
+        <div class="active-tournament-info">
+          <p class="text-muted">Status:</p>
+          <ui-badge variant="primary" class="active-tournament-badge">{{
+            activeTournament.status
+          }}</ui-badge>
+        </div>
+      </div>
+
+      <template #footer>
+        <ui-button
+          asLink
+          size="sm"
+          class="active-tournament-link"
+          :to="`/tournaments/${activeTournament.id}`"
+          >Go to tournament dashboard</ui-button
+        >
+      </template>
+    </ui-card>
+
     <div class="workspace-grid">
       <team-base-info
         :team="team"
@@ -87,8 +124,16 @@
           />
 
           <template v-if="isCaptain && !isInfoLoading">
-            <team-join-requests :search-filter="searchInput" :is-captain="isCaptain" />
-            <team-invitations :search-filter="searchInput" :is-captain="isCaptain" />
+            <team-join-requests
+              :team-id="teamId"
+              :search-filter="searchInput"
+              :is-captain="isCaptain"
+            />
+            <team-invitations
+              :team-id="teamId"
+              :search-filter="searchInput"
+              :is-captain="isCaptain"
+            />
           </template>
         </div>
       </ui-card>
@@ -123,12 +168,14 @@ import { useTeamInfo } from '@/api/queries/teams'
 import { useProfile } from '@/api/queries/accounts'
 import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/ui/UiSkeleton.vue'
-
 import UiInput from '@/components/ui/UiInput.vue'
 import { truncateText } from '@/lib/utils'
+import { useActiveTeamTournament } from '@/api/queries/tournaments'
+import { formatDate } from '@/lib/date'
 
 const router = useRouter()
 const route = useRoute()
+const teamId = Number(route.params.id)
 
 const searchInput = ref('')
 const { data: user, isLoading: isProfileLoading } = useProfile()
@@ -136,7 +183,14 @@ const {
   data: team,
   isLoading: isInfoLoading,
   isLoadingError: isInfoLoadingError,
-} = useTeamInfo({ id: Number(route.params.id) })
+} = useTeamInfo({ id: teamId })
+
+const { data: activeTournament } = useActiveTeamTournament(
+  { id: teamId },
+  {
+    enabled: team.value?.is_in_active_tournament,
+  },
+)
 
 const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
 </script>
@@ -174,6 +228,32 @@ const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
   flex-wrap: wrap;
 }
 
+.active-tournament {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.active-tournament-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  padding: 0 2rem;
+  border-left: 2px solid var(--border);
+  border-top: none;
+  border-bottom: none;
+}
+
+.active-tournament-info:last-child {
+  border-right: 2px solid var(--border);
+}
+
+.active-tournament-badge,
+.active-tournament-link {
+  width: max-content;
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: 0.95fr 1.25fr;
@@ -201,6 +281,19 @@ const isCaptain = computed(() => team.value?.captain_id === user.value?.id)
 
   .status-tags {
     justify-content: flex-start;
+  }
+
+  .active-tournament {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .active-tournament-info {
+    padding: 0.75rem 0;
+    border-left: none;
+    border-right: none !important;
+    border-top: none;
+    border-bottom: 2px solid var(--border);
   }
 }
 </style>

@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import type { JoinRequestId } from '@/api/dbTypes'
+import type { JoinRequestId, TeamId } from '@/api/dbTypes'
 import type { ManageJoinRequestAction } from '@/api/services/teams/types'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiCard from '@/components/ui/UiCard.vue'
@@ -92,19 +92,21 @@ import { teamKeys } from '@/api/queries/keys'
 import { useManageJoinRequest, useTeamJoinRequests } from '@/api/queries/teams'
 import { useQueryClient } from '@tanstack/vue-query'
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
 
 interface Props {
+  teamId: TeamId
   searchFilter?: string
   isCaptain?: boolean
 }
 
-const route = useRoute()
 const props = defineProps<Props>()
 const queryClient = useQueryClient()
-const teamId = Number(route.params.id)
 const { showNotification } = useNotification()
-const { data: joinRequest, isLoading, isLoadingError } = useTeamJoinRequests({ teamId })
+const {
+  data: joinRequest,
+  isLoading,
+  isLoadingError,
+} = useTeamJoinRequests({ teamId: props.teamId })
 
 const matches = (parts: (string | undefined)[]) => {
   const q = props.searchFilter?.trim().toLowerCase()
@@ -125,13 +127,13 @@ const reviewJoinRequest = (id: JoinRequestId, action: ManageJoinRequestAction) =
   loadingJoinRequestIds.value.add(id)
 
   manageJoinRequestMutate(
-    { id, teamId: teamId, action },
+    { id, teamId: props.teamId, action },
     {
       onSuccess: () => {
         const pastTense = { accept: 'accepted', decline: 'declined' }
         showNotification(`Join request ${pastTense[action]}`, 'success')
 
-        queryClient.invalidateQueries({ queryKey: teamKeys.team(teamId) })
+        queryClient.invalidateQueries({ queryKey: teamKeys.team(props.teamId) })
       },
       onError: (err) => {
         showNotification(

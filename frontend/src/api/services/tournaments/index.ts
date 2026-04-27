@@ -2,6 +2,8 @@ import { apiClient } from '@/api/client'
 import type {
   CreateRoundArgs,
   CreateTournamentArgs,
+  GetActiveTeamTournamentArgs,
+  GetActiveTeamTournamentResponse,
   GetCurrentRoundArgs,
   GetCurrentRoundResponse,
   GetEligibleTeamsArgs,
@@ -21,10 +23,8 @@ const prefix = '/api/tournaments'
 export const tournamentsService = {
   getTournaments: async (args: GetTournamentsArgs) => {
     const params = new URLSearchParams()
+    params.append('page', String(args.page))
 
-    if (args.page) {
-      params.append('page', String(args.page))
-    }
     if (args.pageSize) {
       params.append('pageSize', String(args.pageSize))
     }
@@ -36,6 +36,16 @@ export const tournamentsService = {
     }
 
     const { data } = await apiClient.get(`${prefix}?${params.toString()}`)
+    return data
+  },
+
+  async getActiveTeamTournament(args: GetActiveTeamTournamentArgs) {
+    const params = new URLSearchParams()
+    params.append('team_id', String(args.id))
+
+    const { data } = await apiClient.get<GetActiveTeamTournamentResponse>(
+      `${prefix}/active?${params.toString()}`,
+    )
     return data
   },
 

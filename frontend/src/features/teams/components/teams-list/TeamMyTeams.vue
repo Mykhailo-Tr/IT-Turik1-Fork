@@ -50,7 +50,12 @@
           <template #header>
             <div class="team-header">
               <h3 :title="team.name">{{ truncateText(team.name, 15) }}</h3>
-              <ui-badge v-if="isCaptain(team)" variant="green">Captain</ui-badge>
+              <div class="badges">
+                <ui-badge v-if="isCaptain(team)" variant="green">Captain</ui-badge>
+                <ui-badge v-if="team.is_in_active_tournament" variant="orange"
+                  >Active tournament</ui-badge
+                >
+              </div>
             </div>
           </template>
 
@@ -85,7 +90,7 @@
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiCard from '@/components/ui/UiCard.vue'
-import type { GetTeamInfoResponse } from '@/api/services/teams/types'
+import type { GetTeamsResponse } from '@/api/services/teams/types'
 import { computed, ref } from 'vue'
 import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/ui/UiSkeleton.vue'
@@ -111,12 +116,12 @@ const myPages = computed(() =>
   Math.max(1, Math.ceil((myTeams.value?.length ?? 0) / TEAMS_PER_PAGE)),
 )
 
-const isCaptain = (team: GetTeamInfoResponse) => team.captain_id === user.value?.id
-const captainName = (team: GetTeamInfoResponse) => {
+const isCaptain = (team: GetTeamsResponse[number]) => team.captain_id === user.value?.id
+const captainName = (team: GetTeamsResponse[number]) => {
   const captain = team.members.find((member) => member.id === team.captain_id)
   return captain?.username || `User #${team.captain_id}`
 }
-const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCaptain(team)
+const isAcceptedMember = (team: GetTeamsResponse[number]) => team.is_member || isCaptain(team)
 </script>
 
 <style scoped>
@@ -147,6 +152,11 @@ const isAcceptedMember = (team: GetTeamInfoResponse) => team.is_member || isCapt
 
 .team-header h3 {
   font-family: var(--font-display);
+}
+
+.badges {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .pagination {

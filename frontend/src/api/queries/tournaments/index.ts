@@ -3,6 +3,8 @@ import type { MaybeRefArgs, MutationConfig, QueryConfig } from '../types'
 import type {
   CreateRoundArgs,
   CreateTournamentArgs,
+  GetActiveTeamTournamentArgs,
+  GetActiveTeamTournamentResponse,
   GetCurrentRoundArgs,
   GetCurrentRoundResponse,
   GetEligibleTeamsArgs,
@@ -68,6 +70,17 @@ export const useTournamentRounds = (
   return useQuery<GetRoundsResponse, AxiosError<ApiError>>({
     queryKey: touranmentsKeys.rounds(payload.id),
     queryFn: () => $api.tournaments.getRounds({ id: payload.id }),
+    ...config,
+  })
+}
+
+export const useActiveTeamTournament = (
+  payload: GetActiveTeamTournamentArgs,
+  config?: QueryConfig<GetActiveTeamTournamentResponse>,
+) => {
+  return useQuery<GetActiveTeamTournamentResponse, AxiosError<ApiError>>({
+    queryKey: touranmentsKeys['active-team-tournament'](payload.id),
+    queryFn: () => $api.tournaments.getActiveTeamTournament({ id: payload.id }),
     ...config,
   })
 }

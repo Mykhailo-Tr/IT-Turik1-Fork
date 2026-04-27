@@ -108,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Invitation, UserId } from '@/api/dbTypes'
+import type { Invitation, TeamId, UserId } from '@/api/dbTypes'
 import type { GetTeamInfoResponse } from '@/api/services/teams/types'
 import UiBadge from '@/components/ui/UiBadge.vue'
 import UiButton from '@/components/ui/UiButton.vue'
@@ -118,10 +118,10 @@ import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import { useNotification } from '@/composables/useNotification'
 import { useResendInvitation, useTeamInvitations } from '@/api/queries/teams'
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
 
 interface Props {
+  teamId: TeamId
   searchFilter?: string
   isCaptain?: boolean
 }
@@ -130,13 +130,14 @@ const emit = defineEmits<{
   (e: 'updateTeam', newTeamValue: GetTeamInfoResponse): void
 }>()
 
-const route = useRoute()
 const { showNotification } = useNotification()
 const props = defineProps<Props>()
 
-const teamId = Number(route.params.id)
-
-const { data: invitations, isLoading, isLoadingError } = useTeamInvitations({ teamId })
+const {
+  data: invitations,
+  isLoading,
+  isLoadingError,
+} = useTeamInvitations({ teamId: props.teamId })
 
 const uniqueInvitations = computed(() => {
   const byUserId = new Map<UserId, Invitation>()
@@ -176,7 +177,7 @@ const resendInvitation = (userId: UserId) => {
   loadingInvitationIds.value.add(userId)
 
   resendInvitationMutate(
-    { teamId, body: { user_id: userId } },
+    { teamId: props.teamId, body: { user_id: userId } },
     {
       onSuccess: (data) => {
         emit('updateTeam', data)

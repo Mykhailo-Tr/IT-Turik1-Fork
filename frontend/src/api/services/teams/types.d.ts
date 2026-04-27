@@ -12,11 +12,22 @@ import type {
 export interface GetTeamInfoArgs {
   id: TeamId
 }
-export type GetTeamInfoResponse = Omit<Team, 'captain'> & {
+export type GetTeamInfoResponse = Pick<
+  Team,
+  | 'id'
+  | 'name'
+  | 'email'
+  | 'is_public'
+  | 'organization'
+  | 'contact_discord'
+  | 'contact_telegram'
+  | 'members'
+> & {
   captain_id: UserId
   is_member: boolean
   is_captain: boolean
   can_request_to_join: boolean
+  is_in_active_tournament: true
 }
 
 // CreateTeam
@@ -37,7 +48,22 @@ export interface CreateTeamArgs {
 export type CreateTeamResponse = GetTeamInfoResponse
 
 // GetTeams
-export type GetTeamsResponse = GetTeamInfoResponse[]
+export type GetTeamsResponse = (Pick<
+  Team,
+  | 'id'
+  | 'name'
+  | 'email'
+  | 'is_public'
+  | 'organization'
+  | 'contact_discord'
+  | 'contact_telegram'
+  | 'members'
+> & {
+  captain_id: UserId
+  is_member: boolean
+  can_request_to_join: boolean
+  is_in_active_tournament: boolean
+})[]
 
 // GetTeamJoinRequests
 export type GetTeamJoinRequestsArgs = {
@@ -46,7 +72,7 @@ export type GetTeamJoinRequestsArgs = {
 export type GetTeamJoinRequestsResponse = JoinRequest[]
 
 // GetInvitations
-export type GetInvitationsResponse = Omit<Invitation, 'user'>[]
+export type GetInvitationsResponse = Exclude<Invitation, 'user'>[]
 
 // GetTeamInvitations
 export type GetTeamInvitationsArgs = {

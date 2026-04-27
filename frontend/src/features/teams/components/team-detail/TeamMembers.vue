@@ -91,7 +91,6 @@ const matches = (parts: (string | undefined)[]) => {
   return parts.some((p) => p?.toLowerCase().includes(q))
 }
 
-// ── members ───────────────────────────────────────────────────
 const filteredMembers = computed(() =>
   props.team?.members.filter((m) => matches([m.username, m.email, m.full_name])),
 )
