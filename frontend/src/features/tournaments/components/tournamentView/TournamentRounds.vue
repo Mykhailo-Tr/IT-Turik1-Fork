@@ -35,6 +35,10 @@
         </div>
       </ui-card>
 
+      <ui-card v-else-if="rounds.length === 0" class="empty-card">
+        <p class="empty-error">No rounds found</p>
+      </ui-card>
+
       <div v-else class="rounds-list">
         <ui-card v-for="round in rounds" :key="round.id" class="round-card">
           <template #header>

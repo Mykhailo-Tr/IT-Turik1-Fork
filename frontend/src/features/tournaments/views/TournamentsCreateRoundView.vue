@@ -129,7 +129,7 @@ import { useForm } from '@/composables/useForm'
 import { CreateRoundSchema } from '@/schemas/tournaments.schema'
 import type { JSONContent } from '@tiptap/core'
 import { useCreateRound } from '@/queries/tournaments'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { parseApiError } from '@/api'
 import { useNotification } from '@/composables/useNotification'
 
@@ -163,6 +163,7 @@ const form = useForm<Form>(CreateRoundSchema, {
 })
 
 const route = useRoute()
+const router = useRouter()
 const { showNotification } = useNotification()
 const tournamentId = Number(route.params.id)
 
@@ -180,6 +181,14 @@ function handleSubmit() {
       },
     },
     {
+      onSuccess: () => {
+        router.push({
+          path: '/tournaments/5',
+          query: {
+            section: 'rounds',
+          },
+        })
+      },
       onError(error) {
         const parsedError = parseApiError(error)
         for (const [field, errors] of Object.entries(parsedError?.details || {})) {
