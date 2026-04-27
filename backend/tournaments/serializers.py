@@ -22,7 +22,7 @@ from teams.serializers import TeamSummarySerializer
 class RoundShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = Round
-        fields = ('id', 'position', 'name', 'start_date', 'end_date', 'status')
+        fields = ('id', 'name', 'start_date', 'end_date', 'status')
 
 
 class TournamentPublicSerializer(serializers.ModelSerializer):
@@ -89,7 +89,6 @@ class RoundSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'tournament',
-            'position',
             'name',
             'description',
             'tech_requirements',
@@ -108,7 +107,6 @@ class RoundSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         instance = self.instance
         tournament = attrs.get('tournament', getattr(instance, 'tournament', None))
-        position = attrs.get('position', getattr(instance, 'position', None))
         start_date = attrs.get('start_date', getattr(instance, 'start_date', None))
         end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
         winners_count = attrs.get('winners_count', getattr(instance, 'winners_count', None))
@@ -122,18 +120,17 @@ class RoundSerializer(serializers.ModelSerializer):
             if start_date < tournament.start_date or end_date > tournament.end_date:
                 errors['start_date'] = 'Round dates must be within tournament dates.'
 
-            if tournament.rounds.count() == 1 and (
-                start_date != tournament.start_date or end_date != tournament.end_date
-            ):
-                errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
-
-        if position is not None and position < 1:
-            errors['position'] = 'position must be at least 1.'
-        if tournament and position and position > tournament.rounds.count() + 1:
-            errors['position'] = 'position must be less than or equal to tournament rounds.count() + 1.'
-
-        if tournament and position and winners_count is not None and position != (Round.objects.filter(tournament=tournament).order_by('-position').values_list('position', flat=True).first() or 0):
-            errors['winners_count'] = 'winners_count is allowed only for the last round.'
+        if tournament and winners_count is not None:
+            end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
+            last_end = (
+                Round.objects.filter(tournament=tournament)
+                .order_by('-start_date')
+                .values_list('start_date', flat=True)
+                .first()
+            )
+            this_start = attrs.get('start_date', getattr(instance, 'start_date', None))
+            if last_end and this_start and this_start < last_end:
+                errors['winners_count'] = 'winners_count is allowed only for the last round.'
 
         passing_count = attrs.get('passing_count', getattr(instance, 'passing_count', None))
         if passing_count is not None and tournament:
