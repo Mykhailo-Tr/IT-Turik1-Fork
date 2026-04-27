@@ -401,7 +401,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-option:hover,
 .select-option.focused {
-  background: var(--muted);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
 }
 
 .select-option.selected {
