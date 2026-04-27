@@ -24,6 +24,13 @@ export interface GetTournamentsResponse {
   total: number
 }
 
+// Get tournaments
+export interface GetTournamentsArgs {
+  page: number
+  pageSize?: number
+  searchQuery?: string
+}
+
 // Create tournament
 export type CreateTournamentBody = Pick<
   Tournament,
@@ -49,7 +56,7 @@ export type GetTournamentInfoResponse = Tournament & {
   rounds: [] // TODO
 }
 
-// Tournament info
+// Get registered teams
 export interface GetRegisteredTeamsArgs {
   id: TournamentId
 }
@@ -59,6 +66,13 @@ export type GetRegisteredTeamsResponse = {
   team: Pick<Team, 'id' | 'name' | 'is_public'> & { members_count: number }
   is_active: true
 }[]
+
+// Tournament rounds
+export interface GetRoundsArgs {
+  id: TournamentId
+}
+
+export type GetRoundsResponse = Round[]
 
 // Get eligible teams
 export interface GetEligibleTeamsArgs {
@@ -85,6 +99,7 @@ export type CreateRoundBody = Pick<
 }
 
 export interface CreateRoundArgs {
+  id: TournamentId
   body: CreateRoundBody
 }
 

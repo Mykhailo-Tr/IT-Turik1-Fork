@@ -9,6 +9,8 @@ import type {
   GetEligibleTeamsResponse,
   GetRegisteredTeamsArgs,
   GetRegisteredTeamsResponse,
+  GetRoundsArgs,
+  GetRoundsResponse,
   GetTournamentInfoArgs,
   GetTournamentInfoResponse,
   GetTournamentsArgs,
@@ -54,6 +56,17 @@ export const useRegisteredTeams = (
   return useQuery<GetRegisteredTeamsResponse, AxiosError<ApiError>>({
     queryKey: touranmentsKeys['registered-teams'](payload.id),
     queryFn: () => $api.tournaments.getRegisteredTeams({ id: payload.id }),
+    ...config,
+  })
+}
+
+export const useTournamentRounds = (
+  payload: GetRoundsArgs,
+  config?: QueryConfig<GetRoundsResponse>,
+) => {
+  return useQuery<GetRoundsResponse, AxiosError<ApiError>>({
+    queryKey: touranmentsKeys.rounds(payload.id),
+    queryFn: () => $api.tournaments.getRounds({ id: payload.id }),
     ...config,
   })
 }

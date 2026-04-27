@@ -8,6 +8,8 @@ import type {
   GetEligibleTeamsResponse,
   GetRegisteredTeamsArgs,
   GetRegisteredTeamsResponse,
+  GetRoundsArgs,
+  GetRoundsResponse,
   GetTournamentInfoArgs,
   GetTournamentInfoResponse,
   GetTournamentsArgs,
@@ -42,6 +44,11 @@ export const tournamentsService = {
     return data
   },
 
+  getRounds: async (args: GetRoundsArgs) => {
+    const { data } = await apiClient.get<GetRoundsResponse>(`${prefix}/${args.id}/rounds`)
+    return data
+  },
+
   createTournament: async (args: CreateTournamentArgs) => {
     const { data } = await apiClient.post(`${prefix}/manage/`, args.body)
     return data
@@ -60,7 +67,7 @@ export const tournamentsService = {
   },
 
   createRound: async (args: CreateRoundArgs) => {
-    const { data } = await apiClient.post(`${prefix}/rounds/`, args.body)
+    const { data } = await apiClient.post(`${prefix}/${args.id}/rounds/`, args.body)
     return data
   },
 

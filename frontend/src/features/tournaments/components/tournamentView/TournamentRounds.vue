@@ -39,16 +39,14 @@
         <ui-card v-for="round in rounds" :key="round.id" class="round-card">
           <template #header>
             <div class="round-header">
-              <h4>{{ truncateText(round.title, 70) }}</h4>
-              <ui-badge :variant="badgeVariant(round.status)">{{
-                badgeLabel(round.status)
-              }}</ui-badge>
+              <h4>{{ truncateText(round.name, 70) }}</h4>
+              <ui-badge :variant="badgeVariant(round.status)">{{ round.status }}</ui-badge>
             </div>
           </template>
 
           <div class="round-dates">
-            <p class="text-muted">Start: {{ formatDate(round.startAt, { showHours: true }) }}</p>
-            <p class="text-muted">End: {{ formatDate(round.endAt, { showHours: true }) }}</p>
+            <p class="text-muted">Start: {{ formatDate(round.start_date, { showHours: true }) }}</p>
+            <p class="text-muted">End: {{ formatDate(round.end_date, { showHours: true }) }}</p>
           </div>
 
           <div class="round-actions">
@@ -62,10 +60,10 @@
       <round-details-modal
         v-if="selectedRound"
         v-model="isDetailsOpen"
-        :title="selectedRound?.title ?? ''"
+        :title="selectedRound?.name ?? ''"
         :description="selectedRound?.description ?? {}"
-        :mustHave="selectedRound?.mustHave ?? {}"
-        :technicalRequirements="selectedRound?.technicalRequirements ?? {}"
+        :mustHave="selectedRound?.must_have_requirements ?? {}"
+        :technicalRequirements="selectedRound?.tech_requirements ?? {}"
       />
     </ui-skeleton-loader>
   </section>
@@ -80,346 +78,28 @@ import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import { truncateText } from '@/lib/utils'
 import { formatDate } from '@/lib/date'
-import { useQuery } from '@tanstack/vue-query'
-import type { JSONContent } from '@tiptap/core'
 import { computed, ref } from 'vue'
 import type { Variants } from '@/components/UiBadge.vue'
 import { useProfile } from '@/queries/accounts'
 import RoundDetailsModal from './modals/RoundDetailsModal.vue'
-
-interface Round {
-  id: number
-  title: string
-  status: 'active' | 'upcoming' | 'completed'
-  startAt: Date
-  endAt: Date
-  description: JSONContent
-  technicalRequirements: JSONContent
-  mustHave: JSONContent
-}
+import { useTournamentRounds } from '@/queries/tournaments'
+import type { GetRoundsResponse } from '@/api/services/tournaments/types'
 
 interface Props {
   tournamentId: number
 }
+type Round = GetRoundsResponse[number]
 
 const props = defineProps<Props>()
-
 const { data: user } = useProfile()
-
-const mockRequirements: JSONContent = {
-  type: 'doc',
-  content: [
-    {
-      type: 'heading',
-      attrs: { level: 2 },
-      content: [{ type: 'text', text: 'Requirements' }],
-    },
-    {
-      type: 'bulletList',
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Use TypeScript for the solution.' }],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Provide short README with run instructions.' }],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-}
-
-const mockMustHave: JSONContent = {
-  type: 'doc',
-  content: [
-    {
-      type: 'heading',
-      attrs: { level: 2 },
-      content: [{ type: 'text', text: 'Must have' }],
-    },
-    {
-      type: 'orderedList',
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Form validation for required fields.' }],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [{ type: 'text', text: 'Responsive UI layout.' }],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-}
-
-const mockDescription: JSONContent = {
-  type: 'doc',
-  content: [
-    {
-      type: 'heading',
-      attrs: { level: 1 },
-      content: [{ type: 'text', text: 'Tournament Challenge Description' }],
-    },
-
-    {
-      type: 'paragraph',
-      content: [
-        {
-          type: 'text',
-          text: 'Build a modern tournament platform that allows teams to register, manage rounds, submit solutions, and track rankings in real time. The final solution should prioritize ',
-        },
-        { type: 'text', marks: [{ type: 'bold' }], text: 'clarity' },
-        { type: 'text', text: ', ' },
-        { type: 'text', marks: [{ type: 'italic' }], text: 'performance' },
-        { type: 'text', text: ', and maintainability.' },
-      ],
-    },
-
-    {
-      type: 'heading',
-      attrs: { level: 2 },
-      content: [{ type: 'text', text: 'Core Objectives' }],
-    },
-
-    {
-      type: 'orderedList',
-      attrs: { start: 1 },
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: 'Create a secure authentication flow for ' },
-                { type: 'text', marks: [{ type: 'bold' }], text: 'admins' },
-                { type: 'text', text: ' and participants.' },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Allow tournament organizers to create and schedule multiple rounds with deadlines.',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: 'Implement dashboards with live standings and statistics.' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-
-    {
-      type: 'heading',
-      attrs: { level: 2 },
-      content: [{ type: 'text', text: 'Functional Requirements' }],
-    },
-
-    {
-      type: 'bulletList',
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', marks: [{ type: 'bold' }], text: 'Registration:' },
-                { type: 'text', text: ' Teams can join using invite codes.' },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', marks: [{ type: 'bold' }], text: 'Submissions:' },
-                { type: 'text', text: ' Users upload files or links before deadlines.' },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', marks: [{ type: 'bold' }], text: 'Notifications:' },
-                { type: 'text', text: ' Email or in-app reminders for upcoming rounds.' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-
-    {
-      type: 'heading',
-      attrs: { level: 2 },
-      content: [{ type: 'text', text: 'Technical Expectations' }],
-    },
-
-    {
-      type: 'orderedList',
-      attrs: { start: 4 },
-      content: [
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: 'Use ' },
-                { type: 'text', marks: [{ type: 'italic' }], text: 'TypeScript' },
-                { type: 'text', text: ' across frontend and backend where possible.' },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                {
-                  type: 'text',
-                  text: 'Apply proper validation, error handling, and loading states.',
-                },
-              ],
-            },
-          ],
-        },
-        {
-          type: 'listItem',
-          content: [
-            {
-              type: 'paragraph',
-              content: [
-                { type: 'text', text: 'Ensure responsive layouts for desktop and mobile devices.' },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-
-    {
-      type: 'blockquote',
-      content: [
-        {
-          type: 'paragraph',
-          content: [
-            {
-              type: 'text',
-              text: 'A polished and intuitive experience is valued as much as raw functionality.',
-            },
-          ],
-        },
-      ],
-    },
-
-    {
-      type: 'paragraph',
-      content: [
-        {
-          type: 'text',
-          text: 'Bonus points for implementing advanced analytics, reusable UI components, and elegant state management architecture.',
-        },
-      ],
-    },
-  ],
-}
-
-const fetchRounds = async (_tournamentId: number): Promise<Round[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 450))
-
-  return [
-    {
-      id: 2,
-      title: 'Round 2',
-      status: 'active',
-      startAt: new Date('2026-04-20T10:00:00'),
-      endAt: new Date('2026-04-23T18:00:00'),
-      description: mockDescription,
-      technicalRequirements: mockRequirements,
-      mustHave: mockMustHave,
-    },
-    {
-      id: 1,
-      title: 'Round 1',
-      status: 'completed',
-      startAt: new Date('2026-04-19T10:00:00'),
-      endAt: new Date('2026-04-19T18:00:00'),
-      description: mockDescription,
-      technicalRequirements: mockRequirements,
-      mustHave: mockMustHave,
-    },
-    {
-      id: 3,
-      title: 'Round 3',
-      status: 'upcoming',
-      startAt: new Date('2026-04-19T10:00:00'),
-      endAt: new Date('2026-04-19T18:00:00'),
-      description: mockDescription,
-      technicalRequirements: mockRequirements,
-      mustHave: mockMustHave,
-    },
-  ]
-}
 
 const {
   data,
   isLoading,
   error: roundsError,
   isError,
-} = useQuery({
-  queryKey: ['tournament-rounds', props.tournamentId],
-  queryFn: () => fetchRounds(props.tournamentId),
-})
+} = useTournamentRounds({ id: props.tournamentId })
+
 const error = computed(() => parseApiError(roundsError.value))
 const rounds = computed(() => data.value ?? [])
 
@@ -431,15 +111,10 @@ function openDetails(round: Round) {
   isDetailsOpen.value = true
 }
 
-function badgeLabel(status: Round['status']) {
-  if (status === 'active') return 'Active'
-  if (status === 'upcoming') return 'Upcoming'
-  return 'Completed'
-}
-
 function badgeVariant(status: Round['status']): Variants {
-  if (status === 'active') return 'green'
-  if (status === 'upcoming') return 'orange'
+  if (status === 'active') return 'primary'
+  if (status === 'evaluated') return 'green'
+  if (status === 'submission_closed') return 'gray'
   return 'gray'
 }
 </script>

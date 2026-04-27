@@ -173,6 +173,7 @@ function handleSubmit() {
 
   createRound(
     {
+      id: tournamentId,
       body: {
         tournament: tournamentId,
         ...form.fields.value,

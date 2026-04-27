@@ -103,10 +103,11 @@ interface CriteriaItem {
   max_score: number
 }
 
+type EvaluationCriteria = 'score'
+
 interface Round {
   id: RoundId
   name: string
-  position: number
   start_date: Date
   end_date: Date
   status: RoundStatus
@@ -114,5 +115,7 @@ interface Round {
   must_have_requirements: JSONContent
   tech_requirements: JSONContent
   passing_count: number
+  winners_count: number
+  evaluation_criteria
   criteria: CriteriaItem[]
 }

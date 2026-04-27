@@ -26,7 +26,7 @@
 
     <div class="tournament-start">
       <div>
-        <p class="text-muted">Start date</p>
+        <p class="text-muted">Start / end date</p>
         <div class="">
           <ui-skeleton-loader :loading="isLoading">
             <template #skeleton>
@@ -38,6 +38,11 @@
                 tournament?.start_date
                   ? formatDate(tournament.start_date, { showHours: true })
                   : '-'
+              }}
+            </p>
+            <p>
+              {{
+                tournament?.end_date ? formatDate(tournament.end_date, { showHours: true }) : '-'
               }}
             </p>
           </ui-skeleton-loader>

@@ -27,5 +27,6 @@ export const touranmentsKeys = {
   touranment: (id: TournamentId) => ['tournaments', id],
   'eligible-teams': () => ['eligible-teams'],
   'registered-teams': (id: TournamentId) => ['registered-teams', id],
+  rounds: (id: TournamentId) => ['rounds', id],
   'current-round': (id: TournamentId) => ['current-round', id],
 }
