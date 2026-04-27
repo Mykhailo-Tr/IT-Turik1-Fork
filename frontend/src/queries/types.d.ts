@@ -9,3 +9,7 @@ export type MutationConfig<
   Error = AxiosError<ApiError>,
   Variables = void,
 > = UseMutationOptions<Data, Error, Variables>
+
+export type MaybeRefArgs<T> = {
+  [K in keyof T]: MaybeRef<T[K]>
+}

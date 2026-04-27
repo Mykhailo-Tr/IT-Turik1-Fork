@@ -1,26 +1,29 @@
 <template>
   <div class="select-wrapper" :class="{ open: isOpen }" ref="wrapperRef">
-    <ui-button
-      variant="ghost"
-      class="select-trigger"
-      :disabled="isLoading"
+    <div
       @click="toggleOpen"
       @keydown="handleTriggerKeydown"
       :aria-expanded="isOpen"
       aria-haspopup="listbox"
+      data-testid="trigger-wrapper"
     >
-      <span class="select-value">{{ selectedLabel }}</span>
+      <slot name="trigger" :selectedLabel="selectedLabel">
+        <ui-button variant="ghost" class="select-trigger" :disabled="isLoading">
+          <span class="select-value">{{ selectedLabel }}</span>
 
-      <LoadingIcon v-if="isLoading" data-testid="loading-icon" />
-      <arrow-down v-else class="select-chevron" data-testid="arrow-icon" />
-    </ui-button>
+          <LoadingIcon v-if="isLoading" data-testid="loading-icon" />
+          <arrow-down v-else class="select-chevron" data-testid="arrow-icon" />
+        </ui-button>
+      </slot>
+    </div>
 
     <Transition name="dropdown">
       <div
         v-if="isOpen"
-        class="select-dropdown"
+        class=""
         data-testid="select-dropdown"
-        :class="dropdownPosition"
+        :class="['select-dropdown', dropdownPosition, dropdownAlign]"
+        :style="{ minWidth: props.minWidth ?? '100%' }"
         ref="dropdownRef"
       >
         <div class="select-search-wrapper">
@@ -93,6 +96,7 @@ type Props = {
   placeholder?: string
   height?: number
   minWidth?: string
+  alignTo?: 'left' | 'right'
   isLoading?: boolean
   isError?: boolean
   error?: string
@@ -101,6 +105,7 @@ type Props = {
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   options: () => [],
+  alignTo: 'left',
   placeholder: 'Select an option',
 })
 
@@ -112,6 +117,7 @@ const isOpen = ref<boolean>(false)
 const focusedIndex = ref<number>(-1)
 const searchQuery = ref<string>('')
 const dropdownPosition = ref<'bottom' | 'top'>('bottom')
+const dropdownAlign = computed(() => props.alignTo)
 const wrapperRef = ref<HTMLDivElement | null>(null)
 const listRef = ref<HTMLUListElement | null>(null)
 const searchInputRef = ref<HTMLInputElement | null>(null)
@@ -285,7 +291,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 .select-wrapper {
   position: relative;
   display: inline-block;
-  min-width: 200px;
 }
 
 .select-trigger {
@@ -318,8 +323,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-dropdown {
   position: absolute;
-  left: 0;
-  right: 0;
   z-index: 50;
   background: var(--popover);
   color: var(--foreground);
@@ -335,6 +338,14 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', handleOutsideCli
 
 .select-dropdown.top {
   bottom: calc(100% + 3px);
+}
+
+.select-dropdown.left {
+  left: 0;
+}
+
+.select-dropdown.right {
+  right: 0;
 }
 
 .select-search-wrapper {

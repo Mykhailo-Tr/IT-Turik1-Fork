@@ -1,5 +1,5 @@
 import type { AxiosError } from 'axios'
-import type { MutationConfig, QueryConfig } from '../types'
+import type { MaybeRefArgs, MutationConfig, QueryConfig } from '../types'
 import type {
   CreateRoundArgs,
   CreateTournamentArgs,
@@ -9,11 +9,41 @@ import type {
   GetEligibleTeamsResponse,
   GetTournamentInfoArgs,
   GetTournamentInfoResponse,
+  GetTournamentsArgs,
+  GetTournamentsResponse,
   RegisterTeamArgs,
 } from '@/api/services/tournaments/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { $api, type ApiError } from '@/api'
 import { touranmentsKeys } from '../keys'
+import { computed, toValue } from 'vue'
+
+export const useTournaments = (
+  payload: MaybeRefArgs<GetTournamentsArgs>,
+  config?: QueryConfig<GetTournamentsResponse>,
+) => {
+  const queryKey = computed(() =>
+    touranmentsKeys['tournaments-list']({
+      page: toValue(payload.page),
+      searchQuery: toValue(payload.searchQuery),
+      status: toValue(payload.status),
+      pageSize: toValue(payload.pageSize),
+    }),
+  )
+
+  return useQuery<GetTournamentsResponse, AxiosError<ApiError>>({
+    queryKey,
+    queryFn: () =>
+      $api.tournaments.getTournaments({
+        page: toValue(payload.page),
+        searchQuery: toValue(payload.searchQuery),
+        pageSize: toValue(payload.pageSize),
+        status: toValue(payload.status),
+      }),
+    staleTime: 1000 * 60 * 5,
+    ...config,
+  })
+}
 
 export const useCreateTournament = (
   config?: MutationConfig<

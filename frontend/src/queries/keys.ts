@@ -1,5 +1,6 @@
 import type { GetRoleCodesFilter } from '@/api/services/accounts/types'
 import type { TeamId, TournamentId } from '@/api/dbTypes'
+import type { GetTournamentsArgs } from '@/api/services/tournaments/types'
 
 export const teamKeys = {
   allTeams: () => ['teams'],
@@ -16,6 +17,13 @@ export const accountKeys = {
 
 export const touranmentsKeys = {
   allTouranments: () => ['tournaments'],
+  'tournaments-list': (args: GetTournamentsArgs) => [
+    'tournaments',
+    args.page,
+    args.searchQuery,
+    args.status,
+    args.pageSize,
+  ],
   touranment: (id: TournamentId) => ['tournaments', id],
   'eligible-teams': () => ['eligible-teams'],
   'current-round': (id: TournamentId) => ['current-round', id],

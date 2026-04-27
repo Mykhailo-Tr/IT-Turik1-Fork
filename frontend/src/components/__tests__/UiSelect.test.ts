@@ -27,6 +27,18 @@ describe('UiSelect', () => {
       expect(screen.getByText('Choose fruit')).toBeInTheDocument()
     })
 
+    it('shows custom trigger button', async () => {
+      const screen = await render(UiSelect, {
+        props: { multiple: true, modelValue: [], options: mockOptions },
+        slots: {
+          trigger: '<button>Custom</button>',
+        },
+      })
+
+      const button = screen.getByRole('button', { hasText: 'Custom' })
+      expect(button).toBeInTheDocument()
+    })
+
     it('shows selected label when a value is provided', async () => {
       const screen = await render(UiSelect, {
         props: { modelValue: 'apple', options: mockOptions },
@@ -56,6 +68,19 @@ describe('UiSelect', () => {
       const options = screen.getByRole('option').all()
       expect(options.length).toBe(4)
       expect(screen.getByTestId('select-search')).toBeInTheDocument()
+    })
+
+    it('opens dropdown when custom trigger is clicked', async () => {
+      const screen = await render(UiSelect, {
+        props: { multiple: true, modelValue: [], options: mockOptions },
+        slots: {
+          trigger: '<button>Custom</button>',
+        },
+      })
+
+      await userEvent.click(screen.getByRole('button', { hasText: 'Custom' }))
+
+      expect(screen.getByRole('listbox')).toBeInTheDocument()
     })
 
     it('opens the dropdown with keyboard Enter', async () => {
@@ -207,7 +232,7 @@ describe('UiSelect', () => {
         props: { modelValue: null, options: mockOptions },
       })
 
-      const trigger = screen.getByRole('button')
+      const trigger = screen.getByTestId('trigger-wrapper')
       expect(trigger).toHaveAttribute('aria-haspopup', 'listbox')
       expect(trigger).toHaveAttribute('aria-expanded', 'false')
 

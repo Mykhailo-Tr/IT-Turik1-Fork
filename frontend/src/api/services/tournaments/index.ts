@@ -7,12 +7,33 @@ import type {
   GetEligibleTeamsArgs,
   GetTournamentInfoArgs,
   GetTournamentInfoResponse,
+  GetTournamentsArgs,
   RegisterTeamArgs,
 } from './types'
 
 const prefix = '/api/tournaments'
 
 export const tournamentsService = {
+  getTournaments: async (args: GetTournamentsArgs) => {
+    const params = new URLSearchParams()
+
+    if (args.page) {
+      params.append('page', String(args.page))
+    }
+    if (args.pageSize) {
+      params.append('pageSize', String(args.pageSize))
+    }
+    if (args.searchQuery) {
+      params.append('searchQuery', args.searchQuery)
+    }
+    if (args.status) {
+      params.append('status', args.status.join(','))
+    }
+
+    const { data } = await apiClient.get(`${prefix}?${params.toString()}`)
+    return data
+  },
+
   createTournament: async (args: CreateTournamentArgs) => {
     const { data } = await apiClient.post(`${prefix}/manage/`, args.body)
     return data

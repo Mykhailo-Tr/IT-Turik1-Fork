@@ -22,15 +22,37 @@
       </template>
 
       <div>
-        <div class="search-wrapper">
-          <ui-input
-            v-model="searchInput"
-            class="search-input"
-            placeholder="Search tournament by name"
-            @keydown.enter="applySearch"
-          />
+        <div class="filters-wrapper">
+          <div class="search-wrapper">
+            <ui-input
+              v-model="searchInput"
+              class="search-input"
+              placeholder="Search tournament by name"
+              @keydown.enter="applySearch"
+            />
 
-          <ui-button v-if="searchInput.length >= 2" @click="applySearch"><arrow-right /></ui-button>
+            <ui-button v-if="searchInput.length >= 2" @click="applySearch"
+              ><arrow-right
+            /></ui-button>
+          </div>
+
+          <div class="filters">
+            <ui-select
+              v-model="statusFilter"
+              :options="statusOptions"
+              placeholder="All statuses"
+              :multiple="true"
+              align-to="right"
+              min-width="180px"
+              @update:model-value="onStatusChange"
+            >
+              <template #trigger="{ selectedLabel }">
+                <ui-button variant="ghost" size="sm" style="justify-self: end">{{
+                  selectedLabel
+                }}</ui-button>
+              </template>
+            </ui-select>
+          </div>
         </div>
 
         <ui-skeleton-loader :loading="isLoading || isFetching">
@@ -66,7 +88,9 @@
                   class="tournament-card"
                 >
                   <template #header>
-                    <h3>{{ tournament.name }}</h3>
+                    <h3 class="tounament-title" :title="tournament.name">
+                      {{ truncateText(tournament.name, 80) }}
+                    </h3>
                   </template>
 
                   <div>
@@ -79,13 +103,7 @@
                         <p>Start date:</p>
 
                         <p>
-                          {{
-                            tournament.startAt.toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                            })
-                          }}
+                          {{ formatDate(tournament.start_date) }}
                         </p>
                       </div>
 
@@ -109,6 +127,10 @@
                 </ui-card>
               </div>
             </template>
+
+            <ui-card v-if="!isError && pageItems.length === 0" class="empty-card"
+              ><p>No tournaments found</p></ui-card
+            >
 
             <div v-if="totalPages > 1" class="pagination">
               <ui-button size="sm" :disabled="currentPage === 1" @click="goToPage(currentPage - 1)">
@@ -144,86 +166,42 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useQuery } from '@tanstack/vue-query'
-
 import UiCard from '@/components/UiCard.vue'
 import UiBadge from '@/components/UiBadge.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiSkeletonLoader from '@/components/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/UiSkeleton.vue'
 import UiInput from '@/components/UiInput.vue'
+import UiSelect from '@/components/UiSelect.vue'
 import ArrowRight from '@/icons/ArrowRight.vue'
 import { parseApiError } from '@/api'
 import { truncateText } from '@/lib/utils'
 import { useProfile } from '@/queries/accounts'
+import { useTournaments } from '@/queries/tournaments'
+import { formatDate } from '@/lib/date'
+import type { GetTournamentsArgs } from '@/api/services/tournaments/types'
 
-interface Data {
-  id: number
-  name: string
-  description: string
-  status: string
-  startAt: Date
-}
-
-interface Response {
-  data: Data[]
-  page: number
-  total: number
-}
+const statusOptions = [
+  { label: 'Registration', value: 'registration' },
+  { label: 'Running', value: 'running' },
+  { label: 'Finished', value: 'finished' },
+]
 
 const pageSize = 12
-const totalMockedItems = 120
 
 const currentPage = ref(1)
 const searchInput = ref('')
 const searchQuery = ref('')
+const statusFilter = ref<NonNullable<GetTournamentsArgs['status']>>([])
 
 const { data: user } = useProfile()
-
-const fetchItems = async (page: number, query?: string): Promise<Response> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  const allItems = Array.from({ length: totalMockedItems }, (_, i) => ({
-    id: i + 1,
-    name: `Item ${i + 1}`,
-    description: `"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." ${i + 1}`,
-    status: Math.random() > 0.5 ? 'Running' : 'Registration open',
-    startAt: new Date(Date.now() + i * 86400000),
-  }))
-
-  let filtered = allItems
-
-  if (query?.trim()) {
-    const normalized = query.trim().toLowerCase()
-
-    filtered = allItems.filter((item) => item.name.toLowerCase().includes(normalized))
-  }
-
-  const total = filtered.length
-
-  const start = (page - 1) * pageSize
-  const end = start + pageSize
-
-  const data = filtered.slice(start, end)
-
-  return {
-    data,
-    page,
-    total,
-  }
-}
-
 const {
   data,
   isLoading,
   isFetching,
   error: tournamentsError,
   isError,
-} = useQuery({
-  queryKey: computed(() => ['items', currentPage.value, searchQuery.value]),
-  queryFn: () => fetchItems(currentPage.value, searchQuery.value),
-  staleTime: 1000 * 60 * 5,
-})
+} = useTournaments({ page: currentPage, searchQuery, pageSize, status: statusFilter })
 const error = computed(() => parseApiError(tournamentsError.value))
 
 const pageItems = computed(() => data.value?.data ?? [])
@@ -252,13 +230,16 @@ const goToPage = (page: number) => {
   if (page < 1 || page > totalPages.value) {
     return
   }
-
   currentPage.value = page
 }
 
 const applySearch = () => {
   currentPage.value = 1
   searchQuery.value = searchInput.value
+}
+
+const onStatusChange = () => {
+  currentPage.value = 1
 }
 </script>
 
@@ -269,11 +250,23 @@ const applySearch = () => {
   align-items: center;
 }
 
+.filters-wrapper {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filters {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: end;
+}
+
 .search-wrapper {
   display: flex;
   justify-content: space-between;
   gap: 0.3rem;
-  margin-bottom: 1rem;
 }
 
 .search-input {
@@ -286,9 +279,14 @@ const applySearch = () => {
   gap: 16px;
 }
 
+.tounament-title {
+  word-break: break-word;
+}
+
 .tournaments-description {
   margin-bottom: 12px;
   line-height: 1.5;
+  word-break: break-word;
 }
 
 .tournament-card {
@@ -307,6 +305,12 @@ const applySearch = () => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.empty-card {
+  border: 1px dashed var(--border);
+  background: var(--muted);
+  text-align: center;
 }
 
 .tournaments-date p {

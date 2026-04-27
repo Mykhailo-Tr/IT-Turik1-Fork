@@ -3,7 +3,7 @@
     <ui-card class="hero">
       <div>
         <p class="eyebrow">Dashboard</p>
-        <h1 class="hero-title">
+        <h1>
           Welcome back,
           <ui-skeleton-loader :loading="isLoading" style="display: inline-block">
             <template #skeleton>
@@ -142,8 +142,15 @@ const teamNames = computed(() => (user.value?.teams || []).map((team) => team.na
   opacity: 0.85;
 }
 
-.hero-title {
+h1 {
+  margin: 0.45rem 0 0;
   font-family: var(--font-display);
+  font-size: clamp(1.4rem, 1.3vw + 1rem, 2rem);
+}
+
+.sub {
+  margin: 0.5rem 0 0;
+  opacity: 0.92;
 }
 
 .hero-actions {

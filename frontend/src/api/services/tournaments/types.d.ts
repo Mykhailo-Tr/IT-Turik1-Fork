@@ -1,4 +1,28 @@
-import type { Round, Team, TeamId, Tournament, TournamentId } from '@/api/dbTypes'
+import type { Round, Team, TeamId, Tournament, TournamentId, TournamentStatus } from '@/api/dbTypes'
+
+// Get tournaments
+export interface GetTournamentsArgs {
+  page: number
+  pageSize?: number
+  searchQuery?: string
+  status?: Exclude<TournamentStatus, 'draft'>[]
+}
+
+export interface GetTournamentsResponse {
+  // TODO: add rounds type annotation
+  data: (Pick<
+    Tournament,
+    | 'id'
+    | 'name'
+    | 'description'
+    | 'start_date'
+    | 'end_date'
+    | 'max_teams'
+    | 'min_team_members'
+    | 'status'
+  > & { rounds: [] })[]
+  total: number
+}
 
 // Create tournament
 export type CreateTournamentBody = Pick<
