@@ -220,7 +220,6 @@
 ]
 ```
 > **Логіка призначення (manual replace-all):**
-> - payload має бути масивом без wrapper-об'єкта;
 > - endpoint доступний тільки у `round.status = submission_closed`;
 > - потрібно покрити **всі** submission цього раунду;
 > - для кожного submission має бути щонайменше 1 jury;
