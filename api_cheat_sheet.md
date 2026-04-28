@@ -40,6 +40,7 @@
 | Дія | Метод | Шлях | Доступ |
 | :--- | :--- | :--- | :--- |
 | **Розподіл робіт (журі)**| POST | `/api/evaluation/rounds/{id}/assign-jury/` | Admin |
+| **Доступне журі для раунду**| GET | `/api/evaluation/rounds/{id}/available-jury/?include_assigned=true|false` | Admin |
 | **Призначені роботи** | GET | `/api/evaluation/assignments/` | Jury |
 | **Відправити оцінку** | POST | `/api/evaluation/evaluate/` | Jury |
 | **Перегл/Зміна/Вид. оцінки**| GET/PATCH/DEL| `/api/evaluation/evaluate/{id}/` | Jury |
@@ -213,8 +214,25 @@
 
 **Розподіл робіт (Admin) — POST `/api/evaluation/rounds/{id}/assign-jury/`**
 ```json
-{ "k": 2 } 
+[
+  { "submission": 101, "jury": [12, 13] },
+  { "submission": 102, "jury": [12, 13] }
+]
 ```
+> **Логіка призначення (manual replace-all):**
+> - payload має бути масивом без wrapper-об'єкта;
+> - endpoint доступний тільки у `round.status = submission_closed`;
+> - потрібно покрити **всі** submission цього раунду;
+> - для кожного submission має бути щонайменше 1 jury;
+> - для всіх submission кількість jury має бути однакова;
+> - дозволені тільки користувачі з роллю `jury`;
+> - дублікати submission у payload і дублікати jury в межах submission заборонені;
+> - при успіху попередні призначення раунду видаляються, створюються рівно ті, що передані в payload.
+
+**Доступне журі (Admin) — GET `/api/evaluation/rounds/{id}/available-jury/`**
+> Query param: `include_assigned` (`true` за замовчуванням).
+> - `true`: повертає всіх користувачів з роллю `jury`.
+> - `false`: виключає журі, яке вже має призначення в цьому раунді.
 
 **Створення оцінки (Jury) — POST `/api/evaluation/evaluate/`**
 ```json
