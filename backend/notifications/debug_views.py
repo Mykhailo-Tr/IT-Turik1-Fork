@@ -42,21 +42,11 @@ class NotificationDebugSendView(APIView):
         return Response({'detail': f'Notification {event_type} sent to {recipient.username}'})
 
 class NotificationDebugInfoView(APIView):
-    """Returns available event types and users for the test form."""
+    """Returns users list ONLY for admin-led notification sending."""
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        event_types = []
-        for key, event in EVENTS.items():
-            event_types.append({
-                'key': key,
-                'title': event.title_tpl,
-                'channels': event.channels
-            })
-        
         users = User.objects.all().values('id', 'username', 'email')
-        
         return Response({
-            'event_types': event_types,
             'users': list(users)
         })
