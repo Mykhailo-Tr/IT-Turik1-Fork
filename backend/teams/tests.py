@@ -92,9 +92,9 @@ class TeamApiTests(APITestCase):
         self.assertNotIn(self.member.id, member_ids)
         self.assertEqual(response.data['contact_telegram'], 'alpha_team')
         self.assertEqual(response.data['contact_discord'], 'alpha.team')
-        self.assertEqual(len(response.data['invitations']), 1)
-        self.assertEqual(response.data['invitations'][0]['user']['id'], self.member.id)
-        self.assertEqual(response.data['invitations'][0]['status'], TeamInvitation.STATUS_INVITED)
+        invitations = TeamInvitation.objects.filter(team_id=response.data['id'], user=self.member)
+        self.assertEqual(invitations.count(), 1)
+        self.assertEqual(invitations.first().status, TeamInvitation.STATUS_INVITED)
 
     def test_invited_user_can_accept_invitation(self):
         team = self._create_team(
@@ -268,8 +268,8 @@ class TeamApiTests(APITestCase):
 
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(detail_response.data['invitations'], [])
-        self.assertEqual(detail_response.data['join_requests'], [])
+        self.assertNotIn('invitations', detail_response.data)
+        self.assertNotIn('join_requests', detail_response.data)
         member_ids = {member['id'] for member in detail_response.data['members']}
         self.assertIn(self.member.id, member_ids)
         self.assertIn(self.captain.id, member_ids)
@@ -294,9 +294,9 @@ class TeamApiTests(APITestCase):
         self.client.force_authenticate(user=self.captain)
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(detail_response.data['join_requests']), 1)
-        request_id = detail_response.data['join_requests'][0]['id']
-        self.assertEqual(detail_response.data['join_requests'][0]['status'], TeamJoinRequest.STATUS_PENDING)
+        join_request = TeamJoinRequest.objects.get(team_id=team['id'], user=self.member)
+        self.assertEqual(join_request.status, TeamJoinRequest.STATUS_PENDING)
+        request_id = join_request.id
 
         accept_response = self.client.post(
             reverse('team_join_request_accept', kwargs={'pk': team['id'], 'request_id': request_id}),
@@ -337,7 +337,7 @@ class TeamApiTests(APITestCase):
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
         self.assertTrue(detail_response.data['is_member'])
-        self.assertIsNone(detail_response.data['my_join_request_status'])
+        self.assertIsNone(detail_response.data.get('my_join_request_status'))
 
     def test_declined_invitation_is_removed_when_join_request_accepted(self):
         team = self._create_team(
@@ -370,7 +370,7 @@ class TeamApiTests(APITestCase):
         self.client.force_authenticate(user=self.captain)
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        request_id = detail_response.data['join_requests'][0]['id']
+        request_id = TeamJoinRequest.objects.get(team_id=team['id'], user=self.member).id
 
         accept_response = self.client.post(
             reverse('team_join_request_accept', kwargs={'pk': team['id'], 'request_id': request_id}),
@@ -381,8 +381,7 @@ class TeamApiTests(APITestCase):
 
         member_ids = {member['id'] for member in accept_response.data['members']}
         self.assertIn(self.member.id, member_ids)
-        invitation_user_ids = {item['user']['id'] for item in accept_response.data['invitations']}
-        self.assertNotIn(self.member.id, invitation_user_ids)
+        self.assertNotIn('invitations', accept_response.data)
 
         self.assertTrue(TeamMember.objects.filter(team_id=team['id'], user=self.member).exists())
         self.assertFalse(TeamInvitation.objects.filter(team_id=team['id'], user=self.member).exists())
@@ -410,8 +409,7 @@ class TeamApiTests(APITestCase):
         self.client.force_authenticate(user=self.captain)
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        invitation_user_ids = {item['user']['id'] for item in detail_response.data['invitations']}
-        self.assertNotIn(self.member.id, invitation_user_ids)
+        self.assertNotIn('invitations', detail_response.data)
 
         self.client.force_authenticate(user=self.member)
         inbox_response = self.client.get(self.invitations_url)
@@ -527,10 +525,16 @@ class TeamApiTests(APITestCase):
 
         detail_response = self.client.get(reverse('team_detail', kwargs={'pk': team['id']}))
         self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(detail_response.data['invitations']), 1)
-        self.assertEqual(detail_response.data['invitations'][0]['user']['id'], self.member.id)
-        self.assertEqual(len(detail_response.data['join_requests']), 1)
-        self.assertEqual(detail_response.data['join_requests'][0]['user']['id'], self.other_user.id)
+        self.assertNotIn('invitations', detail_response.data)
+        self.assertNotIn('join_requests', detail_response.data)
+        self.assertEqual(
+            TeamInvitation.objects.filter(team_id=team['id'], user=self.member, status=TeamInvitation.STATUS_INVITED).count(),
+            1,
+        )
+        self.assertEqual(
+            TeamJoinRequest.objects.filter(team_id=team['id'], user=self.other_user, status=TeamJoinRequest.STATUS_PENDING).count(),
+            1,
+        )
 
     def test_captain_can_invite_additional_member_and_remove_without_confirmation(self):
         team = self._create_team({'name': 'Delta Team', 'email': 'delta@example.com'})

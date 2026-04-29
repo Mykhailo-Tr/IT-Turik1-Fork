@@ -219,6 +219,7 @@
 **Створення оцінки (Jury) — POST `/api/evaluation/evaluate/`**
 ```json
 {
+  "tournament_id": 123,
   "assignment": 1,
   "scores": [
     { "criterion_id": "backend", "score": 10 },
@@ -255,6 +256,9 @@
 ```
 
 > **Важливо для оцінювання:**
+> - `tournament_id` є **обов'язковим** для створення оцінки.
+> - `assignment` має належати саме до переданого `tournament_id`, інакше повернеться помилка валідації.
+> - `tournament_id` використовується лише для валідації (write-only) і не повертається у відповіді.
 > - Кожен `criterion_id` має точно збігатися з id критерію з раунду.
 > - Оцінка `score` має бути $\ge 0$ та $\le$ `max_score` критерію.
 > - Дублікати `criterion_id` не допускаються.
