@@ -30,3 +30,43 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'{self.event_type} → {self.recipient_id} (read={self.is_read})'
+
+
+class UserNotificationSettings(models.Model):
+    """Global notification toggles for a specific user."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notification_settings'
+    )
+    emails_disabled_globally = models.BooleanField(
+        default=False,
+        help_text="If True, this user will never receive any notification emails."
+    )
+
+    class Meta:
+        verbose_name = "User Notification Setting"
+        verbose_name_plural = "User Notification Settings"
+
+    def __str__(self):
+        return f"Settings for {self.user.username}"
+
+
+class NotificationConfig(models.Model):
+    """Per-user configuration for a specific event type."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='event_configs'
+    )
+    event_type = models.CharField(max_length=64)
+    is_system_enabled = models.BooleanField(default=True)
+    is_email_enabled = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('user', 'event_type')
+        verbose_name = "User Event Config"
+        verbose_name_plural = "User Event Configs"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.event_type}"
