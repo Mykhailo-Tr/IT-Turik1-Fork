@@ -57,6 +57,10 @@
             <ui-button size="sm" variant="secondary" @click="openDetails(round)">
               View details
             </ui-button>
+
+            <ui-button size="sm" variant="danger" @click="handleDeleteRound(round.id)">
+              delete
+            </ui-button>
           </div>
         </ui-card>
       </div>
@@ -86,8 +90,9 @@ import { computed, ref } from 'vue'
 import type { Variants } from '@/components/ui/UiBadge.vue'
 import { useProfile } from '@/api/queries/accounts'
 import RoundDetailsModal from './modals/RoundDetailsModal.vue'
-import { useTournamentRounds } from '@/api/queries/tournaments'
+import { useDeleteRound, useTournamentRounds } from '@/api/queries/tournaments'
 import type { GetRoundsResponse } from '@/api/services/tournaments/types'
+import type { RoundId } from '@/api/dbTypes'
 
 interface Props {
   tournamentId: number
@@ -104,13 +109,19 @@ const {
   isError,
 } = useTournamentRounds({ id: props.tournamentId })
 
-console.log(data.value)
+const { mutate: deleteRound } = useDeleteRound({ id: props.tournamentId })
 
 const error = computed(() => parseApiError(roundsError.value))
 const rounds = computed(() => data.value ?? [])
 
 const isDetailsOpen = ref(false)
 const selectedRound = ref<Round | null>(null)
+
+function handleDeleteRound(id: RoundId) {
+  deleteRound({
+    id,
+  })
+}
 
 function openDetails(round: Round) {
   selectedRound.value = round
@@ -149,6 +160,7 @@ function badgeVariant(status: Round['status']): Variants {
   display: flex;
   justify-content: end;
   align-items: center;
+  gap: 8px;
 }
 
 .round-dates {

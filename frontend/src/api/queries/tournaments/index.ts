@@ -3,6 +3,7 @@ import type { MaybeRefArgs, MutationConfig, QueryConfig } from '../types'
 import type {
   CreateRoundArgs,
   CreateTournamentArgs,
+  DeleteRoundArgs,
   GetActiveTeamTournamentArgs,
   GetActiveTeamTournamentResponse,
   GetCurrentRoundArgs,
@@ -24,6 +25,7 @@ import { $api } from '@/api/services'
 import { touranmentsKeys } from '../keys'
 import { computed, toValue } from 'vue'
 import type { ApiError } from '@/api/errors'
+import type { TournamentId } from '@/api/dbTypes'
 
 export const useTournaments = (
   payload: MaybeRefArgs<GetTournamentsArgs>,
@@ -135,17 +137,31 @@ export const useCreateRound = (
     CreateRoundArgs
   >,
 ) => {
-  const _queryClient = useQueryClient()
+  const queryClient = useQueryClient()
   return useMutation<unknown, AxiosError<ApiError<keyof CreateRoundArgs['body']>>, CreateRoundArgs>(
     {
       mutationFn: $api.tournaments.createRound,
-      onSuccess: () => {
-        // TODO:
-        // queryClient.invalidateQueries({ queryKey: touranmentsKeys.allTouranments() })
+      onSuccess: (_data, vars) => {
+        queryClient.invalidateQueries({ queryKey: touranmentsKeys.rounds(vars.id) })
       },
       ...config,
     },
   )
+}
+
+// TODO: rebuild this
+export const useDeleteRound = (
+  payload: { id: TournamentId },
+  config?: MutationConfig<unknown, AxiosError<ApiError>, DeleteRoundArgs>,
+) => {
+  const queryClient = useQueryClient()
+  return useMutation<unknown, AxiosError<ApiError>, DeleteRoundArgs>({
+    mutationFn: $api.tournaments.deleteRound,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: touranmentsKeys.rounds(payload.id) })
+    },
+    ...config,
+  })
 }
 
 export const useCurrentRound = (

@@ -2,6 +2,7 @@ import { apiClient } from '@/api/client'
 import type {
   CreateRoundArgs,
   CreateTournamentArgs,
+  DeleteRoundArgs,
   GetActiveTeamTournamentArgs,
   GetActiveTeamTournamentResponse,
   GetCurrentRoundArgs,
@@ -78,6 +79,11 @@ export const tournamentsService = {
 
   createRound: async (args: CreateRoundArgs) => {
     const { data } = await apiClient.post(`${prefix}/${args.id}/rounds/`, args.body)
+    return data
+  },
+
+  deleteRound: async (args: DeleteRoundArgs) => {
+    const { data } = await apiClient.delete(`${prefix}/rounds/${args.id}/`)
     return data
   },
 

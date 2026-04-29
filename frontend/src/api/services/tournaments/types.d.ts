@@ -1,4 +1,12 @@
-import type { Round, Team, TeamId, Tournament, TournamentId, TournamentStatus } from '@/api/dbTypes'
+import type {
+  Round,
+  RoundId,
+  Team,
+  TeamId,
+  Tournament,
+  TournamentId,
+  TournamentStatus,
+} from '@/api/dbTypes'
 
 // Get tournaments
 export interface GetTournamentsArgs {
@@ -111,6 +119,12 @@ export type CreateRoundBody = Pick<
 export interface CreateRoundArgs {
   id: TournamentId
   body: CreateRoundBody
+}
+
+// delete round
+
+export interface DeleteRoundArgs {
+  id: RoundId
 }
 
 // Get current round
