@@ -93,6 +93,7 @@ import RoundDetailsModal from './modals/RoundDetailsModal.vue'
 import { useDeleteRound, useTournamentRounds } from '@/api/queries/tournaments'
 import type { GetRoundsResponse } from '@/api/services/tournaments/types'
 import type { RoundId } from '@/api/dbTypes'
+import { useNotification } from '@/composables/useNotification'
 
 interface Props {
   tournamentId: number
@@ -100,6 +101,7 @@ interface Props {
 type Round = GetRoundsResponse[number]
 
 const props = defineProps<Props>()
+const { showNotification } = useNotification()
 const { data: user } = useProfile()
 
 const {
@@ -118,9 +120,17 @@ const isDetailsOpen = ref(false)
 const selectedRound = ref<Round | null>(null)
 
 function handleDeleteRound(id: RoundId) {
-  deleteRound({
-    id,
-  })
+  deleteRound(
+    {
+      id,
+    },
+    {
+      onError: (error) => {
+        const parsedError = parseApiError(error)
+        showNotification(parsedError?.message, 'error')
+      },
+    },
+  )
 }
 
 function openDetails(round: Round) {
