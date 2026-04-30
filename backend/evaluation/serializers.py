@@ -3,6 +3,7 @@ from accounts.models import User
 from tournaments.models import Submission
 from .models import JuryAssignment, SubmissionEvaluation
 from tournaments.serializers import SubmissionSerializer
+from tournaments.models import Tournament
 
 
 class JuryAssignmentItemSerializer(serializers.Serializer):
@@ -19,10 +20,18 @@ class JuryAssignmentItemSerializer(serializers.Serializer):
 
 
 class SubmissionEvaluationSerializer(serializers.ModelSerializer):
+    tournament_id = serializers.PrimaryKeyRelatedField(
+        source='tournament',
+        queryset=Tournament.objects.all(),
+        write_only=True,
+        required=True,
+    )
+
     class Meta:
         model = SubmissionEvaluation
         fields = (
             'id',
+            'tournament_id',
             'assignment',
             'scores',
             'total_score',
@@ -49,9 +58,15 @@ class SubmissionEvaluationSerializer(serializers.ModelSerializer):
         assignment = attrs.get('assignment')
         if not assignment and self.instance:
             assignment = self.instance.assignment
-        
+        tournament = attrs.pop('tournament', None)
+
+        if assignment and tournament and assignment.submission.round.tournament_id != tournament.id:
+            raise serializers.ValidationError(
+                {'tournament_id': 'Assignment does not belong to this tournament.'}
+            )
+
         scores = attrs.get('scores')
-        
+
         if scores is not None and assignment:
             round_obj = assignment.submission.round
             criteria = round_obj.criteria
