@@ -49,6 +49,12 @@
 - **Вручну:** `POST /api/tournaments/rounds/{id}/close-submissions/`.
 - **Guard для ручного закриття:** лише `active` раунд.
 
+### Призначення журі в `submission_closed`
+- Після переходу в `submission_closed` призначення журі виконується **вручну адміністратором** через:
+- `POST /api/evaluation/rounds/{id}/assign-jury/`.
+- Автоматичний/рандомний розподіл не використовується.
+- Поточна модель: frontend передає повний список призначень; backend валідовує і повністю замінює призначення раунду.
+
 3. **`submission_closed` -> `evaluated`**
 - **Хто ініціює:** адміністратор вручну або автоматично при завершенні оцінювання журі.
 - **Вручну:** `POST /api/tournaments/rounds/{id}/mark-evaluated/`.
