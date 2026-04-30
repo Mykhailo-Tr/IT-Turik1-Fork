@@ -23,6 +23,18 @@ class TournamentApiTests(APITestCase):
             email='captain@example.com',
             password='StrongPass123!',
         )
+        self.organizer = User.objects.create_user(
+            username='organizer',
+            email='organizer@example.com',
+            password='StrongPass123!',
+            role='organizer',
+        )
+        self.jury = User.objects.create_user(
+            username='jury',
+            email='jury@example.com',
+            password='StrongPass123!',
+            role='jury',
+        )
         self.team = Team.objects.create(
             name='Test Team',
             email='test@example.com',
@@ -46,6 +58,15 @@ class TournamentApiTests(APITestCase):
         self.assertEqual(Tournament.objects.count(), 1)
         self.assertEqual(Round.objects.count(), 0)
 
+    def test_organizer_and_jury_can_create_tournaments(self):
+        url = reverse('tournament_manage_create')
+
+        for user in (self.organizer, self.jury):
+            with self.subTest(role=user.role):
+                self.client.force_authenticate(user=user)
+                response = self.client.post(url, self.tournament_data, format='json')
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_non_admin_cannot_create_tournament(self):
         self.client.force_authenticate(user=self.captain)
         url = reverse('tournament_manage_create')
@@ -64,6 +85,19 @@ class TournamentApiTests(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_organizer_and_jury_can_update_tournament(self):
+        for user in (self.organizer, self.jury):
+            with self.subTest(role=user.role):
+                tournament = Tournament.objects.create(
+                    created_by=self.admin,
+                    **self.tournament_data
+                )
+                self.client.force_authenticate(user=user)
+                url = reverse('tournament_manage_update', kwargs={'pk': tournament.id})
+                response = self.client.patch(url, {'name': f'Updated by {user.role}'}, format='json')
+
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_start_registration(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,
@@ -73,6 +107,19 @@ class TournamentApiTests(APITestCase):
         url = reverse('tournament_start_registration', kwargs={'pk': tournament.id})
         response = self.client.post(url)
         
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        tournament.refresh_from_db()
+        self.assertEqual(tournament.status, Tournament.STATUS_REGISTRATION)
+
+    def test_jury_can_start_registration(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        self.client.force_authenticate(user=self.jury)
+        url = reverse('tournament_start_registration', kwargs={'pk': tournament.id})
+        response = self.client.post(url)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         tournament.refresh_from_db()
         self.assertEqual(tournament.status, Tournament.STATUS_REGISTRATION)
@@ -100,6 +147,22 @@ class TournamentApiTests(APITestCase):
         
         round_data = {
             'name': 'Extra Round',
+            'start_date': self.tournament_data['start_date'],
+            'end_date': self.tournament_data['end_date'],
+        }
+        response = self.client.post(url, round_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_jury_can_manage_rounds(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        self.client.force_authenticate(user=self.jury)
+        url = reverse('rounds', kwargs={'tournament_pk': tournament.id})
+
+        round_data = {
+            'name': 'Jury Round',
             'start_date': self.tournament_data['start_date'],
             'end_date': self.tournament_data['end_date'],
         }

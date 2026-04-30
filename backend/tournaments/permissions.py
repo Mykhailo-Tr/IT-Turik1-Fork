@@ -1,24 +1,51 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.db.models import Q
 
-from accounts.utils.permissions import is_platform_admin
+from accounts.utils.permissions import Permission, user_has_permission
 from teams.models import Team, TeamMember
 
 
-class IsPlatformAdminPermission(BasePermission):
-    message = 'Admin access required.'
+class HasTournamentPermission(BasePermission):
+    message = 'Tournament permission required.'
+    required_permission = None
 
     def has_permission(self, request, view):
-        return is_platform_admin(request.user)
+        return user_has_permission(request.user, self.required_permission)
 
 
-class IsPlatformAdminOrReadOnly(BasePermission):
-    message = 'Admin access required.'
-
+class HasTournamentPermissionOrReadOnly(HasTournamentPermission):
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return True
-        return is_platform_admin(request.user)
+        return super().has_permission(request, view)
+
+
+class CanCreateTournament(HasTournamentPermission):
+    required_permission = Permission.CREATE_TOURNAMENT
+
+
+class CanEditTournament(HasTournamentPermission):
+    required_permission = Permission.EDIT_TOURNAMENT
+
+
+class CanDeleteTournament(HasTournamentPermission):
+    required_permission = Permission.DELETE_TOURNAMENT
+
+
+class CanViewTournament(HasTournamentPermission):
+    required_permission = Permission.VIEW_TOURNAMENT
+
+
+class CanManageParticipants(HasTournamentPermission):
+    required_permission = Permission.MANAGE_PARTICIPANTS
+
+
+class CanSetResults(HasTournamentPermission):
+    required_permission = Permission.SET_RESULTS
+
+
+class CanEditTournamentOrReadOnly(HasTournamentPermissionOrReadOnly):
+    required_permission = Permission.EDIT_TOURNAMENT
 
 
 class IsTeamMemberPermission(BasePermission):
@@ -30,7 +57,7 @@ class IsTeamMemberPermission(BasePermission):
 
 
 class IsPlatformAdminOrTeamMemberPermission(BasePermission):
-    message = 'Admin or team membership is required.'
+    message = 'Tournament view permission or team membership is required.'
 
     def _extract_team_id(self, request, view):
         for key in ('team_id', 'team', 'team_pk'):
@@ -64,7 +91,7 @@ class IsPlatformAdminOrTeamMemberPermission(BasePermission):
         user = request.user
         if not user or not user.is_authenticated:
             return False
-        if is_platform_admin(user):
+        if user_has_permission(user, Permission.VIEW_TOURNAMENT):
             return True
 
         team_id = self._extract_team_id(request, view)
@@ -74,11 +101,3 @@ class IsPlatformAdminOrTeamMemberPermission(BasePermission):
         return Team.objects.filter(
             Q(captain_id=user.id) | Q(team_members__user_id=user.id)
         ).exists()
-
-
-class IsJuryPermission(BasePermission):
-    message = 'Jury access required.'
-
-    def has_permission(self, request, view):
-        user = request.user
-        return bool(user and user.is_authenticated and user.role == 'jury')

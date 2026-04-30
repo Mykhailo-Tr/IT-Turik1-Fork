@@ -44,7 +44,7 @@ class ManualJuryAssignmentApiTests(APITestCase):
             role='jury',
         )
 
-        organizer = User.objects.create_user(
+        self.organizer = User.objects.create_user(
             username='organizer_eval',
             email='organizer_eval@example.com',
             password='TestPass123!',
@@ -64,7 +64,7 @@ class ManualJuryAssignmentApiTests(APITestCase):
             start_date=now - timedelta(days=2),
             end_date=now + timedelta(days=2),
             status=Tournament.STATUS_RUNNING,
-            created_by=organizer,
+            created_by=self.organizer,
         )
 
         self.round_obj = Round.objects.create(
@@ -185,6 +185,21 @@ class ManualJuryAssignmentApiTests(APITestCase):
         self.client.force_authenticate(self.non_admin)
         response = self.client.post(reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}), payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_organizer_and_jury_can_assign_jury(self):
+        for user in (self.organizer, self.jury1):
+            with self.subTest(role=user.role):
+                payload = [
+                    {'submission': self.submission1.id, 'jury': [self.jury2.id]},
+                    {'submission': self.submission2.id, 'jury': [self.jury2.id]},
+                ]
+                self.client.force_authenticate(user)
+                response = self.client.post(
+                    reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}),
+                    payload,
+                    format='json',
+                )
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_available_jury_returns_all_by_default(self):
         JuryAssignment.objects.create(submission=self.submission1, jury=self.jury1)
