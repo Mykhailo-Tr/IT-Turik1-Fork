@@ -5,7 +5,7 @@ from .models import Round, Submission, Tournament, TournamentTeamRegistration
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'status', 'start_date', 'end_date', 'rounds_count')
+    list_display = ('id', 'name', 'status', 'start_date', 'end_date')
     list_filter = ('status',)
     search_fields = ('name',)
 

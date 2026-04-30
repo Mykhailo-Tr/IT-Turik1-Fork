@@ -44,8 +44,6 @@ from .services import (
 def get_tournament_queryset():
     return Tournament.objects.prefetch_related(
         Prefetch('rounds', queryset=Round.objects.order_by('start_date'))
-    ).annotate(
-        rounds_count=Count('rounds')
     ).order_by('-created_at')
 
 
