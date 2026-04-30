@@ -97,7 +97,6 @@ class RoundSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'passing_count',
-            'winners_count',
             'evaluation_criteria',
             'materials',
             'status',
@@ -112,8 +111,6 @@ class RoundSerializer(serializers.ModelSerializer):
         tournament = attrs.get('tournament', getattr(instance, 'tournament', None))
         start_date = attrs.get('start_date', getattr(instance, 'start_date', None))
         end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
-        winners_count = attrs.get('winners_count', getattr(instance, 'winners_count', None))
-
         errors = {}
 
         if start_date and end_date and start_date >= end_date:
@@ -122,18 +119,6 @@ class RoundSerializer(serializers.ModelSerializer):
         if tournament and start_date and end_date:
             if start_date < tournament.start_date or end_date > tournament.end_date:
                 errors['start_date'] = 'Round dates must be within tournament dates.'
-
-        if tournament and winners_count is not None:
-            end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
-            last_end = (
-                Round.objects.filter(tournament=tournament)
-                .order_by('-start_date')
-                .values_list('start_date', flat=True)
-                .first()
-            )
-            this_start = attrs.get('start_date', getattr(instance, 'start_date', None))
-            if last_end and this_start and this_start < last_end:
-                errors['winners_count'] = 'winners_count is allowed only for the last round.'
 
         passing_count = attrs.get('passing_count', getattr(instance, 'passing_count', None))
         if passing_count is not None and tournament:
