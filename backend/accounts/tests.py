@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import RoleActivationCode, User
+from .utils.permissions import Permission, user_has_permission
 
 
 @override_settings(GOOGLE_OAUTH_CLIENT_ID='test-google-client-id')
@@ -455,6 +456,48 @@ class ChangePasswordFlowTests(APITestCase):
 
 class UserRoleBehaviorTests(APITestCase):
     users_url = reverse('users')
+
+    def test_tournament_permissions_match_role_responsibilities(self):
+        admin = User.objects.create_user(
+            username='permission-admin',
+            email='permission-admin@example.com',
+            password='StrongPass123!',
+            role='admin',
+            is_active=True,
+        )
+        organizer = User.objects.create_user(
+            username='permission-organizer',
+            email='permission-organizer@example.com',
+            password='StrongPass123!',
+            role='organizer',
+            is_active=True,
+        )
+        jury = User.objects.create_user(
+            username='permission-jury',
+            email='permission-jury@example.com',
+            password='StrongPass123!',
+            role='jury',
+            is_active=True,
+        )
+
+        management_permissions = {
+            Permission.CREATE_TOURNAMENT,
+            Permission.EDIT_TOURNAMENT,
+            Permission.DELETE_TOURNAMENT,
+            Permission.MANAGE_PARTICIPANTS,
+        }
+
+        for user in (admin, organizer):
+            with self.subTest(role=user.role):
+                for permission in management_permissions | {Permission.VIEW_TOURNAMENT, Permission.SET_RESULTS}:
+                    self.assertTrue(user_has_permission(user, permission))
+
+        for permission in management_permissions:
+            with self.subTest(permission=permission):
+                self.assertFalse(user_has_permission(jury, permission))
+
+        self.assertTrue(user_has_permission(jury, Permission.VIEW_TOURNAMENT))
+        self.assertTrue(user_has_permission(jury, Permission.SET_RESULTS))
 
     def test_create_superuser_uses_admin_role(self):
         user = User.objects.create_superuser(

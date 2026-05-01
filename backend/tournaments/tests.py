@@ -58,14 +58,20 @@ class TournamentApiTests(APITestCase):
         self.assertEqual(Tournament.objects.count(), 1)
         self.assertEqual(Round.objects.count(), 0)
 
-    def test_organizer_and_jury_can_create_tournaments(self):
+    def test_organizer_can_create_tournament(self):
         url = reverse('tournament_manage_create')
 
-        for user in (self.organizer, self.jury):
-            with self.subTest(role=user.role):
-                self.client.force_authenticate(user=user)
-                response = self.client.post(url, self.tournament_data, format='json')
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.client.force_authenticate(user=self.organizer)
+        response = self.client.post(url, self.tournament_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_jury_cannot_create_tournament(self):
+        self.client.force_authenticate(user=self.jury)
+        url = reverse('tournament_manage_create')
+        response = self.client.post(url, self.tournament_data, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_non_admin_cannot_create_tournament(self):
         self.client.force_authenticate(user=self.captain)
@@ -85,18 +91,27 @@ class TournamentApiTests(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_organizer_and_jury_can_update_tournament(self):
-        for user in (self.organizer, self.jury):
-            with self.subTest(role=user.role):
-                tournament = Tournament.objects.create(
-                    created_by=self.admin,
-                    **self.tournament_data
-                )
-                self.client.force_authenticate(user=user)
-                url = reverse('tournament_manage_update', kwargs={'pk': tournament.id})
-                response = self.client.patch(url, {'name': f'Updated by {user.role}'}, format='json')
+    def test_organizer_can_update_tournament(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        self.client.force_authenticate(user=self.organizer)
+        url = reverse('tournament_manage_update', kwargs={'pk': tournament.id})
+        response = self.client.patch(url, {'name': 'Updated by organizer'}, format='json')
 
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_jury_cannot_update_tournament(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        self.client.force_authenticate(user=self.jury)
+        url = reverse('tournament_manage_update', kwargs={'pk': tournament.id})
+        response = self.client.patch(url, {'name': 'Updated by jury'}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_start_registration(self):
         tournament = Tournament.objects.create(
@@ -111,7 +126,7 @@ class TournamentApiTests(APITestCase):
         tournament.refresh_from_db()
         self.assertEqual(tournament.status, Tournament.STATUS_REGISTRATION)
 
-    def test_jury_can_start_registration(self):
+    def test_jury_cannot_start_registration(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,
             **self.tournament_data
@@ -120,9 +135,9 @@ class TournamentApiTests(APITestCase):
         url = reverse('tournament_start_registration', kwargs={'pk': tournament.id})
         response = self.client.post(url)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         tournament.refresh_from_db()
-        self.assertEqual(tournament.status, Tournament.STATUS_REGISTRATION)
+        self.assertEqual(tournament.status, Tournament.STATUS_DRAFT)
 
     def test_team_registration(self):
         tournament = Tournament.objects.create(
@@ -153,7 +168,7 @@ class TournamentApiTests(APITestCase):
         response = self.client.post(url, round_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_jury_can_manage_rounds(self):
+    def test_jury_cannot_manage_rounds(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,
             **self.tournament_data
@@ -167,7 +182,7 @@ class TournamentApiTests(APITestCase):
             'end_date': self.tournament_data['end_date'],
         }
         response = self.client.post(url, round_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_submission_creation(self):
         tournament = Tournament.objects.create(
