@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.utils.permissions import is_platform_admin
+from backend.permissions import is_platform_admin
 from accounts.models import User
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember

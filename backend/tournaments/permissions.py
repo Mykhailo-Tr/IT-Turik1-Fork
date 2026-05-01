@@ -1,7 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from django.db.models import Q
 
-from accounts.utils.permissions import Permission, user_has_permission
+from backend.permissions import Permission, has_permission as user_has_permission
 from teams.models import Team, TeamMember
 
 
@@ -40,12 +40,19 @@ class CanManageParticipants(HasTournamentPermission):
     required_permission = Permission.MANAGE_PARTICIPANTS
 
 
+class CanManageRounds(HasTournamentPermission):
+    required_permission = Permission.MANAGE_ROUNDS
+
+
 class CanSetResults(HasTournamentPermission):
     required_permission = Permission.SET_RESULTS
 
 
-class CanEditTournamentOrReadOnly(HasTournamentPermissionOrReadOnly):
-    required_permission = Permission.EDIT_TOURNAMENT
+class CanManageRoundsOrReadOnly(HasTournamentPermissionOrReadOnly):
+    required_permission = Permission.MANAGE_ROUNDS
+
+
+CanEditTournamentOrReadOnly = CanManageRoundsOrReadOnly
 
 
 class IsTeamMemberPermission(BasePermission):

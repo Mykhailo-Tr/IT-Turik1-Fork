@@ -8,13 +8,14 @@ from rest_framework.views import APIView
 
 from teams.models import Team
 from .models import Round, Submission, Tournament, TournamentTeamRegistration
-from accounts.utils.permissions import Permission, user_has_permission
+from backend.permissions import Permission, has_permission as user_has_permission
 
 from .permissions import (
     CanCreateTournament,
     CanDeleteTournament,
     CanEditTournament,
-    CanEditTournamentOrReadOnly,
+    CanManageRounds,
+    CanManageRoundsOrReadOnly,
     CanManageParticipants,
     CanSetResults,
     CanViewTournament,
@@ -293,7 +294,7 @@ class TeamActiveTournamentView(APIView):
 
 
 class RoundListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, CanEditTournamentOrReadOnly]
+    permission_classes = [IsAuthenticated, CanManageRoundsOrReadOnly]
     serializer_class = RoundSerializer
 
     def _get_tournament(self):
@@ -341,7 +342,7 @@ class RoundListCreateView(generics.ListCreateAPIView):
 
 
 class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, CanEditTournamentOrReadOnly]
+    permission_classes = [IsAuthenticated, CanManageRoundsOrReadOnly]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
@@ -360,7 +361,7 @@ class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class RoundStartView(SyncStatusesMixin, APIView):
-    permission_classes = [IsAuthenticated, CanEditTournament]
+    permission_classes = [IsAuthenticated, CanManageRounds]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)
@@ -380,7 +381,7 @@ class RoundMarkEvaluatedView(SyncStatusesMixin, APIView):
 
 
 class RoundCloseSubmissionsView(SyncStatusesMixin, APIView):
-    permission_classes = [IsAuthenticated, CanEditTournament]
+    permission_classes = [IsAuthenticated, CanManageRounds]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)

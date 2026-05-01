@@ -168,6 +168,22 @@ class TournamentApiTests(APITestCase):
         response = self.client.post(url, round_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_organizer_can_manage_rounds(self):
+        tournament = Tournament.objects.create(
+            created_by=self.admin,
+            **self.tournament_data
+        )
+        self.client.force_authenticate(user=self.organizer)
+        url = reverse('rounds', kwargs={'tournament_pk': tournament.id})
+
+        round_data = {
+            'name': 'Organizer Round',
+            'start_date': self.tournament_data['start_date'],
+            'end_date': self.tournament_data['end_date'],
+        }
+        response = self.client.post(url, round_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_jury_cannot_manage_rounds(self):
         tournament = Tournament.objects.create(
             created_by=self.admin,

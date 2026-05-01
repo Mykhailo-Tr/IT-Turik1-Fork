@@ -10,7 +10,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import RoleActivationCode, User
-from .utils.permissions import Permission, user_has_permission
+from backend.permissions import Permission, user_has_permission
 
 
 @override_settings(GOOGLE_OAUTH_CLIENT_ID='test-google-client-id')
@@ -485,6 +485,7 @@ class UserRoleBehaviorTests(APITestCase):
             Permission.EDIT_TOURNAMENT,
             Permission.DELETE_TOURNAMENT,
             Permission.MANAGE_PARTICIPANTS,
+            Permission.MANAGE_ROUNDS,
         }
 
         for user in (admin, organizer):
