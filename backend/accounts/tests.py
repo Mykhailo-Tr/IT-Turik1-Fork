@@ -545,6 +545,93 @@ class UserRoleBehaviorTests(APITestCase):
         self.assertNotIn('legacy-super-team', usernames)
 
 
+class UserDetailViewTests(APITestCase):
+    def setUp(self):
+        self.requester = User.objects.create_user(
+            username='detail-requester',
+            email='detail-requester@example.com',
+            password='StrongPass123!',
+            role='team',
+            is_active=True,
+        )
+        self.client.force_authenticate(user=self.requester)
+
+    def test_authenticated_user_can_fetch_active_non_superuser_profile(self):
+        target = User.objects.create_user(
+            username='detail-target',
+            email='detail-target@example.com',
+            password='StrongPass123!',
+            role='jury',
+            full_name='Detail Target',
+            city='Kyiv',
+            phone='+380991112233',
+            is_active=True,
+        )
+        url = reverse('user_detail', kwargs={'pk': target.id})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for field in ('id', 'username', 'role', 'full_name', 'city', 'phone', 'teams'):
+            self.assertIn(field, response.data)
+        self.assertEqual(response.data['id'], target.id)
+        self.assertEqual(response.data['username'], target.username)
+        self.assertEqual(response.data['role'], target.role)
+
+    def test_superuser_is_excluded(self):
+        superuser = User.objects.create_user(
+            username='detail-superuser',
+            email='detail-superuser@example.com',
+            password='StrongPass123!',
+            role='admin',
+            is_active=True,
+            is_staff=True,
+            is_superuser=True,
+        )
+        url = reverse('user_detail', kwargs={'pk': superuser.id})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_inactive_user_is_excluded(self):
+        inactive_user = User.objects.create_user(
+            username='detail-inactive',
+            email='detail-inactive@example.com',
+            password='StrongPass123!',
+            role='team',
+            is_active=False,
+        )
+        url = reverse('user_detail', kwargs={'pk': inactive_user.id})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unauthenticated_request_returns_401(self):
+        target = User.objects.create_user(
+            username='detail-public-target',
+            email='detail-public-target@example.com',
+            password='StrongPass123!',
+            role='team',
+            is_active=True,
+        )
+        url = reverse('user_detail', kwargs={'pk': target.id})
+        self.client.force_authenticate(user=None)
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_user_can_fetch_own_profile(self):
+        url = reverse('user_detail', kwargs={'pk': self.requester.id})
+
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.requester.id)
+
+
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class RoleBasedRegistrationTests(APITestCase):
     register_url = reverse('register')
