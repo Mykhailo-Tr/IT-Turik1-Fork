@@ -1,13 +1,14 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tournaments.models import Round
+from tournaments.models import Round, Tournament
 from tournaments.permissions import CanSetResults
 from .services import get_available_jury, replace_round_jury_assignments, try_auto_evaluate_round
+from .leaderboard_service import get_leaderboard
 
 from .models import JuryAssignment, SubmissionEvaluation
 from .serializers import (
@@ -78,3 +79,49 @@ class AvailableJuryListView(APIView):
         include_assigned = include_assigned_param == 'true'
         jury_queryset = get_available_jury(round_obj=round_obj, include_assigned=include_assigned)
         return Response(AvailableJurySerializer(jury_queryset, many=True).data, status=status.HTTP_200_OK)
+
+
+class RoundLeaderboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, round_id):
+        round_obj = Round.objects.select_related('tournament').filter(id=round_id).first()
+        if not round_obj:
+            raise NotFound('Round not found.')
+
+        rankings = get_leaderboard(round_id=round_id, requesting_user=request.user)
+        is_snapshot = round_obj.tournament.status == Tournament.STATUS_FINISHED
+
+        return Response(
+            {
+                'round_id': round_id,
+                'is_snapshot': is_snapshot,
+                'rankings': rankings,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class TournamentLeaderboardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, tournament_id):
+        tournament = Tournament.objects.filter(id=tournament_id).first()
+        if not tournament:
+            raise NotFound('Tournament not found.')
+
+        last_round = Round.objects.filter(tournament_id=tournament_id).order_by('-start_date', '-id').first()
+        if not last_round:
+            raise NotFound('No rounds found for this tournament.')
+
+        rankings = get_leaderboard(round_id=last_round.id, requesting_user=request.user)
+        is_snapshot = tournament.status == Tournament.STATUS_FINISHED
+
+        return Response(
+            {
+                'round_id': last_round.id,
+                'is_snapshot': is_snapshot,
+                'rankings': rankings,
+            },
+            status=status.HTTP_200_OK,
+        )
