@@ -457,12 +457,10 @@ class LeaderboardTests(APITestCase):
         )
 
     def test_tournament_snapshot_idempotent(self):
-        self.round_obj.status = Round.STATUS_EVALUATED
-        self.round_obj2.status = Round.STATUS_EVALUATED
+        self.round_obj.status = Round.STATUS_SUBMISSION_CLOSED
+        self.round_obj2.status = Round.STATUS_SUBMISSION_CLOSED
         self.round_obj.save(update_fields=['status', 'updated_at'])
         self.round_obj2.save(update_fields=['status', 'updated_at'])
-
-        mark_round_evaluated(self.round_obj)
         save_leaderboard_snapshot(self.tournament.id, self.round_obj2.id)
         first_count = LeaderboardEntry.objects.filter(tournament=self.tournament, round__isnull=True).count()
         save_leaderboard_snapshot(self.tournament.id, self.round_obj2.id)
