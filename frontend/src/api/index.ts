@@ -1,10 +1,12 @@
 import { isAxiosError, type AxiosError } from 'axios'
 import { accountsService } from './accounts'
 import { teamsService } from './teams'
+import { notificationsService } from './notifications'
 
 const $api = {
   accounts: accountsService,
   teams: teamsService,
+  notifications: notificationsService,
 }
 
 export default $api

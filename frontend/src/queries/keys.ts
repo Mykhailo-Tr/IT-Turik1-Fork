@@ -13,3 +13,11 @@ export const accountKeys = {
   users: () => ['users'],
   roleCodes: (filter?: GetRoleCodesFilter) => ['role-codes', filter?.role ?? 'all'],
 }
+
+export const notificationKeys = {
+  all: ['notifications'] as const,
+  lists: () => [...notificationKeys.all, 'list'] as const,
+  list: (page: number) => [...notificationKeys.lists(), page] as const,
+  unreadCount: () => [...notificationKeys.all, 'unread-count'] as const,
+  settings: () => [...notificationKeys.all, 'settings'] as const,
+}

@@ -5,6 +5,7 @@ import RoleCodesAdmin from '@/features/admin/views/RoleCodesAdminView.vue'
 import CompleteProfile from '@/features/auth/views/CompleteProfileView.vue'
 import ForgotPassword from '@/features/auth/views/ForgotPasswordView.vue'
 import EditProfile from '@/features/profile/views/EditProfileView.vue'
+import NotificationsView from '@/features/notifications/views/NotificationsView.vue'
 import Home from '@/features/home/views/HomeView.vue'
 import Login from '@/features/auth/views/LoginView.vue'
 import Profile from '@/features/profile/views/ProfileView.vue'
@@ -51,6 +52,11 @@ const router = createRouter({
     {
       path: '/profile/edit',
       component: EditProfile,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/profile/notifications',
+      component: NotificationsView,
       meta: { requiresAuth: true },
     },
     {

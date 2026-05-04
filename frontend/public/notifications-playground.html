@@ -348,10 +348,13 @@
 
                 if (!notifRes.ok || !settingsRes.ok) throw new Error('Failed to fetch base data');
                 
-                const notifs = await notifRes.json();
+                const notifsData = await notifRes.json();
                 const settingsData = await settingsRes.json();
 
-                renderNotifications(notifs);
+                // Handle both paginated (notifsData.results) and non-paginated arrays
+                const notifsArray = Array.isArray(notifsData) ? notifsData : (notifsData.results || []);
+
+                renderNotifications(notifsArray);
                 renderConfig(settingsData);
                 populateEventDropdown(settingsData.event_types);
 

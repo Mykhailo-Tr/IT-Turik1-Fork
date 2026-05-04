@@ -1,5 +1,8 @@
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import generics, status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,13 +12,24 @@ from .serializers import NotificationSerializer
 from .config import EVENTS
 
 
+class NotificationPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
 class NotificationListView(generics.ListAPIView):
     """List current user's notifications, newest first."""
 
     permission_classes = [IsAuthenticated]
     serializer_class = NotificationSerializer
+    pagination_class = NotificationPagination
 
     def get_queryset(self):
+        cutoff_date = timezone.now() - timedelta(days=30)
+        # Auto-delete notifications older than 30 days for this user
+        Notification.objects.filter(recipient=self.request.user, created_at__lt=cutoff_date).delete()
+        
         return Notification.objects.filter(recipient=self.request.user)
 
 
