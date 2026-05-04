@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tournaments.models import Round
-from tournaments.permissions import IsJuryPermission, IsPlatformAdminPermission
+from tournaments.permissions import CanSetResults
 from .services import get_available_jury, replace_round_jury_assignments, try_auto_evaluate_round
 
 from .models import JuryAssignment, SubmissionEvaluation
@@ -19,7 +19,7 @@ from .serializers import (
 
 
 class JuryAssignmentListView(generics.ListAPIView):
-    permission_classes = [IsAuthenticated, IsJuryPermission]
+    permission_classes = [IsAuthenticated, CanSetResults]
     serializer_class = JuryAssignmentSerializer
 
     def get_queryset(self):
@@ -29,7 +29,7 @@ class JuryAssignmentListView(generics.ListAPIView):
 
 
 class JuryEvaluationCreateView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated, IsJuryPermission]
+    permission_classes = [IsAuthenticated, CanSetResults]
     serializer_class = SubmissionEvaluationSerializer
 
     def perform_create(self, serializer):
@@ -39,7 +39,7 @@ class JuryEvaluationCreateView(generics.CreateAPIView):
 
 
 class JuryEvaluationDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsJuryPermission]
+    permission_classes = [IsAuthenticated, CanSetResults]
     serializer_class = SubmissionEvaluationSerializer
     lookup_field = 'assignment_id'
 
@@ -53,7 +53,7 @@ class JuryEvaluationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AdminRoundAssignmentView(APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanSetResults]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(Round, pk=pk)
@@ -67,7 +67,7 @@ class AdminRoundAssignmentView(APIView):
 
 
 class AvailableJuryListView(APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanSetResults]
 
     def get(self, request, pk):
         round_obj = get_object_or_404(Round, pk=pk)
