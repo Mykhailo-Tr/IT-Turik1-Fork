@@ -72,7 +72,12 @@
             <ui-skeleton variant="rect" width="100%" style="margin-top: 5px" />
           </template>
 
-          <strong>{{ captainName }}</strong>
+          <strong v-if="props.team?.captain_id">
+            <RouterLink :to="`/users/${props.team.captain_id}`" class="captain-link">
+              {{ captainName }}
+            </RouterLink>
+          </strong>
+          <strong v-else>{{ captainName }}</strong>
         </ui-skeleton-loader>
       </ui-card>
 
@@ -243,6 +248,12 @@ const leaveTeam = () => {
 .info-item span {
   display: block;
   font-size: 0.8rem;
+}
+
+.captain-link {
+  color: var(--brand-700);
+  text-decoration: none;
+  font-weight: 700;
 }
 
 .info-actions {

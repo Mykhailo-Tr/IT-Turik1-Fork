@@ -43,7 +43,11 @@
             >
               <template #header>
                 <div style="display: flex; justify-content: space-between">
-                  <p class="member-name">{{ member.username }}</p>
+                  <p class="member-name">
+                    <RouterLink :to="`/users/${member.id}`" class="member-link">
+                      {{ member.username }}
+                    </RouterLink>
+                  </p>
 
                   <ui-badge v-if="member.id === props.team?.captain_id" variant="green"
                     >Captain</ui-badge
@@ -164,6 +168,12 @@ const filteredMembers = computed(() =>
 }
 
 .member-name {
+  font-weight: 700;
+}
+
+.member-link {
+  color: var(--brand-700);
+  text-decoration: none;
   font-weight: 700;
 }
 

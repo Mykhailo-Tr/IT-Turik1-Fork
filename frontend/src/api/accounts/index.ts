@@ -95,6 +95,11 @@ export const accountsService = {
     return data
   },
 
+  async getUserById(id: number) {
+    const { data } = await apiClient.get<GetProfileResponse>(`${prefix}/users/${id}/`)
+    return data
+  },
+
   async getRoleCodes(args: GetRoleCodesArgs) {
     const params = new URLSearchParams()
     if (args.filter?.role && args.filter.role !== 'all') {
