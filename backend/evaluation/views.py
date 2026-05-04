@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from tournaments.models import Round, Tournament
 from tournaments.permissions import CanSetResults
 from .services import get_available_jury, replace_round_jury_assignments, try_auto_evaluate_round
-from .leaderboard_service import get_leaderboard
+from .leaderboard_service import get_leaderboard, get_tournament_leaderboard
 
 from .models import JuryAssignment, SubmissionEvaluation
 from .serializers import (
@@ -110,16 +110,16 @@ class TournamentLeaderboardView(APIView):
         if not tournament:
             raise NotFound('Tournament not found.')
 
-        last_round = Round.objects.filter(tournament_id=tournament_id).order_by('-start_date', '-id').first()
-        if not last_round:
+        has_rounds = Round.objects.filter(tournament_id=tournament_id).exists()
+        if not has_rounds:
             raise NotFound('No rounds found for this tournament.')
 
-        rankings = get_leaderboard(round_id=last_round.id, requesting_user=request.user)
+        rankings = get_tournament_leaderboard(tournament_id=tournament_id, requesting_user=request.user)
         is_snapshot = tournament.status == Tournament.STATUS_FINISHED
 
         return Response(
             {
-                'round_id': last_round.id,
+                'tournament_id': tournament_id,
                 'is_snapshot': is_snapshot,
                 'rankings': rankings,
             },

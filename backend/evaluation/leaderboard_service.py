@@ -73,26 +73,47 @@ def compute_leaderboard(round_id: int) -> list[dict]:
 
 def save_leaderboard_snapshot(tournament_id: int, round_id: int) -> None:
     if LeaderboardEntry.objects.filter(tournament_id=tournament_id, round_id=round_id).exists():
+        pass
+    else:
+        rankings = compute_leaderboard(round_id)
+        if rankings:
+            entries = [
+                LeaderboardEntry(
+                    tournament_id=tournament_id,
+                    round_id=round_id,
+                    team_id=row['team_id'],
+                    rank=row['rank'],
+                    total_score=row['total_score'],
+                    average_score=row['average_score'],
+                    criteria_breakdown=row['criteria_breakdown'],
+                    jury_breakdown=row['jury_breakdown'],
+                )
+                for row in rankings
+            ]
+            LeaderboardEntry.objects.bulk_create(entries)
+
+    if LeaderboardEntry.objects.filter(tournament_id=tournament_id, round__isnull=True).exists():
         return
 
-    rankings = compute_leaderboard(round_id)
-    if not rankings:
+    tournament_rankings = compute_tournament_leaderboard(tournament_id)
+    if not tournament_rankings:
         return
 
-    entries = [
+    tournament_entries = [
         LeaderboardEntry(
             tournament_id=tournament_id,
-            round_id=round_id,
+            round_id=None,
             team_id=row['team_id'],
             rank=row['rank'],
             total_score=row['total_score'],
-            average_score=row['average_score'],
-            criteria_breakdown=row['criteria_breakdown'],
-            jury_breakdown=row['jury_breakdown'],
+            average_score=0,
+            criteria_breakdown={},
+            jury_breakdown=None,
+            rounds_breakdown=row['rounds'],
         )
-        for row in rankings
+        for row in tournament_rankings
     ]
-    LeaderboardEntry.objects.bulk_create(entries)
+    LeaderboardEntry.objects.bulk_create(tournament_entries)
 
 
 def get_leaderboard(round_id: int, requesting_user) -> list[dict]:
@@ -130,4 +151,94 @@ def get_leaderboard(round_id: int, requesting_user) -> list[dict]:
     if requesting_user.role == 'team':
         for row in result:
             row['jury_breakdown'] = None
+    return result
+
+
+def compute_tournament_leaderboard(tournament_id: int) -> list[dict]:
+    rounds = (
+        Round.objects.filter(tournament_id=tournament_id)
+        .order_by('start_date', 'id')
+        .only('id', 'name', 'status')
+    )
+
+    teams = {}
+    for round_obj in rounds:
+        round_ranking = compute_leaderboard(round_obj.id)
+        for team_row in round_ranking:
+            team_bucket = teams.setdefault(
+                team_row['team_id'],
+                {
+                    'team_id': team_row['team_id'],
+                    'team_name': team_row['team_name'],
+                    'total_score': Decimal('0.00'),
+                    'rounds': [],
+                },
+            )
+            team_bucket['total_score'] += Decimal(str(team_row['total_score']))
+            team_bucket['rounds'].append(
+                {
+                    'round_id': round_obj.id,
+                    'round_name': round_obj.name,
+                    'total_score': team_row['total_score'],
+                    'average_score': team_row['average_score'],
+                    'criteria_breakdown': team_row['criteria_breakdown'],
+                    'jury_breakdown': team_row['jury_breakdown'],
+                }
+            )
+
+    rankings = sorted(
+        teams.values(),
+        key=lambda item: (-item['total_score'], item['team_name']),
+    )
+    result = []
+    for idx, row in enumerate(rankings, start=1):
+        result.append(
+            {
+                'rank': idx,
+                'team_id': row['team_id'],
+                'team_name': row['team_name'],
+                'total_score': float(_quantize(row['total_score'])),
+                'rounds': row['rounds'],
+            }
+        )
+    return result
+
+
+def get_tournament_leaderboard(tournament_id: int, requesting_user) -> list[dict]:
+    tournament = Tournament.objects.filter(id=tournament_id).first()
+    if tournament is None:
+        return []
+
+    is_privileged = requesting_user.role in {'admin', 'organizer', 'jury'}
+    has_evaluated_rounds = Round.objects.filter(
+        tournament_id=tournament_id,
+        status=Round.STATUS_EVALUATED,
+    ).exists()
+
+    if tournament.status == Tournament.STATUS_FINISHED:
+        rows = LeaderboardEntry.objects.filter(
+            tournament_id=tournament_id,
+            round__isnull=True,
+        ).select_related('team').order_by('rank')
+        result = [
+            {
+                'rank': row.rank,
+                'team_id': row.team_id,
+                'team_name': row.team.name,
+                'total_score': float(row.total_score),
+                'rounds': row.rounds_breakdown or [],
+            }
+            for row in rows
+        ]
+    elif has_evaluated_rounds:
+        result = compute_tournament_leaderboard(tournament_id)
+    else:
+        if not is_privileged:
+            raise PermissionDenied('Tournament leaderboard is not available yet.')
+        result = compute_tournament_leaderboard(tournament_id)
+
+    if requesting_user.role == 'team':
+        for row in result:
+            for round_row in row['rounds']:
+                round_row['jury_breakdown'] = None
     return result

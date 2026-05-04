@@ -48,6 +48,7 @@ class LeaderboardEntry(models.Model):
     average_score = models.DecimalField(max_digits=6, decimal_places=2)
     criteria_breakdown = models.JSONField()
     jury_breakdown = models.JSONField(null=True, blank=True)
+    rounds_breakdown = models.JSONField(null=True, blank=True)
     snapshot_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
