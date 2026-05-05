@@ -135,8 +135,14 @@ const handleNotificationClick = (notification: any, event: Event) => {
 
 const getRedirectUrl = (notification: any) => {
   const type = notification.event_type
+
+  // These events should lead to the general teams page for management/responses
+  if (type === 'team_join_request_received' || type === 'team_invitation_received') {
+    return '/teams'
+  }
+
   if (type.startsWith('team_')) {
-    // Try to extract team_id from the message if it exists in the format [team:id:name]
+    // Other team events can still link directly if possible
     const match = notification.message.match(/\[team:(\d+):.+?\]/)
     if (match) {
       return `/teams/${match[1]}`
