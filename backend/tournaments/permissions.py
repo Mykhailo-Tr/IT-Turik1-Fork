@@ -48,6 +48,10 @@ class CanSetResults(HasTournamentPermission):
     required_permission = Permission.SET_RESULTS
 
 
+class CanManageAssignments(HasTournamentPermission):
+    required_permission = Permission.MANAGE_ROUNDS
+
+
 class CanManageRoundsOrReadOnly(HasTournamentPermissionOrReadOnly):
     required_permission = Permission.MANAGE_ROUNDS
 
