@@ -10,6 +10,7 @@ export const teamKeys = {
 
 export const accountKeys = {
   profile: () => ['profile'],
+  user: (id: number) => ['user', id],
   users: () => ['users'],
   roleCodes: (filter?: GetRoleCodesFilter) => ['role-codes', filter?.role ?? 'all'],
 }

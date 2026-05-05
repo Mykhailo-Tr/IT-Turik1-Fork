@@ -40,14 +40,6 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
-    @property
-    def rounds_count(self):
-        return self.__dict__.get('rounds_count') or self.rounds.count()
-
-    @rounds_count.setter
-    def rounds_count(self, value):
-        self.__dict__['rounds_count'] = value
-
     def clean(self):
         errors = {}
 
@@ -92,7 +84,6 @@ class Round(models.Model):
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
     passing_count = models.PositiveIntegerField(blank=True, null=True)
-    winners_count = models.PositiveIntegerField(blank=True, null=True)
     evaluation_criteria = models.CharField(
         max_length=32,
         choices=EVALUATION_CRITERIA_CHOICES,
@@ -169,16 +160,6 @@ class Round(models.Model):
             if self.start_date != tournament.start_date or self.end_date != tournament.end_date:
                 errors['start_date'] = 'For single-round tournaments, round dates must match tournament dates.'
         
-        if tournament and self.winners_count is not None:
-            last_round = (
-                Round.objects.filter(tournament=tournament)
-                .order_by('-start_date')
-                .values_list('id', flat=True)
-                .first()
-            )
-            if last_round and self.pk != last_round:
-                errors['winners_count'] = 'winners_count is allowed only for the last round.'
-
         self._validate_date_overlaps(errors)
 
         if not isinstance(self.criteria, list):
@@ -293,4 +274,52 @@ class TournamentTeamRegistration(models.Model):
 
     def __str__(self):
         return f'{self.tournament_id}:{self.team_id}'
+
+
+class Icon(models.Model):
+    name = models.CharField(max_length=255, blank=True)
+    path = models.CharField(max_length=500)
+
+    class Meta:
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name or self.path
+
+
+class Event(models.Model):
+    TYPE_MEET = 'meet'
+    TYPE_EVENT = 'event'
+
+    TYPE_CHOICES = (
+        (TYPE_MEET, 'Meet'),
+        (TYPE_EVENT, 'Event'),
+    )
+
+    tournament = models.ForeignKey(
+        Tournament,
+        on_delete=models.CASCADE,
+        related_name='events',
+    )
+    type = models.CharField(max_length=16, choices=TYPE_CHOICES)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    link = models.URLField(blank=True)
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField(blank=True, null=True)
+    icon = models.ForeignKey(
+        Icon,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        related_name='events',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('start_datetime',)
+
+    def __str__(self):
+        return f'{self.tournament_id}:{self.title}'
 
