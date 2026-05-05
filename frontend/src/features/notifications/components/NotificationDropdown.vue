@@ -175,8 +175,8 @@ const handleNotificationClick = (notification: any, event: Event) => {
 const getRedirectUrl = (notification: any) => {
   const type = notification.event_type
 
-  // These events should lead to the general teams page for management/responses
-  if (type === 'team_join_request_received' || type === 'team_invitation_received') {
+  // Only invitations go to /teams — recipient hasn't joined yet
+  if (type === 'team_invitation_received') {
     return '/teams'
   }
 
