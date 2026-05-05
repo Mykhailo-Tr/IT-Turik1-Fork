@@ -23,13 +23,15 @@
       <div class="dropdown-body">
         <div v-if="isLoading" class="state-message">Loading...</div>
         <div v-else-if="error" class="state-message">Error loading</div>
-        <div v-else-if="recentNotifications.length === 0" class="state-message">No notifications</div>
+        <div v-else-if="unreadNotifications.length === 0" class="state-message">
+          There are currently no new notifications
+        </div>
           <div v-else class="notifications-list">
             <div 
-              v-for="notification in recentNotifications" 
+              v-for="notification in unreadNotifications" 
               :key="notification.id"
-              :class="['notification-item', { 'is-unread': !notification.is_read }]"
-              @click="!notification.is_read && markAsRead(notification.id)"
+              class="notification-item is-unread"
+              @click="markAsRead(notification.id)"
             >
               <div class="item-content">
                 <div class="item-title-row">
@@ -103,13 +105,11 @@ const { data: unreadCount } = useUnreadCount()
 const { mutate: markAsRead } = useMarkAsRead()
 const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllAsRead()
 
-const recentNotifications = computed(() => {
-  return notifications.value?.results?.slice(0, 5) || []
+const unreadNotifications = computed(() => {
+  return notifications.value?.results?.filter(n => !n.is_read) || []
 })
 
-const hasUnread = computed(() => {
-  return notifications.value?.results?.some(n => !n.is_read) ?? false
-})
+const hasUnread = computed(() => unreadNotifications.value.length > 0)
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
