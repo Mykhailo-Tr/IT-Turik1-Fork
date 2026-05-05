@@ -46,10 +46,40 @@
               <ui-badge variant="gray">{{ notification.event_type }}</ui-badge>
               <h4 class="notification-title">{{ notification.title }}</h4>
             </div>
-            <span class="notification-date">{{ formatDate(notification.created_at) }}</span>
+            <div class="notification-actions">
+              <span class="notification-date">{{ formatDate(notification.created_at) }}</span>
+              <button 
+                v-if="getRedirectUrl(notification)"
+                class="redirect-btn" 
+                @click.stop="handleNotificationClick(notification, $event)"
+                title="Go to page"
+              >
+                <external-link-icon class="icon" />
+              </button>
+            </div>
           </div>
           <div class="notification-body">
-            <p>{{ notification.message }}</p>
+            <p class="notification-message">
+              <template v-for="(part, index) in parseMessage(notification.message)" :key="index">
+                <a 
+                  v-if="part.type === 'user'" 
+                  :href="`/users/${part.id}`" 
+                  class="user-link"
+                  @click.stop
+                >
+                  {{ part.text }}
+                </a>
+                <router-link 
+                  v-else-if="part.type === 'team'" 
+                  :to="`/teams/${part.id}`" 
+                  class="user-link"
+                  @click.stop
+                >
+                  {{ part.text }}
+                </router-link>
+                <span v-else>{{ part.text }}</span>
+              </template>
+            </p>
           </div>
         </div>
       </div>
@@ -67,15 +97,18 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import UiCard from '@/components/UiCard.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiBadge from '@/components/UiBadge.vue'
+import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
 import NotificationSettingsModal from '../components/NotificationSettingsModal.vue'
 import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/queries/notifications'
 import { useNotification } from '@/composables/useNotification'
 
 const isSettingsModalOpen = ref(false)
 const page = ref(1)
+const router = useRouter()
 
 const { data: notificationsData, isLoading, error } = useNotifications(page)
 const { mutate: markAsRead } = useMarkAsRead()
@@ -108,6 +141,56 @@ const handleMarkAllRead = () => {
     onSuccess: () => showNotification('All notifications marked as read', 'success'),
     onError: () => showNotification('Failed to mark notifications as read', 'error')
   })
+}
+
+const handleNotificationClick = (notification: any, event: Event) => {
+  if (!notification.is_read) {
+    handleMarkRead(notification.id)
+  }
+
+  const url = getRedirectUrl(notification)
+  if (url) {
+    router.push(url)
+  }
+}
+
+const getRedirectUrl = (notification: any) => {
+  const type = notification.event_type
+  if (type.startsWith('team_')) {
+    // Try to extract team_id from the message if it exists in the format [team:id:name]
+    const match = notification.message.match(/\[team:(\d+):.+?\]/)
+    if (match) {
+      return `/teams/${match[1]}`
+    }
+    return '/teams'
+  }
+  return null
+}
+
+const parseMessage = (message: string) => {
+  const parts = []
+  // Matches [user:id:name] or [team:id:name]
+  const regex = /\[(user|team):(\d+):(.+?)\]/g
+  let lastIndex = 0
+  let match
+
+  while ((match = regex.exec(message)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', text: message.substring(lastIndex, match.index) })
+    }
+    parts.push({ 
+      type: match[1], // 'user' or 'team'
+      id: match[2], 
+      text: match[3] 
+    })
+    lastIndex = regex.lastIndex
+  }
+
+  if (lastIndex < message.length) {
+    parts.push({ type: 'text', text: message.substring(lastIndex) })
+  }
+
+  return parts.length > 0 ? parts : [{ type: 'text', text: message }]
 }
 
 const formatDate = (dateStr: string) => {
@@ -182,6 +265,35 @@ const formatDate = (dateStr: string) => {
   margin-bottom: 0.5rem;
 }
 
+.notification-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.redirect-btn {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.redirect-btn:hover {
+  color: var(--brand-600);
+  background: color-mix(in srgb, var(--brand-500) 10%, transparent);
+}
+
+.redirect-btn .icon {
+  width: 16px;
+  height: 16px;
+}
+
 .notification-title-group {
   display: flex;
   align-items: center;
@@ -240,5 +352,17 @@ const formatDate = (dateStr: string) => {
   font-size: 0.9rem;
   color: var(--muted-foreground);
   font-weight: 500;
+}
+
+.user-link {
+  color: var(--brand-600);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.user-link:hover {
+  color: var(--brand-700);
+  text-decoration: underline;
 }
 </style>

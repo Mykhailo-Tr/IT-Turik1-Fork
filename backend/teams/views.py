@@ -9,7 +9,6 @@ from rest_framework.views import APIView
 
 from accounts.utils.permissions import is_platform_admin
 from accounts.models import User
-from notifications.services import NotificationService
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
 from .serializers import (
@@ -23,6 +22,14 @@ from .serializers import (
     invite_user_to_team,
 )
 from .services import assert_can_remove_member, assert_team_not_in_active_tournament
+from .signals import (
+    invitation_received,
+    invitation_responded,
+    join_request_received,
+    join_request_responded,
+    member_removed,
+    member_left,
+)
 
 
 def get_team_queryset():
@@ -149,11 +156,7 @@ class TeamMemberManageView(APIView):
         if not invitation:
             raise ValidationError({'message': ['Unable to invite this user.']})
 
-        NotificationService.notify(
-            recipients=[user],
-            event_type='team_invitation_received',
-            context={'team_name': team.name, 'invited_by': request.user.username},
-        )
+        invitation_received.send(sender=self.__class__, invitation=invitation)
 
         team.refresh_from_db()
         serializer = TeamSerializer(team, context={'request': request})
@@ -174,11 +177,7 @@ class TeamMemberManageView(APIView):
         if deleted_count == 0:
             raise NotFound('User is not a team member.')
 
-        NotificationService.notify(
-            recipients=[removed_user],
-            event_type='team_member_removed',
-            context={'team_name': team.name},
-        )
+        member_removed.send(sender=self.__class__, team=team, user=removed_user)
 
         clear_invitation_states_for_member(team=team, user_id=user_id)
         clear_join_request_states_for_member(team=team, user_id=user_id)
@@ -204,11 +203,7 @@ class TeamLeaveView(APIView):
         if deleted_count == 0:
             raise ValidationError({'message': ['You are not a team member of this team.']})
 
-        NotificationService.notify(
-            recipients=[team.captain],
-            event_type='team_member_left',
-            context={'team_name': team.name, 'user_name': request.user.username},
-        )
+        member_left.send(sender=self.__class__, team=team, user=request.user)
 
         clear_invitation_states_for_member(team=team, user=request.user)
         clear_join_request_states_for_member(team=team, user=request.user)
@@ -256,21 +251,15 @@ class TeamInvitationRespondView(APIView):
                 reviewed_by=invitation.team.captain,
                 reviewed_at=now,
             )
+            invitation.status = TeamInvitation.STATUS_ACCEPTED
+            invitation.responded_at = now
             clear_invitation_states_for_member(team=invitation.team, user=request.user)
-            NotificationService.notify(
-                recipients=[invitation.team.captain],
-                event_type='team_invitation_accepted',
-                context={'team_name': invitation.team.name, 'user_name': request.user.username},
-            )
+            invitation_responded.send(sender=self.__class__, invitation=invitation)
         else:
             invitation.status = self.new_status
             invitation.responded_at = now
             invitation.save(update_fields=['status', 'responded_at', 'updated_at'])
-            NotificationService.notify(
-                recipients=[invitation.team.captain],
-                event_type='team_invitation_declined',
-                context={'team_name': invitation.team.name, 'user_name': request.user.username},
-            )
+            invitation_responded.send(sender=self.__class__, invitation=invitation)
 
         team = get_object_or_404(get_team_queryset(), pk=invitation.team_id)
         serializer = TeamSerializer(team, context={'request': request})
@@ -323,11 +312,7 @@ class TeamJoinRequestCreateView(APIView):
             join_request.reviewed_at = None
             join_request.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'updated_at'])
 
-        NotificationService.notify(
-            recipients=[team.captain],
-            event_type='team_join_request_received',
-            context={'team_name': team.name, 'user_name': request.user.username},
-        )
+        join_request_received.send(sender=self.__class__, join_request=join_request)
 
         return Response({'detail': 'Join request sent.'}, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
@@ -361,17 +346,8 @@ class TeamJoinRequestReviewView(APIView):
         if self.new_status == TeamJoinRequest.STATUS_ACCEPTED:
             TeamMember.objects.get_or_create(team=team, user=join_request.user)
             clear_invitation_states_for_member(team=team, user=join_request.user)
-            NotificationService.notify(
-                recipients=[join_request.user],
-                event_type='team_join_request_accepted',
-                context={'team_name': team.name},
-            )
-        else:
-            NotificationService.notify(
-                recipients=[join_request.user],
-                event_type='team_join_request_declined',
-                context={'team_name': team.name},
-            )
+
+        join_request_responded.send(sender=self.__class__, join_request=join_request)
 
         team.refresh_from_db()
         serializer = TeamSerializer(team, context={'request': request})

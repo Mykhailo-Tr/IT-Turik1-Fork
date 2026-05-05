@@ -39,20 +39,20 @@ EVENTS = {
         key='team_invitation_received',
         channels=['system', 'email'],
         title='Team Invitation',
-        message='You have received an invitation to join team "{team_name}" from {invited_by}.',
+        message='You have received an invitation to join team "[team:{team_id}:{team_name}]" from [user:{user_id}:{invited_by}].',
         email_subject='Invitation to join team "{team_name}"',
     ),
     'team_invitation_accepted': NotificationEvent(
         key='team_invitation_accepted',
         channels=['system'],
         title='Invitation Accepted',
-        message='{user_name} has accepted the invitation to join team "{team_name}".',
+        message='[user:{user_id}:{user_name}] has accepted the invitation to join team "[team:{team_id}:{team_name}]".',
     ),
     'team_invitation_declined': NotificationEvent(
         key='team_invitation_declined',
         channels=['system'],
         title='Invitation Declined',
-        message='{user_name} has declined the invitation to join team "{team_name}".',
+        message='[user:{user_id}:{user_name}] has declined the invitation to join team "[team:{team_id}:{team_name}]".',
     ),
 
     # ── Join requests ──────────────────────────────────────────────
@@ -60,20 +60,20 @@ EVENTS = {
         key='team_join_request_received',
         channels=['system', 'email'],
         title='Join Request Received',
-        message='{user_name} has sent a request to join team "{team_name}".',
+        message='[user:{user_id}:{user_name}] has sent a request to join team "[team:{team_id}:{team_name}]".',
         email_subject='New join request for team "{team_name}"',
     ),
     'team_join_request_accepted': NotificationEvent(
         key='team_join_request_accepted',
         channels=['system'],
         title='Join Request Approved',
-        message='Your request to join team "{team_name}" has been approved.',
+        message='Your request to join team "[team:{team_id}:{team_name}]" has been approved.',
     ),
     'team_join_request_declined': NotificationEvent(
         key='team_join_request_declined',
         channels=['system'],
         title='Join Request Declined',
-        message='Your request to join team "{team_name}" has been declined.',
+        message='Your request to join team "[team:{team_id}:{team_name}]" has been declined.',
     ),
 
     # ── Membership changes ─────────────────────────────────────────
@@ -81,13 +81,13 @@ EVENTS = {
         key='team_member_removed',
         channels=['system', 'email'],
         title='Removed from Team',
-        message='You have been removed from team "{team_name}".',
+        message='You have been removed from team "[team:{team_id}:{team_name}]".',
         email_subject='You were removed from team "{team_name}"',
     ),
     'team_member_left': NotificationEvent(
         key='team_member_left',
         channels=['system'],
         title='Member Left Team',
-        message='{user_name} has left team "{team_name}".',
+        message='[user:{user_id}:{user_name}] has left team "[team:{team_id}:{team_name}]".',
     ),
 }

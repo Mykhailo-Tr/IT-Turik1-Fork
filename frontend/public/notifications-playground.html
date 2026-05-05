@@ -298,8 +298,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="context">Context JSON (e.g. {"team_name": "Pro", "user_name": "Dan"})</label>
-                        <textarea id="context" rows="4">{"team_name": "Test Team", "user_name": "Tester", "invited_by": "Admin"}</textarea>
+                        <label for="context">Context JSON (e.g. {"team_id": 1, "team_name": "Pro", "user_id": 2, "user_name": "Dan"})</label>
+                        <textarea id="context" rows="4">{"team_name": "Test Team", "team_id": 1, "user_name": "Tester", "user_id": 2, "invited_by": "Admin"}</textarea>
                     </div>
                     <button type="submit" id="submitBtn">Trigger Notification</button>
                 </form>
@@ -379,6 +379,14 @@
             }
         }
 
+        function parseMessage(message) {
+            // Support both [user:id:name] and [team:id:name]
+            return message.replace(/\[(user|team):(\d+):(.+?)\]/g, (match, type, id, name) => {
+                const color = type === 'user' ? 'var(--primary)' : '#f59e0b'; // Teal for users, Amber for teams
+                return `<span style="color: ${color}; font-weight: 600;">${name} (${type.toUpperCase()} ID:${id})</span>`;
+            });
+        }
+
         function renderNotifications(notifs) {
             if (notifs.length === 0) {
                 notifList.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">No notifications yet.</div>`;
@@ -392,7 +400,7 @@
                         <span class="badge">${n.event_type}</span>
                         ${n.title}
                     </div>
-                    <div class="message">${n.message}</div>
+                    <div class="message">${parseMessage(n.message)}</div>
                     <div class="meta">${new Date(n.created_at).toLocaleString()}</div>
                 </div>
             `).join('');
