@@ -1,28 +1,33 @@
 from django.db.models import Count, IntegerField, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
-from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework import generics, status, viewsets
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from teams.models import Team
-from .models import Round, Submission, Tournament, TournamentTeamRegistration
-from accounts.utils.permissions import is_platform_admin
+from .models import Event, Icon, Round, Submission, Tournament, TournamentTeamRegistration
+from backend.permissions import Permission, has_permission as user_has_permission
 
 from .permissions import (
-    IsJuryPermission,
+    CanCreateTournament,
+    CanDeleteTournament,
+    CanEditTournament,
+    CanManageRounds,
+    CanManageRoundsOrReadOnly,
+    CanManageParticipants,
+    CanSetResults,
+    CanViewTournament,
     IsPlatformAdminOrTeamMemberPermission,
-    IsPlatformAdminPermission,
-    IsPlatformAdminOrReadOnly,
 )
 from .serializers import (
     ActiveTournamentSerializer,
     CurrentTaskSerializer,
-    
+    EventSerializer,
+    IconSerializer,
     OwnSubmissionSerializer,
     RoundSerializer,
-    
     SubmissionSerializer,
     TournamentAdminSerializer,
     TournamentPublicSerializer,
@@ -44,8 +49,6 @@ from .services import (
 def get_tournament_queryset():
     return Tournament.objects.prefetch_related(
         Prefetch('rounds', queryset=Round.objects.order_by('start_date'))
-    ).annotate(
-        rounds_count=Count('rounds')
     ).order_by('-created_at')
 
 
@@ -78,7 +81,7 @@ class TournamentListView(SyncStatusesMixin, APIView):
         base_queryset = get_tournament_queryset()
         published_filter = ~Q(status=Tournament.STATUS_DRAFT)
 
-        if user.is_staff:
+        if user_has_permission(user, Permission.VIEW_TOURNAMENT):
             return base_queryset
 
         if user.is_authenticated:
@@ -143,7 +146,7 @@ class TournamentDetailView(SyncStatusesMixin, generics.RetrieveAPIView):
         base_queryset = get_tournament_queryset()
         published_filter = ~Q(status=Tournament.STATUS_DRAFT)
 
-        if user.is_staff:
+        if user_has_permission(user, Permission.VIEW_TOURNAMENT):
             return base_queryset
 
         if user.is_authenticated:
@@ -153,7 +156,7 @@ class TournamentDetailView(SyncStatusesMixin, generics.RetrieveAPIView):
 
 
 class TournamentCreateView(generics.CreateAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanCreateTournament]
     serializer_class = TournamentAdminSerializer
 
     def create(self, request, *args, **kwargs):
@@ -165,8 +168,17 @@ class TournamentCreateView(generics.CreateAPIView):
 
 class TournamentUpdateView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Tournament.objects.all()
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
     serializer_class = TournamentAdminSerializer
+
+    def get_permissions(self):
+        permission_classes = [IsAuthenticated]
+        if self.request.method == 'DELETE':
+            permission_classes.append(CanDeleteTournament)
+        elif self.request.method == 'GET':
+            permission_classes.append(CanViewTournament)
+        else:
+            permission_classes.append(CanEditTournament)
+        return [permission() for permission in permission_classes]
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -178,14 +190,12 @@ class TournamentUpdateView(generics.RetrieveUpdateDestroyAPIView):
 
     def destroy(self, request, *args, **kwargs):
         tournament = self.get_object()
-        if tournament.created_by_id != request.user.id:
-            raise PermissionDenied('Only the admin owner of this tournament can delete it.')
         tournament.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class TournamentStartRegistrationView(APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanEditTournament]
 
     def post(self, request, pk):
         tournament = get_object_or_404(Tournament, pk=pk)
@@ -208,7 +218,7 @@ class TournamentTeamRegistrationCreateView(SyncStatusesMixin, APIView):
 
 
 class TournamentTeamRegistrationDetailView(generics.RetrieveUpdateAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanManageParticipants]
 
     def get_queryset(self):
         return TournamentTeamRegistration.objects.filter(
@@ -282,7 +292,7 @@ class TeamActiveTournamentView(APIView):
 
 
 class RoundListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
+    permission_classes = [IsAuthenticated, CanManageRoundsOrReadOnly]
     serializer_class = RoundSerializer
 
     def _get_tournament(self):
@@ -296,7 +306,7 @@ class RoundListCreateView(generics.ListCreateAPIView):
         queryset = get_round_queryset().filter(tournament_id=tournament.id)
         user = self.request.user
 
-        if not is_platform_admin(user):
+        if not user_has_permission(user, Permission.VIEW_TOURNAMENT):
             queryset = queryset.exclude(status=Round.STATUS_DRAFT)
 
         status_param = self.request.query_params.get('status')
@@ -330,14 +340,14 @@ class RoundListCreateView(generics.ListCreateAPIView):
 
 
 class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminOrReadOnly]
+    permission_classes = [IsAuthenticated, CanManageRoundsOrReadOnly]
     serializer_class = RoundSerializer
 
     def get_queryset(self):
         queryset = get_round_queryset()
         user = self.request.user
 
-        if not is_platform_admin(user):
+        if not user_has_permission(user, Permission.VIEW_TOURNAMENT):
             queryset = queryset.exclude(status=Round.STATUS_DRAFT)
 
         return queryset
@@ -349,7 +359,7 @@ class RoundDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class RoundStartView(SyncStatusesMixin, APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanManageRounds]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)
@@ -359,7 +369,7 @@ class RoundStartView(SyncStatusesMixin, APIView):
 
 
 class RoundMarkEvaluatedView(SyncStatusesMixin, APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanSetResults]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)
@@ -369,7 +379,7 @@ class RoundMarkEvaluatedView(SyncStatusesMixin, APIView):
 
 
 class RoundCloseSubmissionsView(SyncStatusesMixin, APIView):
-    permission_classes = [IsAuthenticated, IsPlatformAdminPermission]
+    permission_classes = [IsAuthenticated, CanManageRounds]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(get_round_queryset(), pk=pk)
@@ -424,3 +434,22 @@ class CurrentTaskView(SyncStatusesMixin, APIView):
             raise NotFound('No active round is available right now.')
 
         return Response(CurrentTaskSerializer(active_round).data, status=status.HTTP_200_OK)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    serializer_class = EventSerializer
+    permission_classes = [CanManageRoundsOrReadOnly]
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        queryset = Event.objects.select_related('icon', 'tournament').order_by('start_datetime')
+        tournament_id = self.request.query_params.get('tournament')
+        if tournament_id:
+            queryset = queryset.filter(tournament_id=tournament_id)
+        return queryset
+
+
+class IconListView(generics.ListAPIView):
+    queryset = Icon.objects.all()
+    serializer_class = IconSerializer
+    permission_classes = [AllowAny]
