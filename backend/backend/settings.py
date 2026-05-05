@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'tournaments',
     'corsheaders',
     'rest_framework_simplejwt',
+    'notifications',
 ]
 
 MIDDLEWARE = [

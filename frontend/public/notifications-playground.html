@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Playground | TournamentOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #14b8a6;
+            --primary-foreground: #ffffff;
+            --background: #0f172a;
+            --card: #1e293b;
+            --border: #334155;
+            --foreground: #f8fafc;
+            --muted-foreground: #94a3b8;
+            --destructive: #ef4444;
+            --secondary: #1e293b;
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin: 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #14b8a6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--muted-foreground);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.625rem;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--foreground);
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .notification-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: rgba(20, 184, 166, 0.05);
+        }
+
+        .notification-item .title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-item .message {
+            font-size: 0.875rem;
+            color: var(--muted-foreground);
+        }
+
+        .notification-item .meta {
+            font-size: 0.75rem;
+            color: var(--muted-foreground);
+            margin-top: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .unread-dot {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: var(--secondary);
+            margin-right: 0.5rem;
+        }
+
+        .status {
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            display: block;
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            display: block;
+        }
+
+        .auth-check {
+            background: rgba(234, 179, 8, 0.1);
+            color: #eab308;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .config-table th {
+            text-align: left;
+            padding: 0.75rem;
+            color: var(--muted-foreground);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .config-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .config-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Notification Playground</h1>
+            <div>
+                <button id="refreshBtn" style="width: auto;">Refresh List</button>
+            </div>
+        </header>
+
+        <div id="authWarning" class="auth-check">
+            <strong>Warning:</strong> No access token found in localStorage. Please login to the main app first.
+        </div>
+
+        <div id="statusMsg" class="status"></div>
+
+        <div class="grid" style="grid-template-columns: 1fr;">
+            <!-- Configuration Section -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2>Your Personal Settings</h2>
+                
+                <div class="form-group" style="background: rgba(20, 184, 166, 0.05); padding: 1rem; border-radius: 8px; margin-bottom: 2rem; border: 1px solid var(--primary);">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: var(--foreground);">
+                        <input type="checkbox" id="globalEmailToggle" style="width: auto;">
+                        <span style="font-size: 1rem; font-weight: 700;">DISABLE ALL MY EMAILS</span>
+                    </label>
+                    <p style="margin: 0.5rem 0 0 1.5rem; font-size: 0.8rem; color: var(--muted-foreground);">
+                        When checked, you will never receive any notification emails from this system.
+                    </p>
+                </div>
+
+                <div class="config-table-wrapper">
+                    <table class="config-table">
+                        <thead>
+                            <tr>
+                                <th>Event Type</th>
+                                <th style="text-align: center;">In-Site (System)</th>
+                                <th style="text-align: center;">Email Channel</th>
+                            </tr>
+                        </thead>
+                        <tbody id="configTableBody">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Sender Section -->
+            <div class="card" id="senderSection" style="display: none;">
+                <h2>Send Test Notification (Admin Only)</h2>
+                <form id="sendForm">
+                    <div class="form-group">
+                        <label for="userId">Target User ID</label>
+                        <select id="userId" required>
+                            <option value="" disabled>Select a user...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventType">Event Type</label>
+                        <select id="eventType" required>
+                            <option value="team_invitation_received">Team Invitation Received</option>
+                            <option value="team_invitation_accepted">Team Invitation Accepted</option>
+                            <option value="team_invitation_declined">Team Invitation Declined</option>
+                            <option value="team_join_request_received">Team Join Request Received</option>
+                            <option value="team_join_request_accepted">Team Join Request Accepted</option>
+                            <option value="team_join_request_declined">Team Join Request Declined</option>
+                            <option value="team_member_removed">Team Member Removed</option>
+                            <option value="team_member_left">Team Member Left</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="context">Context JSON (e.g. {"team_id": 1, "team_name": "Pro", "user_id": 2, "user_name": "Dan"})</label>
+                        <textarea id="context" rows="4">{"team_name": "Test Team", "team_id": 1, "user_name": "Tester", "user_id": 2, "invited_by": "Admin"}</textarea>
+                    </div>
+                    <button type="submit" id="submitBtn">Trigger Notification</button>
+                </form>
+            </div>
+
+            <!-- Receiver Section -->
+            <div class="card">
+                <h2>Recent Notifications (Current User)</h2>
+                <div id="notifList" class="notification-list">
+                    <div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">
+                        Loading notifications...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const statusMsg = document.getElementById('statusMsg');
+        const notifList = document.getElementById('notifList');
+        const sendForm = document.getElementById('sendForm');
+        const authWarning = document.getElementById('authWarning');
+        const userSelect = document.getElementById('userId');
+
+        function getAuthHeader() {
+            const token = localStorage.getItem('access');
+            if (!token) {
+                authWarning.style.display = 'block';
+                return null;
+            }
+            authWarning.style.display = 'none';
+            return `Bearer ${token}`;
+        }
+
+        async function fetchNotifications() {
+            const auth = getAuthHeader();
+            if (!auth) return;
+
+            try {
+                // 1. Fetch current user's notifications and personal settings (Public for all users)
+                const [notifRes, settingsRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/notifications/`, { headers: { 'Authorization': auth } }),
+                    fetch(`${API_BASE}/api/notifications/settings/`, { headers: { 'Authorization': auth } })
+                ]);
+
+                if (!notifRes.ok || !settingsRes.ok) throw new Error('Failed to fetch base data');
+                
+                const notifsData = await notifRes.json();
+                const settingsData = await settingsRes.json();
+
+                // Handle both paginated (notifsData.results) and non-paginated arrays
+                const notifsArray = Array.isArray(notifsData) ? notifsData : (notifsData.results || []);
+
+                renderNotifications(notifsArray);
+                renderConfig(settingsData);
+                populateEventDropdown(settingsData.event_types);
+
+                // 2. Try to fetch admin debug info (User list for sending) - Optional
+                try {
+                    const debugRes = await fetch(`${API_BASE}/api/notifications/debug/info/`, { headers: { 'Authorization': auth } });
+                    if (debugRes.ok) {
+                        const debugData = await debugRes.json();
+                        populateUserDropdown(debugData.users);
+                        document.getElementById('senderSection').style.display = 'block';
+                    } else {
+                        // Not an admin, hide the sender section
+                        document.getElementById('senderSection').style.display = 'none';
+                    }
+                } catch (e) {
+                    document.getElementById('senderSection').style.display = 'none';
+                }
+
+            } catch (err) {
+                console.error(err);
+                notifList.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--destructive);">Error loading data. Is the backend running?</div>`;
+            }
+        }
+
+        function parseMessage(message) {
+            // Support both [user:id:name] and [team:id:name]
+            return message.replace(/\[(user|team):(\d+):(.+?)\]/g, (match, type, id, name) => {
+                const color = type === 'user' ? 'var(--primary)' : '#f59e0b'; // Teal for users, Amber for teams
+                return `<span style="color: ${color}; font-weight: 600;">${name} (${type.toUpperCase()} ID:${id})</span>`;
+            });
+        }
+
+        function renderNotifications(notifs) {
+            if (notifs.length === 0) {
+                notifList.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--muted-foreground);">No notifications yet.</div>`;
+                return;
+            }
+
+            notifList.innerHTML = notifs.map(n => `
+                <div class="notification-item ${n.is_read ? '' : 'unread'}">
+                    ${n.is_read ? '' : '<div class="unread-dot"></div>'}
+                    <div class="title">
+                        <span class="badge">${n.event_type}</span>
+                        ${n.title}
+                    </div>
+                    <div class="message">${parseMessage(n.message)}</div>
+                    <div class="meta">${new Date(n.created_at).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderConfig(data) {
+            const tableBody = document.getElementById('configTableBody');
+            const globalToggle = document.getElementById('globalEmailToggle');
+
+            // Global toggle
+            globalToggle.onchange = null;
+            globalToggle.checked = data.global_config.emails_disabled_globally;
+            globalToggle.onchange = async () => {
+                await updateGlobalConfig(globalToggle.checked);
+            };
+
+            // Event configs
+            tableBody.innerHTML = data.configs.map(config => {
+                const event = data.event_types.find(e => e.key === config.event_type);
+                const title = event ? event.title : config.event_type;
+                
+                return `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600;">${title}</div>
+                            <div style="font-size: 0.7rem; color: var(--muted-foreground);">${config.event_type}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="checkbox" ${config.is_system_enabled ? 'checked' : ''} 
+                                onchange="updateEventConfig('${config.event_type}', this.checked, null)">
+                        </td>
+                        <td style="text-align: center;">
+                            <input type="checkbox" ${config.is_email_enabled ? 'checked' : ''} 
+                                onchange="updateEventConfig('${config.event_type}', null, this.checked)">
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function updateEventConfig(eventType, isSystem, isEmail) {
+            const auth = getAuthHeader();
+            const body = { event_type: eventType };
+            if (isSystem !== null) body.is_system_enabled = isSystem;
+            if (isEmail !== null) body.is_email_enabled = isEmail;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications/settings/config/update/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                if (res.ok) showStatus(`Updated your config for ${eventType}`, 'success');
+            } catch (err) {
+                showStatus('Failed to update config', 'error');
+            }
+        }
+
+        async function updateGlobalConfig(disabled) {
+            const auth = getAuthHeader();
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications/settings/global/update/`, {
+                    method: 'POST',
+                    headers: { 'Authorization': auth, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ emails_disabled_globally: disabled })
+                });
+                if (res.ok) showStatus('Your personal global config updated', 'success');
+            } catch (err) {
+                showStatus('Failed to update global config', 'error');
+            }
+        }
+
+        function populateUserDropdown(users) {
+            const currentVal = userSelect.value;
+            userSelect.innerHTML = '<option value="" disabled>Select a user...</option>' + 
+                users.map(u => `<option value="${u.id}">${u.username} (${u.email})</option>`).join('');
+            if (currentVal) userSelect.value = currentVal;
+        }
+
+        function populateEventDropdown(events) {
+            const select = document.getElementById('eventType');
+            const currentVal = select.value;
+            select.innerHTML = events.map(e => `<option value="${e.key}">${e.title}</option>`).join('');
+            if (currentVal) select.value = currentVal;
+        }
+
+        sendForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const auth = getAuthHeader();
+            if (!auth) return;
+
+            const userId = userSelect.value;
+            const eventType = document.getElementById('eventType').value;
+            const contextStr = document.getElementById('context').value;
+
+            let context = {};
+            try {
+                context = JSON.parse(contextStr);
+            } catch (err) {
+                showStatus('Invalid JSON context', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Sending...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/notifications/debug/send/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': auth,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: parseInt(userId),
+                        event_type: eventType,
+                        context: context
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    showStatus(data.detail || 'Success!', 'success');
+                    fetchNotifications(); // Refresh current view manually
+                } else {
+                    showStatus(data.error || 'Error sending', 'error');
+                }
+            } catch (err) {
+                showStatus('Network error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Trigger Notification';
+            }
+        });
+
+        function showStatus(msg, type) {
+            statusMsg.innerText = msg;
+            statusMsg.className = `status ${type}`;
+            statusMsg.style.display = 'block';
+            setTimeout(() => { statusMsg.style.display = 'none'; }, 5000);
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', fetchNotifications);
+
+        // Initial load
+        fetchNotifications();
+        // Automatic polling removed to reduce server requests as requested.
+        // List only updates on page load or when "Refresh List" is clicked.
+    </script>
+    </script>
+</body>
+</html>

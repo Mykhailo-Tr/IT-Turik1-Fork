@@ -17,6 +17,9 @@
           <router-link to="/" :class="navItemClass('home')">Home</router-link>
           <router-link to="/teams" :class="navItemClass('teams')">Teams</router-link>
           <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
+          
+          <notification-dropdown />
+
           <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
             >Admin</router-link
           >
@@ -36,6 +39,7 @@ import UiButton from '../UiButton.vue'
 import { useUserStore } from '@/stores/user'
 import { useProfile } from '@/queries/accounts'
 import SwitchThemeButton from './SwitchThemeButton.vue'
+import NotificationDropdown from '@/features/notifications/components/NotificationDropdown.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -44,6 +48,7 @@ const store = useUserStore()
 const { data: user } = useProfile()
 
 const isAdmin = computed(() => user.value?.role === 'admin')
+
 
 type Section = 'home' | 'teams' | 'profile' | 'admin' | 'login' | 'register'
 

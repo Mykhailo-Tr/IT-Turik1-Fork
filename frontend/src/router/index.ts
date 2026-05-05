@@ -4,7 +4,9 @@ import Activate from '@/features/auth/views/ActivateView.vue'
 import RoleCodesAdmin from '@/features/admin/views/RoleCodesAdminView.vue'
 import CompleteProfile from '@/features/auth/views/CompleteProfileView.vue'
 import ForgotPassword from '@/features/auth/views/ForgotPasswordView.vue'
+import UserProfile from '@/features/profile/views/UserProfileView.vue'
 import EditProfile from '@/features/profile/views/EditProfileView.vue'
+import NotificationsView from '@/features/notifications/views/NotificationsView.vue'
 import Home from '@/features/home/views/HomeView.vue'
 import Login from '@/features/auth/views/LoginView.vue'
 import Profile from '@/features/profile/views/ProfileView.vue'
@@ -54,8 +56,13 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/profile/notifications',
+      component: NotificationsView,
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/users/:id',
-      component: () => import('@/features/profile/views/UserProfileView.vue'),
+      component: UserProfile,
       meta: { requiresAuth: true },
     },
     {
