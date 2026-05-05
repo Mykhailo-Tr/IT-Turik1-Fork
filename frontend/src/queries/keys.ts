@@ -17,7 +17,7 @@ export const accountKeys = {
 export const notificationKeys = {
   all: ['notifications'] as const,
   lists: () => [...notificationKeys.all, 'list'] as const,
-  list: (page: number) => [...notificationKeys.lists(), page] as const,
+  list: (page: number, pageSize: number) => [...notificationKeys.lists(), { page, pageSize }] as const,
   unreadCount: () => [...notificationKeys.all, 'unread-count'] as const,
   settings: () => [...notificationKeys.all, 'settings'] as const,
 }

@@ -100,7 +100,7 @@ const isOpen = ref(false)
 const dropdownContainer = ref<HTMLElement | null>(null)
 const router = useRouter()
 
-const { data: notifications, isLoading, error } = useNotifications()
+const { data: notifications, isLoading, error } = useNotifications(1, 100)
 const { data: unreadCount } = useUnreadCount()
 const { mutate: markAsRead } = useMarkAsRead()
 const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllAsRead()

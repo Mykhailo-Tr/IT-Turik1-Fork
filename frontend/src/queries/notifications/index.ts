@@ -10,11 +10,11 @@ import type {
 } from '@/api/notifications/types'
 import { type Ref, unref, computed } from 'vue'
 
-export const useNotifications = (page: Ref<number> | number = 1) => {
+export const useNotifications = (page: Ref<number> | number = 1, pageSize: Ref<number> | number = 10) => {
   return useQuery({
-    queryKey: computed(() => notificationKeys.list(unref(page))),
+    queryKey: computed(() => notificationKeys.list(unref(page), unref(pageSize))),
     queryFn: async (): Promise<PaginatedResponse<Notification>> => {
-      return await $api.notifications.getNotifications(unref(page))
+      return await $api.notifications.getNotifications(unref(page), unref(pageSize))
     },
   })
 }

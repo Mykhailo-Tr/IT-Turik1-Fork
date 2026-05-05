@@ -11,8 +11,8 @@ import type {
 const prefix = '/api/notifications'
 
 export const notificationsService = {
-  async getNotifications(page: number = 1) {
-    const { data } = await apiClient.get<PaginatedResponse<Notification>>(`${prefix}/?page=${page}`)
+  async getNotifications(page: number = 1, pageSize: number = 10) {
+    const { data } = await apiClient.get<PaginatedResponse<Notification>>(`${prefix}/?page=${page}&page_size=${pageSize}`)
     return data
   },
 
