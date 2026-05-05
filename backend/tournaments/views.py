@@ -1,13 +1,13 @@
 from django.db.models import Count, IntegerField, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from teams.models import Team
-from .models import Round, Submission, Tournament, TournamentTeamRegistration
+from .models import Event, Icon, Round, Submission, Tournament, TournamentTeamRegistration
 from backend.permissions import Permission, has_permission as user_has_permission
 
 from .permissions import (
@@ -24,10 +24,10 @@ from .permissions import (
 from .serializers import (
     ActiveTournamentSerializer,
     CurrentTaskSerializer,
-    
+    EventSerializer,
+    IconSerializer,
     OwnSubmissionSerializer,
     RoundSerializer,
-    
     SubmissionSerializer,
     TournamentAdminSerializer,
     TournamentPublicSerializer,
@@ -434,3 +434,22 @@ class CurrentTaskView(SyncStatusesMixin, APIView):
             raise NotFound('No active round is available right now.')
 
         return Response(CurrentTaskSerializer(active_round).data, status=status.HTTP_200_OK)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    serializer_class = EventSerializer
+    permission_classes = [CanManageRoundsOrReadOnly]
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        queryset = Event.objects.select_related('icon', 'tournament').order_by('start_datetime')
+        tournament_id = self.request.query_params.get('tournament')
+        if tournament_id:
+            queryset = queryset.filter(tournament_id=tournament_id)
+        return queryset
+
+
+class IconListView(generics.ListAPIView):
+    queryset = Icon.objects.all()
+    serializer_class = IconSerializer
+    permission_classes = [AllowAny]
