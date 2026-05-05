@@ -10,14 +10,24 @@
     <div v-if="isOpen" class="dropdown-menu">
       <div class="dropdown-header">
         <h4>Notifications</h4>
-        <button 
-          v-if="hasUnread" 
-          class="mark-all-btn" 
-          @click="handleMarkAllRead"
-          :disabled="isMarkingAll"
-        >
-          Mark all read
-        </button>
+        <div class="header-actions">
+          <button 
+            v-if="hasUnread" 
+            class="action-link" 
+            @click="handleMarkAllRead"
+            :disabled="isMarkingAll"
+          >
+            Mark read
+          </button>
+          <button 
+            v-if="hasNotifications" 
+            class="action-link danger" 
+            @click="handleDeleteAll"
+            :disabled="isDeletingAll"
+          >
+            Delete all
+          </button>
+        </div>
       </div>
 
       <div class="dropdown-body">
@@ -44,6 +54,13 @@
                     title="Go to page"
                   >
                     <external-link-icon class="icon" />
+                  </button>
+                  <button 
+                    class="delete-btn-mini" 
+                    @click.stop="handleDelete(notification.id)"
+                    title="Delete notification"
+                  >
+                    <trash-icon class="icon" />
                   </button>
                 </div>
                 <span class="item-message">
@@ -87,12 +104,15 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import BellIcon from '@/icons/BellIcon.vue'
 import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
+import TrashIcon from '@/icons/TrashIcon.vue'
 import UiButton from '@/components/UiButton.vue'
 import { 
   useNotifications, 
   useUnreadCount, 
   useMarkAsRead, 
-  useMarkAllAsRead 
+  useMarkAllAsRead,
+  useDeleteNotification,
+  useDeleteAllNotifications
 } from '@/queries/notifications'
 import type { Notification } from '@/api/notifications/types'
 
@@ -104,12 +124,15 @@ const { data: notifications, isLoading, error } = useNotifications(1, 100)
 const { data: unreadCount } = useUnreadCount()
 const { mutate: markAsRead } = useMarkAsRead()
 const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllAsRead()
+const { mutate: deleteNotification } = useDeleteNotification()
+const { mutate: deleteAllNotifications, isPending: isDeletingAll } = useDeleteAllNotifications()
 
 const unreadNotifications = computed(() => {
   return notifications.value?.results?.filter(n => !n.is_read) || []
 })
 
 const hasUnread = computed(() => unreadNotifications.value.length > 0)
+const hasNotifications = computed(() => (notifications.value?.results?.length ?? 0) > 0)
 
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
@@ -118,6 +141,22 @@ const toggleDropdown = () => {
 const closeDropdown = (e: MouseEvent) => {
   if (dropdownContainer.value && !dropdownContainer.value.contains(e.target as Node)) {
     isOpen.value = false
+  }
+}
+
+const handleMarkAllRead = () => {
+  markAllAsRead()
+}
+
+const handleDelete = (id: number) => {
+  if (confirm('Delete this notification?')) {
+    deleteNotification(id)
+  }
+}
+
+const handleDeleteAll = () => {
+  if (confirm('Delete ALL notifications?')) {
+    deleteAllNotifications()
   }
 }
 
@@ -178,9 +217,6 @@ const parseMessage = (message: string) => {
   return parts.length > 0 ? parts : [{ type: 'text', text: message }]
 }
 
-const handleMarkAllRead = () => {
-  markAllAsRead()
-}
 
 const goToAllNotifications = () => {
   isOpen.value = false
@@ -278,17 +314,38 @@ onUnmounted(() => {
   font-size: 1rem;
 }
 
-.mark-all-btn {
+.action-link {
   background: none;
   border: none;
   color: var(--brand-600);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
   padding: 0;
+  transition: color 0.2s;
 }
 
-.mark-all-btn:hover {
+.action-link:hover:not(:disabled) {
   text-decoration: underline;
+  color: var(--brand-700);
+}
+
+.action-link.danger {
+  color: var(--danger-500);
+}
+
+.action-link.danger:hover:not(:disabled) {
+  color: var(--danger-600);
+}
+
+.action-link:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
 }
 
 .dropdown-body {
@@ -383,6 +440,35 @@ onUnmounted(() => {
 }
 
 .redirect-btn-mini .icon {
+  width: 12px;
+  height: 12px;
+}
+
+.delete-btn-mini {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  padding: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  opacity: 0;
+}
+
+.notification-item:hover .delete-btn-mini {
+  opacity: 1;
+}
+
+.delete-btn-mini:hover {
+  color: var(--danger-600);
+  background: color-mix(in srgb, var(--danger-500) 10%, transparent);
+}
+
+.delete-btn-mini .icon {
   width: 12px;
   height: 12px;
 }

@@ -3,6 +3,8 @@ from .views import (
     NotificationListView,
     NotificationMarkReadView,
     NotificationMarkAllReadView,
+    NotificationDeleteView,
+    NotificationDeleteAllView,
     UnreadCountView,
     NotificationSettingsView,
     NotificationConfigUpdateView,
@@ -16,7 +18,9 @@ from .debug_views import (
 urlpatterns = [
     path('', NotificationListView.as_view(), name='notification-list'),
     path('<int:pk>/read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
+    path('<int:pk>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
     path('read-all/', NotificationMarkAllReadView.as_view(), name='notification-mark-all-read'),
+    path('delete-all/', NotificationDeleteAllView.as_view(), name='notification-delete-all'),
     path('unread-count/', UnreadCountView.as_view(), name='notification-unread-count'),
     
     # Personal Settings (Production)

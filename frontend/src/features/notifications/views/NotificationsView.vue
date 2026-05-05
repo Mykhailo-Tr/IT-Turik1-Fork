@@ -15,7 +15,15 @@
               @click="handleMarkAllRead" 
               :disabled="!hasUnread || isMarkingAll"
             >
-              Mark all as read
+              Mark all read
+            </ui-button>
+            <ui-button 
+              variant="danger" 
+              size="sm" 
+              @click="handleDeleteAll" 
+              :disabled="!hasNotifications || isDeletingAll"
+            >
+              Delete all
             </ui-button>
             <ui-button size="sm" @click="isSettingsModalOpen = true">
               Settings
@@ -55,6 +63,13 @@
                 title="Go to page"
               >
                 <external-link-icon class="icon" />
+              </button>
+              <button 
+                class="delete-btn" 
+                @click.stop="handleDelete(notification.id)"
+                title="Delete notification"
+              >
+                <trash-icon class="icon" />
               </button>
             </div>
           </div>
@@ -102,8 +117,15 @@ import UiCard from '@/components/UiCard.vue'
 import UiButton from '@/components/UiButton.vue'
 import UiBadge from '@/components/UiBadge.vue'
 import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
+import TrashIcon from '@/icons/TrashIcon.vue'
 import NotificationSettingsModal from '../components/NotificationSettingsModal.vue'
-import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/queries/notifications'
+import { 
+  useNotifications, 
+  useMarkAsRead, 
+  useMarkAllAsRead,
+  useDeleteNotification,
+  useDeleteAllNotifications
+} from '@/queries/notifications'
 import { useNotification } from '@/composables/useNotification'
 
 const isSettingsModalOpen = ref(false)
@@ -113,10 +135,16 @@ const router = useRouter()
 const { data: notificationsData, isLoading, error } = useNotifications(page)
 const { mutate: markAsRead } = useMarkAsRead()
 const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllAsRead()
+const { mutate: deleteNotification } = useDeleteNotification()
+const { mutate: deleteAllNotifications, isPending: isDeletingAll } = useDeleteAllNotifications()
 const { showNotification } = useNotification()
 
 const hasUnread = computed(() => {
   return notificationsData.value?.results?.some(n => !n.is_read) ?? false
+})
+
+const hasNotifications = computed(() => {
+  return (notificationsData.value?.results?.length ?? 0) > 0
 })
 
 const totalPages = computed(() => {
@@ -141,6 +169,24 @@ const handleMarkAllRead = () => {
     onSuccess: () => showNotification('All notifications marked as read', 'success'),
     onError: () => showNotification('Failed to mark notifications as read', 'error')
   })
+}
+
+const handleDelete = (id: number) => {
+  if (confirm('Are you sure you want to delete this notification?')) {
+    deleteNotification(id, {
+      onSuccess: () => showNotification('Notification deleted', 'success'),
+      onError: () => showNotification('Failed to delete notification', 'error')
+    })
+  }
+}
+
+const handleDeleteAll = () => {
+  if (confirm('Are you sure you want to delete ALL notifications? This cannot be undone.')) {
+    deleteAllNotifications(undefined, {
+      onSuccess: () => showNotification('All notifications deleted', 'success'),
+      onError: () => showNotification('Failed to delete notifications', 'error')
+    })
+  }
 }
 
 const handleNotificationClick = (notification: any, event: Event) => {
@@ -296,6 +342,29 @@ const formatDate = (dateStr: string) => {
 }
 
 .redirect-btn .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: var(--muted-foreground);
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  color: var(--danger-600);
+  background: color-mix(in srgb, var(--danger-500) 10%, transparent);
+}
+
+.delete-btn .icon {
   width: 16px;
   height: 16px;
 }

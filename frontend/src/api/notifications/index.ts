@@ -36,6 +36,16 @@ export const notificationsService = {
     return data
   },
 
+  async deleteNotification(id: number) {
+    const { data } = await apiClient.delete(`${prefix}/${id}/delete/`)
+    return data
+  },
+
+  async deleteAllNotifications() {
+    const { data } = await apiClient.delete(`${prefix}/delete-all/`)
+    return data
+  },
+
   async updateEventConfig(payload: UpdateEventConfigPayload) {
     const { data } = await apiClient.post(`${prefix}/settings/config/update/`, payload)
     return data
