@@ -100,11 +100,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import UiCard from '@/components/UiCard.vue'
-import UiButton from '@/components/UiButton.vue'
-import UiBadge from '@/components/UiBadge.vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
 import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
-import NotificationSettingsModal from '../components/NotificationSettingsModal.vue'
+import NotificationSettingsModal from '../components/notifications/NotificationSettingsModal.vue'
 import { useNotifications, useMarkAsRead, useMarkAllAsRead } from '@/api/queries/notifications'
 import { useNotification } from '@/composables/useNotification'
 

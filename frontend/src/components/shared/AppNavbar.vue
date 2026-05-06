@@ -23,11 +23,12 @@
             >
             <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
 
-            <notification-dropdown />
-
             <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
               >Admin</router-link
             >
+
+            <notification-dropdown />
+
             <ui-button @click="logout" size="sm" variant="danger" class="logout-btn"
               >Logout</ui-button
             >
