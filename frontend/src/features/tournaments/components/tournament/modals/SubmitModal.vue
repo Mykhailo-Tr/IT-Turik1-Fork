@@ -43,7 +43,7 @@
     </form>
 
     <template #footer>
-      <ui-button variant="secondary" @click="toggleOpen"> Close </ui-button>
+      <ui-button variant="secondary" @click="toggleClose"> Close </ui-button>
       <ui-button @click="submitRound"> <loading-icon v-if="isPending" /> Submit </ui-button>
     </template>
   </ui-modal>
@@ -85,12 +85,7 @@ const form = useForm<Form>(SubmitRoundSchema, {
   description: '',
 })
 
-const toggleOpen = () => {
-  emit('update:modelValue', !props.modelValue)
-}
-
 const { mutate: submit, isPending } = useSubmitRound()
-
 const submitRound = () => {
   if (!form.validate()) return
 
@@ -109,7 +104,7 @@ const submitRound = () => {
           form.setError(field as keyof Form, errors?.[0] ?? 'Invalid value')
         }
 
-        parsedError?.message && showNotification(parsedError?.message, 'error')
+        showNotification(parsedError?.message, 'error')
       },
 
       onSuccess() {
@@ -118,6 +113,15 @@ const submitRound = () => {
       },
     },
   )
+}
+
+const toggleOpen = () => {
+  emit('update:modelValue', !props.modelValue)
+}
+
+const toggleClose = () => {
+  toggleOpen()
+  form.reset()
 }
 </script>
 

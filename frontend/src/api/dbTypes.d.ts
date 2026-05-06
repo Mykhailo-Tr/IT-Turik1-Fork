@@ -118,3 +118,20 @@ interface Round {
   evaluation_criteria
   criteria: CriteriaItem[]
 }
+
+// Event
+
+type EventId = number
+
+interface TournamentEvent {
+  description: string
+  icon: 2
+  id: EventId
+  link: string
+  start_datetime: Date
+  title: string
+  tournament: TournamentId
+  type: 'event' // TODO: remove cuz we dont need this
+  created_at: Date
+  updated_at: Date
+}

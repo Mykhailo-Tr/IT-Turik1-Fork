@@ -1,14 +1,19 @@
 import { apiClient } from '@/api/client'
 import type {
+  CreateEventArgs,
   CreateRoundArgs,
   CreateTournamentArgs,
+  DeleteEventArgs,
   DeleteRoundArgs,
+  EditEventArgs,
   GetActiveTeamTournamentArgs,
   GetActiveTeamTournamentResponse,
   GetCurrentRoundArgs,
   GetCurrentRoundResponse,
   GetEligibleTeamsArgs,
   GetEligibleTeamsResponse,
+  GetEventsArgs,
+  GetEventsResponse,
   GetRegisteredTeamsArgs,
   GetRegisteredTeamsResponse,
   GetRoundsArgs,
@@ -102,6 +107,29 @@ export const tournamentsService = {
 
   submitRound: async (args: SubmitRoundArgs) => {
     const { data } = await apiClient.post(`${prefix}/submissions/`, args.body)
+    return data
+  },
+
+  createEvent: async (args: CreateEventArgs) => {
+    const { data } = await apiClient.post(`${prefix}/events/`, args.body)
+    return data
+  },
+
+  getEvents: async (args: GetEventsArgs) => {
+    const params = new URLSearchParams()
+    params.append('tournament', String(args.tournamentId))
+
+    const { data } = await apiClient.get<GetEventsResponse>(`${prefix}/events?${params.toString()}`)
+    return data
+  },
+
+  editEvent: async (args: EditEventArgs) => {
+    const { data } = await apiClient.patch(`${prefix}/events/${args.eventId}/`, args.body)
+    return data
+  },
+
+  deleteEvent: async (args: DeleteEventArgs) => {
+    const { data } = await apiClient.delete(`${prefix}/events/${args.eventId}/`)
     return data
   },
 }

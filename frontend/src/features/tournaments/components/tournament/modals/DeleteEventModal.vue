@@ -1,7 +1,5 @@
 <template>
-  <ui-button size="sm" variant="danger" @click="isOpen = true">Delete</ui-button>
-
-  <ui-modal v-model="isOpen">
+  <ui-modal :model-value="props.modelValue" @update:model-value="toggleOpen" @close="closeModal">
     <template #title>
       <h3>Delete event</h3>
     </template>
@@ -17,7 +15,7 @@
         v-model="confirmInput"
         :placeholder="props.title"
         style="width: 100%"
-        :disabled="isDeleting"
+        :disabled="isPending"
       />
 
       <p v-if="errorMessage" class="text-error">
@@ -26,9 +24,10 @@
     </div>
 
     <template #footer>
-      <ui-button variant="secondary" :disabled="isDeleting" @click="closeModal"> Cancel </ui-button>
+      <ui-button variant="secondary" :disabled="isPending" @click="closeModal"> Cancel </ui-button>
 
       <ui-button variant="danger" :disabled="!canDelete" @click="handleDelete">
+        <loading-icon v-if="isPending" />
         Delete permanently
       </ui-button>
     </template>
@@ -41,32 +40,41 @@ import UiButton from '@/components/ui/UiButton.vue'
 import UiInput from '@/components/ui/UiInput.vue'
 import UiModal from '@/components/ui/UiModal.vue'
 import UiBadge from '@/components/ui/UiBadge.vue'
+import { useDeleteEvent } from '@/api/queries/tournaments'
+import { parseApiError } from '@/api/errors'
+import { useNotification } from '@/composables/useNotification'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
+import { useQueryClient } from '@tanstack/vue-query'
+import { touranmentsKeys } from '@/api/queries/keys'
+import type { TournamentId } from '@/api/dbTypes'
 
 interface Props {
+  modelValue: boolean
   eventId: number
+  tournamentId: TournamentId
   title: string
 }
 
 const props = defineProps<Props>()
-
 const emit = defineEmits<{
-  (e: 'deleted', id: number): void
+  (e: 'update:modelValue', value: boolean): void
 }>()
 
-const isOpen = ref(false)
-const isDeleting = ref(false)
 const confirmInput = ref('')
 const errorMessage = ref('')
 
-const canDelete = computed(() => {
-  return confirmInput.value === props.title && !isDeleting.value
-})
-
 function closeModal() {
-  isOpen.value = false
+  emit('update:modelValue', false)
   confirmInput.value = ''
   errorMessage.value = ''
 }
+
+const { showNotification } = useNotification()
+const queryClient = useQueryClient()
+const { mutate: deleteEvent, isPending } = useDeleteEvent()
+const canDelete = computed(() => {
+  return confirmInput.value === props.title && !isPending.value
+})
 
 async function handleDelete() {
   if (!canDelete.value) {
@@ -74,19 +82,27 @@ async function handleDelete() {
     return
   }
 
-  errorMessage.value = ''
-  isDeleting.value = true
+  deleteEvent(
+    {
+      eventId: props.eventId,
+    },
+    {
+      onError: (error) => {
+        const parsedError = parseApiError(error)
+        showNotification(parsedError?.message, 'error')
+      },
 
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: touranmentsKeys.events(props.tournamentId) })
+        emit('update:modelValue', false)
+        showNotification('Event deleted successfully', 'success')
+      },
+    },
+  )
+}
 
-    emit('deleted', props.eventId)
-    closeModal()
-  } catch {
-    errorMessage.value = 'Unable to delete event.'
-  } finally {
-    isDeleting.value = false
-  }
+const toggleOpen = () => {
+  emit('update:modelValue', !props.modelValue)
 }
 </script>
 

@@ -31,6 +31,7 @@ export const touranmentsKeys = {
   'registered-teams': (id: TournamentId) => ['registered-teams', id],
   rounds: (id: TournamentId) => ['rounds', id],
   'current-round': (id: TournamentId) => ['current-round', id],
+  events: (id: TournamentId) => ['tournament-events', id],
 }
 
 export const notificationKeys = {

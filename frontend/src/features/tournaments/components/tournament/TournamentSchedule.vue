@@ -1,6 +1,7 @@
 <template>
   <div class="top-actions" v-if="user?.role === 'admin'">
-    <AddEventModal :tournament-id="props.tournamentId" />
+    <ui-button @click="isAddOpen = true">Add event</ui-button>
+    <AddEventModal v-model="isAddOpen" :tournament-id="props.tournamentId" />
   </div>
 
   <section class="page-shell">
@@ -22,8 +23,14 @@
       </template>
 
       <ui-card v-if="isEventsError">
-        <div style="display: flex; height: 500px; justify-content: center; align-items: center">
+        <div style="display: flex; height: 300px; justify-content: center; align-items: center">
           <p>Error while fetching tournament schedule</p>
+        </div>
+      </ui-card>
+
+      <ui-card v-else-if="events?.length === 0">
+        <div style="display: flex; height: 300px; justify-content: center; align-items: center">
+          <p>No events founded for this tournament</p>
         </div>
       </ui-card>
 
@@ -40,18 +47,28 @@
 
             <div class="event-right-side">
               <p class="text-muted">
-                {{ formatDate(event.startAt, { showHours: true }) }}
+                {{ formatDate(event.start_datetime, { showHours: true }) }}
               </p>
             </div>
           </div>
 
           <div class="event-actions" v-if="user?.role === 'admin'">
+            <ui-button size="sm" @click="isEditOpen = true">Edit</ui-button>
             <EditEventModal
+              v-model="isEditOpen"
               :event-id="event.id"
+              :tournament-id="props.tournamentId"
               :title="event.title"
-              :start-date="event.startAt!"
+              :start-date="event.created_at!"
             />
-            <DeleteEventModal :event-id="event.id" :title="event.title" />
+
+            <ui-button size="sm" variant="danger" @click="isDeleteOpen = true">Delete</ui-button>
+            <DeleteEventModal
+              v-model="isDeleteOpen"
+              :event-id="event.id"
+              :tournament-id="props.tournamentId"
+              :title="event.title"
+            />
           </div>
         </ui-card>
       </div>
@@ -65,17 +82,13 @@ import UiSkeleton from '@/components/ui/UiSkeleton.vue'
 import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import FinishIcon from '@/icons/FinishIcon.vue'
 import { formatDate } from '@/lib/date'
-import { useQuery } from '@tanstack/vue-query'
 import EditEventModal from './modals/EditEventModal.vue'
 import { useProfile } from '@/api/queries/accounts'
 import DeleteEventModal from './modals/DeleteEventModal.vue'
 import AddEventModal from './modals/AddEventModal.vue'
-
-interface Event {
-  id: number
-  title: string
-  startAt: Date
-}
+import { useTournamentEvents } from '@/api/queries/tournaments'
+import { ref } from 'vue'
+import UiButton from '@/components/ui/UiButton.vue'
 
 interface Props {
   tournamentId: number
@@ -84,31 +97,15 @@ interface Props {
 const props = defineProps<Props>()
 const { data: user } = useProfile()
 
-const fetchEvents = async (_tournamentId: number): Promise<Event[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 200))
-
-  return [
-    {
-      id: 1,
-      title: 'Opening Ceremony',
-      startAt: new Date('2026-04-18T10:00:00'),
-    },
-    {
-      id: 2,
-      title: 'Final Event',
-      startAt: new Date('2026-04-21T15:00:00'),
-    },
-  ]
-}
+const isAddOpen = ref(false)
+const isEditOpen = ref(false)
+const isDeleteOpen = ref(false)
 
 const {
   data: events,
   isLoading: isEventsLoading,
   isError: isEventsError,
-} = useQuery({
-  queryKey: ['events', props.tournamentId],
-  queryFn: () => fetchEvents(props.tournamentId),
-})
+} = useTournamentEvents({ tournamentId: props.tournamentId })
 </script>
 
 <style scoped>

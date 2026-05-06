@@ -1,9 +1,11 @@
 import type {
+  EventId,
   Round,
   RoundId,
   Team,
   TeamId,
   Tournament,
+  TournamentEvent,
   TournamentId,
   TournamentStatus,
 } from '@/api/dbTypes'
@@ -166,4 +168,36 @@ export interface SubmitRoundBody {
 
 export interface SubmitRoundArgs {
   body: SubmitRoundBody
+}
+
+// create Event
+export type CreateEventBody = Pick<
+  TournamentEvent,
+  'title' | 'description' | 'link' | 'start_datetime' | 'tournament'
+> & {
+  type: 'event' // TODO: remove this. We dont actually need to pass type of event
+}
+
+export interface CreateEventArgs {
+  body: CreateEventBody
+}
+
+// get events
+export interface GetEventsArgs {
+  tournamentId: TournamentId
+}
+
+export type GetEventsResponse = TournamentEvent[]
+
+// Edit event
+export type EditEventBody = Pick<TournamentEvent, 'title' | 'start_datetime'>
+
+export interface EditEventArgs {
+  eventId: EventId
+  body: EditEventBody
+}
+
+// delete event
+export interface DeleteEventArgs {
+  eventId: EventId
 }

@@ -112,3 +112,46 @@ export const SubmitRoundSchema = v.object({
     v.maxLength(500, 'Description must not exceed 500 characters'),
   ),
 })
+
+export const EditEventSchema = v.object({
+  title: v.pipe(
+    v.string('Title is required'),
+    v.nonEmpty('Title cannot be empty'),
+    v.minLength(3, 'Title must be at least 3 characters long'),
+    v.maxLength(100, 'Title must not exceed 100 characters'),
+  ),
+
+  startDate: v.pipe(v.date('Start date is required')),
+
+  startTime: v.pipe(
+    TimeSchema,
+    v.custom((value) => value != null, 'Start time is required'),
+  ),
+})
+
+export const AddEventSchema = v.object({
+  title: v.pipe(
+    v.string('Title is required'),
+    v.nonEmpty('Title cannot be empty'),
+    v.minLength(3, 'Title must be at least 3 characters long'),
+    v.maxLength(100, 'Title must not exceed 100 characters'),
+  ),
+
+  description: v.pipe(
+    v.string('Description is required'),
+    v.nonEmpty('Description cannot be empty'),
+    v.minLength(5, 'Description must be at least 5 characters long'),
+    v.maxLength(500, 'Description must not exceed 500 characters'),
+  ),
+
+  link: v.optional(
+    v.pipe(
+      v.string('Link must be a string'),
+      v.nonEmpty('Link cannot be empty'),
+      v.url('Invalid URL format'),
+    ),
+  ),
+
+  start_date: v.pipe(v.date('Start date is required')),
+  start_time: TimeSchema,
+})

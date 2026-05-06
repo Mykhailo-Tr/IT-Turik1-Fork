@@ -1,15 +1,20 @@
 import type { AxiosError } from 'axios'
 import type { MaybeRefArgs, MutationConfig, QueryConfig } from '../types'
 import type {
+  CreateEventArgs,
   CreateRoundArgs,
   CreateTournamentArgs,
+  DeleteEventArgs,
   DeleteRoundArgs,
+  EditEventArgs,
   GetActiveTeamTournamentArgs,
   GetActiveTeamTournamentResponse,
   GetCurrentRoundArgs,
   GetCurrentRoundResponse,
   GetEligibleTeamsArgs,
   GetEligibleTeamsResponse,
+  GetEventsArgs,
+  GetEventsResponse,
   GetRegisteredTeamsArgs,
   GetRegisteredTeamsResponse,
   GetRoundsArgs,
@@ -214,4 +219,56 @@ export const useSubmitRound = (
       ...config,
     },
   )
+}
+
+export const useCreateEvent = (
+  config?: MutationConfig<
+    unknown,
+    AxiosError<ApiError<keyof CreateEventArgs['body']>>,
+    CreateEventArgs
+  >,
+) => {
+  const queryClient = useQueryClient()
+  return useMutation<unknown, AxiosError<ApiError<keyof CreateEventArgs['body']>>, CreateEventArgs>(
+    {
+      mutationFn: $api.tournaments.createEvent,
+      ...config,
+      onSuccess: (_data, vars) => {
+        queryClient.invalidateQueries({ queryKey: touranmentsKeys.events(vars.body.tournament) })
+      },
+    },
+  )
+}
+
+export const useTournamentEvents = (
+  payload: GetEventsArgs,
+  config?: QueryConfig<GetEventsResponse>,
+) => {
+  return useQuery<GetEventsResponse, AxiosError<ApiError>>({
+    queryKey: touranmentsKeys.events(payload.tournamentId),
+    queryFn: () => $api.tournaments.getEvents({ tournamentId: payload.tournamentId }),
+    ...config,
+  })
+}
+
+export const useEditEvent = (
+  config?: MutationConfig<
+    unknown,
+    AxiosError<ApiError<keyof EditEventArgs['body']>>,
+    EditEventArgs
+  >,
+) => {
+  return useMutation<unknown, AxiosError<ApiError<keyof EditEventArgs['body']>>, EditEventArgs>({
+    mutationFn: $api.tournaments.editEvent,
+    ...config,
+  })
+}
+
+export const useDeleteEvent = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, DeleteEventArgs>,
+) => {
+  return useMutation<unknown, AxiosError<ApiError>, DeleteEventArgs>({
+    mutationFn: $api.tournaments.deleteEvent,
+    ...config,
+  })
 }
