@@ -5,6 +5,11 @@ export const profileRoutes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/users/:id',
+    component: () => import('@/features/profile/pages/UserProfilePage.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/profile/edit',
     component: () => import('./pages/EditProfilePage.vue'),
     meta: { requiresAuth: true },
