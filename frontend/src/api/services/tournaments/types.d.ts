@@ -153,3 +153,17 @@ export interface RegisterTeamArgs {
   id: TournamentId
   body: RegisterTeamBody
 }
+
+// Submit round
+
+export interface SubmitRoundBody {
+  team: TeamId
+  round: RoundId
+  github_url: string
+  demo_video_url: string
+  description: string
+}
+
+export interface SubmitRoundArgs {
+  body: SubmitRoundBody
+}

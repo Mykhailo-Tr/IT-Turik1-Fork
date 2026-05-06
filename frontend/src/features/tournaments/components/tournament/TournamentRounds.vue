@@ -58,8 +58,20 @@
               View details
             </ui-button>
 
-            <ui-button size="sm" variant="danger" @click="handleDeleteRound(round.id)">
-              delete
+            <ui-button size="sm" @click="openSubmissionForm"> Submit </ui-button>
+            <submit-modal
+              :roundId="selectedRound?.id ?? 0"
+              :tournamentId="props.tournamentId"
+              v-model="isSubmitOpen"
+            />
+
+            <ui-button
+              v-if="profile?.role === 'admin'"
+              size="sm"
+              variant="danger"
+              @click="handleDeleteRound(round.id)"
+            >
+              <delete-icon width="20" height="20" />
             </ui-button>
           </div>
         </ui-card>
@@ -94,6 +106,8 @@ import { useDeleteRound, useTournamentRounds } from '@/api/queries/tournaments'
 import type { GetRoundsResponse } from '@/api/services/tournaments/types'
 import type { RoundId } from '@/api/dbTypes'
 import { useNotification } from '@/composables/useNotification'
+import DeleteIcon from '@/icons/DeleteIcon.vue'
+import SubmitModal from './modals/SubmitModal.vue'
 
 interface Props {
   tournamentId: number
@@ -104,6 +118,7 @@ const props = defineProps<Props>()
 const { showNotification } = useNotification()
 const { data: user } = useProfile()
 
+const { data: profile } = useProfile()
 const {
   data,
   isLoading,
@@ -117,6 +132,7 @@ const error = computed(() => parseApiError(roundsError.value))
 const rounds = computed(() => data.value ?? [])
 
 const isDetailsOpen = ref(false)
+const isSubmitOpen = ref(false)
 const selectedRound = ref<Round | null>(null)
 
 function handleDeleteRound(id: RoundId) {
@@ -136,6 +152,10 @@ function handleDeleteRound(id: RoundId) {
 function openDetails(round: Round) {
   selectedRound.value = round
   isDetailsOpen.value = true
+}
+
+function openSubmissionForm() {
+  isSubmitOpen.value = !isSubmitOpen.value
 }
 
 function badgeVariant(status: Round['status']): Variants {

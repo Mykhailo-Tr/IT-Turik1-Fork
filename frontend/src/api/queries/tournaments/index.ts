@@ -19,6 +19,7 @@ import type {
   GetTournamentsArgs,
   GetTournamentsResponse,
   RegisterTeamArgs,
+  SubmitRoundArgs,
 } from '@/api/services/tournaments/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { $api } from '@/api/services'
@@ -149,7 +150,6 @@ export const useCreateRound = (
   )
 }
 
-// TODO: rebuild this
 export const useDeleteRound = (
   payload: { id: TournamentId },
   config?: MutationConfig<unknown, AxiosError<ApiError>, DeleteRoundArgs>,
@@ -189,9 +189,29 @@ export const useRegisterTeam = (
     RegisterTeamArgs
   >({
     mutationFn: $api.tournaments.registerTeam,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: touranmentsKeys['eligible-teams']() })
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          touranmentsKeys['eligible-teams'](),
+          touranmentsKeys['registered-teams'](vars.id),
+        ],
+      })
     },
     ...config,
   })
+}
+
+export const useSubmitRound = (
+  config?: MutationConfig<
+    unknown,
+    AxiosError<ApiError<keyof SubmitRoundArgs['body']>>,
+    SubmitRoundArgs
+  >,
+) => {
+  return useMutation<unknown, AxiosError<ApiError<keyof SubmitRoundArgs['body']>>, SubmitRoundArgs>(
+    {
+      mutationFn: $api.tournaments.submitRound,
+      ...config,
+    },
+  )
 }

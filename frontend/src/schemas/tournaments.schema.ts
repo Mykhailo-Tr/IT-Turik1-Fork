@@ -91,3 +91,24 @@ export const CreateRoundSchema = v.pipe(
     ['end_date'],
   ),
 )
+
+export const SubmitRoundSchema = v.object({
+  github_url: v.pipe(
+    v.string('GitHub URL is required'),
+    v.nonEmpty('GitHub URL cannot be empty'),
+    v.url('Invalid GitHub URL format'),
+  ),
+
+  demo_video_url: v.pipe(
+    v.string('Demo URL is required'),
+    v.nonEmpty('Demo URL cannot be empty'),
+    v.url('Invalid Demo URL format'),
+  ),
+
+  description: v.pipe(
+    v.string('Description is required'),
+    v.nonEmpty('Description cannot be empty'),
+    v.minLength(10, 'Description must be at least 10 characters long'),
+    v.maxLength(500, 'Description must not exceed 500 characters'),
+  ),
+})
