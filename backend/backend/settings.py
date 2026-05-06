@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'tournaments',
     'corsheaders',
     'rest_framework_simplejwt',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +121,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -1,5 +1,5 @@
 import type { GetRoleCodesFilter } from '@/api/services/accounts/types'
-import type { TeamId, TournamentId } from '@/api/dbTypes'
+import type { TeamId, TournamentId, UserId } from '@/api/dbTypes'
 import type { GetTournamentsArgs } from '@/api/services/tournaments/types'
 
 export const teamKeys = {
@@ -12,6 +12,7 @@ export const teamKeys = {
 export const accountKeys = {
   profile: () => ['profile'],
   users: () => ['users'],
+  user: (id: UserId) => ['user', id],
   roleCodes: (filter?: GetRoleCodesFilter) => ['role-codes', filter?.role ?? 'all'],
 }
 
@@ -30,4 +31,12 @@ export const touranmentsKeys = {
   'registered-teams': (id: TournamentId) => ['registered-teams', id],
   rounds: (id: TournamentId) => ['rounds', id],
   'current-round': (id: TournamentId) => ['current-round', id],
+}
+
+export const notificationKeys = {
+  all: ['notifications'],
+  lists: () => [...notificationKeys.all, 'list'],
+  list: (page: number, pageSize: number) => [...notificationKeys.lists(), { page, pageSize }],
+  unreadCount: () => [...notificationKeys.all, 'unread-count'],
+  settings: () => [...notificationKeys.all, 'settings'],
 }

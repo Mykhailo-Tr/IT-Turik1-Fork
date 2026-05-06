@@ -1,11 +1,11 @@
 from django.contrib import admin
 
-from .models import Round, Submission, Tournament, TournamentTeamRegistration
+from .models import Event, Icon, Round, Submission, Tournament, TournamentTeamRegistration
 
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'status', 'start_date', 'end_date', 'rounds_count')
+    list_display = ('id', 'name', 'status', 'start_date', 'end_date')
     list_filter = ('status',)
     search_fields = ('name',)
 
@@ -27,3 +27,17 @@ class SubmissionAdmin(admin.ModelAdmin):
 class TournamentTeamRegistrationAdmin(admin.ModelAdmin):
     list_display = ('id', 'tournament', 'team', 'created_by', 'created_at')
     search_fields = ('tournament__name', 'team__name', 'created_by__username')
+
+
+@admin.register(Icon)
+class IconAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'path')
+    search_fields = ('name',)
+
+
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display = ('id', 'tournament', 'type', 'title', 'start_datetime', 'icon')
+    list_filter = ('type',)
+    search_fields = ('title', 'tournament__name')
+

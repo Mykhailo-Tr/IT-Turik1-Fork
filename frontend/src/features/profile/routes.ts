@@ -19,4 +19,9 @@ export const profileRoutes = [
     component: () => import('./pages/ActivateProfilePage.vue'),
     meta: { requiresGuest: true },
   },
+  {
+    path: '/profile/notifications',
+    component: () => import('./pages/NotificationsPage.vue'),
+    meta: { requiresAuth: true },
+  },
 ]

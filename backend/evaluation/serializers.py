@@ -1,11 +1,22 @@
 from rest_framework import serializers
+from accounts.models import User
+from tournaments.models import Submission
 from .models import JuryAssignment, SubmissionEvaluation
 from tournaments.serializers import SubmissionSerializer
 from tournaments.models import Tournament
 
 
-class RoundAssignmentRequestSerializer(serializers.Serializer):
-    k = serializers.IntegerField(required=False, default=2, min_value=1)
+class JuryAssignmentItemSerializer(serializers.Serializer):
+    submission = serializers.PrimaryKeyRelatedField(queryset=Submission.objects.all())
+    jury = serializers.ListField(
+        child=serializers.IntegerField(min_value=1),
+        allow_empty=False,
+    )
+
+    def validate_jury(self, value):
+        if len(value) != len(set(value)):
+            raise serializers.ValidationError('Duplicate jury user ids are not allowed for a submission.')
+        return value
 
 
 class SubmissionEvaluationSerializer(serializers.ModelSerializer):
@@ -98,3 +109,9 @@ class JuryAssignmentSerializer(serializers.ModelSerializer):
 
     def get_is_evaluated(self, obj):
         return hasattr(obj, 'evaluation')
+
+
+class AvailableJurySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'full_name')

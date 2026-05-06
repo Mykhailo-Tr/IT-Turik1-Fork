@@ -1,7 +1,10 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 from .views import (
     CurrentTaskView,
+    EventViewSet,
+    IconListView,
     RoundCloseSubmissionsView,
     RoundDetailView,
     RoundListCreateView,
@@ -20,6 +23,9 @@ from .views import (
     TournamentTeamRegistrationDetailView,
     TournamentUpdateView,
 )
+
+router = DefaultRouter()
+router.register(r'events', EventViewSet, basename='event')
 
 urlpatterns = [
     path('', TournamentListView.as_view(), name='tournaments'),
@@ -48,4 +54,5 @@ urlpatterns = [
     path('submissions/', SubmissionListCreateView.as_view(), name='submissions'),
     path('submissions/<int:pk>/', SubmissionDetailView.as_view(), name='submission_detail'),
     path('current-task/', CurrentTaskView.as_view(), name='current_task'),
-]
+    path('icons/', IconListView.as_view(), name='icon_list'),
+] + router.urls

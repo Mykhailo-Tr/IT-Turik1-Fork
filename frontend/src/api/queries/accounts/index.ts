@@ -50,6 +50,14 @@ export const useUsers = (config?: QueryConfig<GetUsersResponse>) => {
   })
 }
 
+export const useUserById = (id: MaybeRef<number>) => {
+  return useQuery<GetProfileResponse, AxiosError<ApiError>>({
+    queryKey: computed(() => accountKeys.user(toValue(id))),
+    queryFn: () => $api.accounts.getUserById(toValue(id)),
+    enabled: computed(() => !!toValue(id)),
+  })
+}
+
 export const useUpdateProfile = (
   config?: MutationConfig<
     unknown,

@@ -22,6 +22,9 @@
               >Tournaments</router-link
             >
             <router-link to="/profile" :class="navItemClass('profile')">Profile</router-link>
+
+            <notification-dropdown />
+
             <router-link v-if="isAdmin" to="/admin/role-codes" :class="navItemClass('admin')"
               >Admin</router-link
             >
@@ -121,6 +124,7 @@ import UiButton from '../ui/UiButton.vue'
 import { useUserStore } from '@/stores/user'
 import { useProfile } from '@/api/queries/accounts'
 import SwitchThemeButton from './SwitchThemeButton.vue'
+import NotificationDropdown from '@/features/profile/components/notifications/NotificationDropdown.vue'
 
 const route = useRoute()
 const router = useRouter()

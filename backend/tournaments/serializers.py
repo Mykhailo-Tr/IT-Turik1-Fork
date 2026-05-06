@@ -7,6 +7,8 @@ from teams.models import Team
 from teams.models import TeamMember
 
 from .models import (
+    Event,
+    Icon,
     Round,
     Submission,
     Tournament,
@@ -97,7 +99,6 @@ class RoundSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'passing_count',
-            'winners_count',
             'evaluation_criteria',
             'materials',
             'status',
@@ -112,8 +113,6 @@ class RoundSerializer(serializers.ModelSerializer):
         tournament = attrs.get('tournament', getattr(instance, 'tournament', None))
         start_date = attrs.get('start_date', getattr(instance, 'start_date', None))
         end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
-        winners_count = attrs.get('winners_count', getattr(instance, 'winners_count', None))
-
         errors = {}
 
         if start_date and end_date and start_date >= end_date:
@@ -122,18 +121,6 @@ class RoundSerializer(serializers.ModelSerializer):
         if tournament and start_date and end_date:
             if start_date < tournament.start_date or end_date > tournament.end_date:
                 errors['start_date'] = 'Round dates must be within tournament dates.'
-
-        if tournament and winners_count is not None:
-            end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
-            last_end = (
-                Round.objects.filter(tournament=tournament)
-                .order_by('-start_date')
-                .values_list('start_date', flat=True)
-                .first()
-            )
-            this_start = attrs.get('start_date', getattr(instance, 'start_date', None))
-            if last_end and this_start and this_start < last_end:
-                errors['winners_count'] = 'winners_count is allowed only for the last round.'
 
         passing_count = attrs.get('passing_count', getattr(instance, 'passing_count', None))
         if passing_count is not None and tournament:
@@ -346,3 +333,71 @@ class TournamentTeamRegistrationListSerializer(serializers.ModelSerializer):
  
     def get_members_count(self, obj):
         return obj.team.team_members.count() + 1  # members + captain
+
+
+class IconSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Icon
+        fields = ('id', 'name', 'path')
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = (
+            'id',
+            'tournament',
+            'type',
+            'title',
+            'description',
+            'link',
+            'start_datetime',
+            'end_datetime',
+            'icon',
+            'created_at',
+            'updated_at',
+        )
+        read_only_fields = ('created_at', 'updated_at')
+
+    def validate(self, attrs):
+        instance = self.instance
+        event_type = attrs.get('type', getattr(instance, 'type', None))
+        start_datetime = attrs.get('start_datetime', getattr(instance, 'start_datetime', None))
+        end_datetime = attrs.get('end_datetime', getattr(instance, 'end_datetime', None))
+        errors = {}
+
+        if end_datetime and start_datetime and end_datetime < start_datetime:
+            errors['end_datetime'] = 'end_datetime must be greater than or equal to start_datetime.'
+
+        if event_type == Event.TYPE_EVENT:
+            attrs.pop('link', None)
+            attrs['link'] = ''
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return attrs
+
+    def _resolve_default_icon(self, event_type):
+        if event_type == Event.TYPE_MEET:
+            default_name = 'meet_default'
+        else:
+            default_name = 'event_default'
+        return Icon.objects.filter(name=default_name).first()
+
+    @transaction.atomic
+    def create(self, validated_data):
+        if 'icon' not in validated_data or validated_data['icon'] is None:
+            validated_data['icon'] = self._resolve_default_icon(validated_data.get('type'))
+        return Event.objects.create(**validated_data)
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        if 'icon' in validated_data and validated_data['icon'] is None:
+            validated_data['icon'] = self._resolve_default_icon(
+                validated_data.get('type', instance.type)
+            )
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

@@ -8,151 +8,136 @@
       </template>
 
       <template #header>
-        <div>
-          <div class="top-header">
+        <div class="head">
+          <div>
             <p class="section-eyebrow">User Center</p>
-            <p class="meta">
-              Joined: {{ user?.created_at ? formatDate(user?.created_at) : 'N/A' }}
-            </p>
+            <h1 class="section-title profile-title">My profile</h1>
           </div>
-          <h1 class="section-title">My profile</h1>
+          <p class="meta">Joined: {{ user?.created_at ? formatDate(user?.created_at) : 'N/A' }}</p>
         </div>
       </template>
 
-      <div>
-        <div class="details">
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">Username</span>
+      <div class="details">
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Username</span>
+          </template>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <ui-skeleton-loader :loading="isLoading">
-              <template #skeleton>
-                <ui-skeleton variant="rect" width="100%" />
-              </template>
+            <strong class="item-value value-wrap">{{ user?.username || '-' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Email</span>
+          </template>
 
-              <strong class="card-content">{{ user?.username || '-' }}</strong>
-            </ui-skeleton-loader>
-          </ui-card>
-
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">Email</span>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <ui-skeleton-loader :loading="isLoading">
-              <template #skeleton>
-                <ui-skeleton variant="rect" width="100%" />
-              </template>
+            <strong class="item-value value-wrap">{{ user?.email || '-' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Role</span>
+          </template>
 
-              <strong class="card-content">{{ user?.email || '-' }}</strong>
-            </ui-skeleton-loader>
-          </ui-card>
-
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">Role</span>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <ui-skeleton-loader :loading="isLoading">
-              <template #skeleton>
-                <ui-skeleton variant="rect" width="100%" />
-              </template>
+            <ui-badge variant="green">{{ user?.role ?? '-' }}</ui-badge>
+          </ui-skeleton-loader>
+        </ui-card>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Full name</span>
+          </template>
 
-              <ui-badge variant="primary">{{ user?.role ?? '-' }}</ui-badge>
-            </ui-skeleton-loader>
-          </ui-card>
-
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">Full name</span>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <ui-skeleton-loader :loading="isLoading">
-              <template #skeleton>
-                <ui-skeleton variant="rect" width="100%" />
-              </template>
+            <strong class="item-value value-wrap">{{ user?.full_name || '-' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">City</span>
+          </template>
 
-              <strong class="card-content">{{ user?.full_name || '-' }}</strong>
-            </ui-skeleton-loader>
-          </ui-card>
-
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">City</span>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <ui-skeleton-loader :loading="isLoading">
-              <template #skeleton>
-                <ui-skeleton variant="rect" width="100%" />
-              </template>
+            <strong class="item-value value-wrap">{{ user?.city || '-' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Phone</span>
+          </template>
 
-              <strong class="card-content">{{ user?.city || '-' }}</strong>
-            </ui-skeleton-loader>
-          </ui-card>
-
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">Phone</span>
+          <ui-skeleton-loader :loading="isLoading">
+            <template #skeleton>
+              <ui-skeleton variant="rect" width="100%" />
             </template>
 
-            <ui-skeleton-loader :loading="isLoading">
-              <template #skeleton>
-                <ui-skeleton variant="rect" width="100%" />
-              </template>
+            <strong class="item-value value-fixed">{{ user?.phone || '-' }}</strong>
+          </ui-skeleton-loader>
+        </ui-card>
+        <ui-card class="field-card">
+          <template #header>
+            <span class="card-text-title">Teams</span>
+          </template>
 
-              <strong class="card-content">{{ user?.phone || '-' }}</strong>
-            </ui-skeleton-loader>
-          </ui-card>
-
-          <ui-card class="field-card">
-            <template #header>
-              <span class="card-label">Teams</span>
-            </template>
-
-            <div>
-              <ui-skeleton-loader :loading="isLoading">
-                <template #skeleton>
-                  <div style="display: flex; flex-direction: column; gap: 4px">
-                    <ui-skeleton v-for="i in 2" :key="i" variant="rect" width="150px" />
-                  </div>
-                </template>
-
-                <div class="team-list">
-                  <router-link
-                    v-for="team in user?.teams || []"
-                    :key="team.id"
-                    :to="`/teams/${team.id}`"
-                    :title="team.name"
-                    class="team-link"
-                  >
-                    {{ truncateText(team.name, 20) }}
-                  </router-link>
-                </div>
-
-                <p v-if="!(user?.teams || []).length" class="text-muted">No teams yet.</p>
-              </ui-skeleton-loader>
-            </div>
-          </ui-card>
-        </div>
-
-        <div class="actions">
-          <ui-button :disabled="isLoading" @click="goToEditProfile"> Edit Profile </ui-button>
-          <ui-button variant="secondary" :disabled="isLoading || isDeleting" @click="logout">
-            Log Out
-          </ui-button>
-        </div>
-      </div>
-
-      <template #footer>
-        <ui-card class="danger-zone">
           <div>
-            <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
+            <ui-skeleton-loader :loading="isLoading">
+              <template #skeleton>
+                <div style="display: flex; flex-direction: column; gap: 4px">
+                  <ui-skeleton v-for="i in 2" :key="i" variant="rect" width="150px" />
+                </div>
+              </template>
 
-            <delete-profile-modal />
+              <div class="team-list">
+                <router-link
+                  v-for="team in user?.teams || []"
+                  :key="team.id"
+                  :to="`/teams/${team.id}`"
+                  class="team-link"
+                >
+                  {{ team.name }}
+                </router-link>
+              </div>
+
+              <p v-if="!(user?.teams || []).length" class="text-muted">No teams yet.</p>
+            </ui-skeleton-loader>
           </div>
         </ui-card>
-      </template>
+      </div>
+
+      <div class="actions">
+        <ui-button :disabled="isLoading" @click="goToEditProfile"> Edit Profile </ui-button>
+        <ui-button :disabled="isLoading" @click="goToNotifications"> Notifications </ui-button>
+        <ui-button variant="secondary" :disabled="isLoading || isDeleting" @click="logout">
+          Log Out
+        </ui-button>
+      </div>
+
+      <ui-card class="danger-zone">
+        <p class="danger-text">Danger zone: this action permanently deletes your account.</p>
+
+        <delete-profile-modal />
+      </ui-card>
     </ui-card>
   </section>
 </template>
@@ -169,7 +154,6 @@ import { useUserStore } from '@/stores/user'
 import UiSkeletonLoader from '@/components/ui/UiSkeletonLoader.vue'
 import UiSkeleton from '@/components/ui/UiSkeleton.vue'
 import { parseApiError } from '@/api/errors'
-import { truncateText } from '@/lib/utils'
 
 const store = useUserStore()
 const { data: user, isLoading, isLoadingError, error: profileError } = useProfile()
@@ -187,6 +171,10 @@ const goToEditProfile = () => {
   router.push('/profile/edit')
 }
 
+const goToNotifications = () => {
+  router.push('/profile/notifications')
+}
+
 const formatDate = (date: Date) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('uk-UA')
@@ -194,31 +182,60 @@ const formatDate = (date: Date) => {
 </script>
 
 <style scoped>
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.profile-title {
+  margin-top: 0.2rem;
+}
+
 .meta {
   margin: 0;
   font-size: 0.86rem;
-}
-
-.top-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .details {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.6rem;
+  margin-top: 1rem;
   align-items: start;
+}
+
+.item {
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 0.7rem;
+  background: rgba(255, 255, 255, 0.85);
+  min-width: 0;
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+}
+
+.item-label {
+  color: var(--color-gray-500);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .field-card {
   background: var(--muted);
-  gap: 5px;
+  color: var(--muted-foreground);
+  gap: 0;
 }
 
-.card-content {
-  color: var(--muted-foreground);
+.item-phone {
+  align-content: start;
+}
+
+.item-wide {
+  grid-column: 1 / -1;
 }
 
 .team-list {
@@ -229,6 +246,7 @@ const formatDate = (date: Date) => {
 
 .team-link {
   color: var(--brand-700);
+  text-decoration: none;
   font-weight: 700;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -249,7 +267,7 @@ const formatDate = (date: Date) => {
 .danger-zone {
   margin-top: 1.4rem;
   padding-top: 1rem;
-  border: 1px solid color-mix(in srgb, var(--destructive) 20%, transparent);
+  border: 1px solied var(--destructive);
   background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
@@ -257,6 +275,16 @@ const formatDate = (date: Date) => {
   margin: 0 0 0.6rem;
   color: color-mix(in srgb, var(--destructive) 80%, transparent);
   font-weight: 600;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  padding: 1rem;
 }
 
 @media (max-width: 760px) {

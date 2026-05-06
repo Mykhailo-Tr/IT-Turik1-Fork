@@ -52,7 +52,11 @@
         <ui-card v-for="member in filteredMembers" :key="`member-${member.id}`" class="member-row">
           <div>
             <div style="display: flex; justify-content: space-between; gap: 10px">
-              <p class="member-name">{{ member.username }}</p>
+              <p class="member-name">
+                <RouterLink :to="`/users/${member.id}`" class="member-link">
+                  {{ member.username }}
+                </RouterLink>
+              </p>
               <div style="display: flex; align-items: center; gap: 5px">
                 <ui-badge v-if="member.id === team?.captain_id" variant="green">Captain</ui-badge>
               </div>
@@ -300,6 +304,12 @@ const addMember = () => {
 }
 
 .member-name {
+  font-weight: 700;
+}
+
+.member-link {
+  color: var(--brand-700);
+  text-decoration: none;
   font-weight: 700;
 }
 

@@ -27,6 +27,12 @@
 | **Подати роботу** | POST | `/api/tournaments/submissions/` | Команда |
 | **Деталі/Зміна роботи** | GET/PATCH | `/api/tournaments/submissions/{id}/` | Команда |
 | **Поточне завдання** | GET | `/api/tournaments/current-task/?tournament_id={id}` *(опц.)* | Учасники |
+| **Список подій** | GET | `/api/tournaments/events/?tournament={id}` *(опц.)* | Всі |
+| **Деталі події** | GET | `/api/tournaments/events/{id}/` | Всі |
+| **Створити подію** | POST | `/api/tournaments/events/` | Admin |
+| **Редагувати подію** | PATCH | `/api/tournaments/events/{id}/` | Admin |
+| **Видалити подію** | DELETE | `/api/tournaments/events/{id}/` | Admin |
+| **Список іконок** | GET | `/api/tournaments/icons/` | Всі |
 
 > **`GET /api/tournaments/current-task/`**
 > - Повертає перший активний раунд (`status=active`) серед турнірів зі статусом `running`, відсортований за `end_date`, `id`.
@@ -40,6 +46,7 @@
 | Дія | Метод | Шлях | Доступ |
 | :--- | :--- | :--- | :--- |
 | **Розподіл робіт (журі)**| POST | `/api/evaluation/rounds/{id}/assign-jury/` | Admin |
+| **Доступне журі для раунду**| GET | `/api/evaluation/rounds/{id}/available-jury/?include_assigned=true|false` | Admin |
 | **Призначені роботи** | GET | `/api/evaluation/assignments/` | Jury |
 | **Відправити оцінку** | POST | `/api/evaluation/evaluate/` | Jury |
 | **Перегл/Зміна/Вид. оцінки**| GET/PATCH/DEL| `/api/evaluation/evaluate/{id}/` | Jury |
@@ -182,7 +189,6 @@
 > - Дати раунду мають бути в межах дат турніру.
 > - Раунди одного турніру не можуть перетинатися в часі. Перевірка виконується в бізнес-логіці моделі (`Round.clean()`), тому працює однаково для create/update.
 > - Кейс на кшталт `round1(21.04-24.04)` і `round2(23.04-27.04)` заборонений (перетин періодів).
-> - `winners_count` дозволено лише для останнього раунду.
 > - Для single-round турніру (коли в турнірі один раунд) дати раунду мають збігатися з датами турніру.
 >
 > **Валідація `passing_count`:**
@@ -209,12 +215,88 @@
 }
 ```
 
-### 4. Оцінювання (Jury/Admin)
+### 4. Розклад / Події (Admin)
+
+**Список подій — GET `/api/tournaments/events/`**
+> Опційний query-параметр: `?tournament={id}` для фільтрації за турніром.
+> Сортування: за `start_datetime` (зростання).
+
+**Створення події — POST `/api/tournaments/events/`**
+```json
+{
+  "tournament": 1,
+  "type": "meet",
+  "title": "Online Consultation",
+  "description": "Discuss project",
+  "link": "https://meet.google.com/abc",
+  "start_datetime": "2026-05-01T10:00:00Z",
+  "end_datetime": "2026-05-01T11:00:00Z",
+  "icon": 2
+}
+```
+
+**Створення без іконки (авто-призначення) — POST `/api/tournaments/events/`**
+```json
+{
+  "tournament": 1,
+  "type": "event",
+  "title": "Deadline",
+  "start_datetime": "2026-05-02T18:00:00Z"
+}
+```
+> Якщо `icon` не передано або `null`:
+> - `type == "meet"` → автоматично призначається іконка з `name="meet_default"` (camera)
+> - `type == "event"` → автоматично призначається іконка з `name="event_default"` (calendar)
+
+**Редагування події — PATCH `/api/tournaments/events/{id}/`**
+```json
+{
+  "title": "Updated Title",
+  "end_datetime": "2026-05-01T12:00:00Z"
+}
+```
+
+**Видалення події — DELETE `/api/tournaments/events/{id}/`**
+> Повертає `204 No Content`.
+
+> **Валідація подій:**
+> - `start_datetime` є обов'язковим.
+> - Якщо вказано `end_datetime`, він має бути ≥ `start_datetime`.
+> - Якщо `type == "event"` — поле `link` ігнорується (встановлюється порожнім).
+> - Якщо `type == "meet"` — поле `link` дозволено.
+> - `tournament` має існувати.
+
+**Список іконок — GET `/api/tournaments/icons/`**
+```json
+[
+  { "id": 1, "name": "meet_default", "path": "icons/camera.svg" },
+  { "id": 2, "name": "event_default", "path": "icons/calendar.svg" }
+]
+```
+> Повертає всі іконки з бази. Доступ публічний.
+
+### 5. Оцінювання (Jury/Admin)
 
 **Розподіл робіт (Admin) — POST `/api/evaluation/rounds/{id}/assign-jury/`**
 ```json
-{ "k": 2 } 
+[
+  { "submission": 101, "jury": [12, 13] },
+  { "submission": 102, "jury": [12, 13] }
+]
 ```
+> **Логіка призначення (manual replace-all):**
+> - endpoint доступний тільки у `round.status = submission_closed`;
+> - потрібно покрити **всі** submission цього раунду;
+> - для кожного submission має бути щонайменше 1 jury;
+> - для всіх submission кількість jury має бути однакова;
+> - дозволені тільки користувачі з роллю `jury`;
+> - дублікати submission у payload і дублікати jury в межах submission заборонені;
+> - при успіху попередні призначення раунду видаляються, створюються рівно ті, що передані в payload.
+
+**Доступне журі (Admin) — GET `/api/evaluation/rounds/{id}/available-jury/`**
+> Query param: `include_assigned` (`true` за замовчуванням).
+> - `true`: повертає всіх користувачів з роллю `jury`.
+> - `false`: виключає журі, яке вже має призначення в цьому раунді.
 
 **Створення оцінки (Jury) — POST `/api/evaluation/evaluate/`**
 ```json

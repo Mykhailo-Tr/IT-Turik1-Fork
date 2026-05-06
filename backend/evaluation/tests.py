@@ -6,166 +6,223 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from accounts.models import User
-from teams.models import Team, TeamMember
+from evaluation.models import JuryAssignment
+from teams.models import Team
 from tournaments.models import Round, Submission, Tournament
 
-from .models import JuryAssignment, SubmissionEvaluation
 
-
-class JuryEvaluationCreateApiTests(APITestCase):
+class ManualJuryAssignmentApiTests(APITestCase):
     def setUp(self):
-        now = timezone.now()
-        self.jury = User.objects.create_user(
-            username='jury-user',
-            email='jury-user@example.com',
-            password='StrongPass123!',
-            role='jury',
+        self.admin = User.objects.create_user(
+            username='admin_eval',
+            email='admin_eval@example.com',
+            password='TestPass123!',
+            role='admin',
         )
-        self.other_jury = User.objects.create_user(
-            username='other-jury',
-            email='other-jury@example.com',
-            password='StrongPass123!',
-            role='jury',
-        )
-        self.team_user = User.objects.create_user(
-            username='team-user',
-            email='team-user@example.com',
-            password='StrongPass123!',
+        self.non_admin = User.objects.create_user(
+            username='team_eval',
+            email='team_eval@example.com',
+            password='TestPass123!',
             role='team',
         )
-        self.team = Team.objects.create(
-            name='Eval Team',
-            email='eval-team@example.com',
-            captain=self.team_user,
+        self.jury1 = User.objects.create_user(
+            username='jury1_eval',
+            email='jury1_eval@example.com',
+            password='TestPass123!',
+            role='jury',
         )
-        TeamMember.objects.create(team=self.team, user=self.team_user)
+        self.jury2 = User.objects.create_user(
+            username='jury2_eval',
+            email='jury2_eval@example.com',
+            password='TestPass123!',
+            role='jury',
+        )
+        self.jury3 = User.objects.create_user(
+            username='jury3_eval',
+            email='jury3_eval@example.com',
+            password='TestPass123!',
+            role='jury',
+        )
 
-        self.tournament = Tournament.objects.create(
-            name='Main Tournament',
-            description='Main',
-            start_date=now - timedelta(days=1),
-            end_date=now + timedelta(days=3),
-            status=Tournament.STATUS_RUNNING,
+        self.organizer = User.objects.create_user(
+            username='organizer_eval',
+            email='organizer_eval@example.com',
+            password='TestPass123!',
+            role='organizer',
         )
-        self.other_tournament = Tournament.objects.create(
-            name='Other Tournament',
-            description='Other',
-            start_date=now - timedelta(days=1),
-            end_date=now + timedelta(days=3),
+        captain = User.objects.create_user(
+            username='captain_eval',
+            email='captain_eval@example.com',
+            password='TestPass123!',
+            role='team',
+        )
+
+        now = timezone.now()
+        tournament = Tournament.objects.create(
+            name='Eval Tournament',
+            description='desc',
+            start_date=now - timedelta(days=2),
+            end_date=now + timedelta(days=2),
             status=Tournament.STATUS_RUNNING,
+            created_by=self.organizer,
         )
 
         self.round_obj = Round.objects.create(
-            tournament=self.tournament,
+            tournament=tournament,
             name='Round 1',
-            criteria=[
-                {'id': 'backend', 'name': 'Backend', 'max_score': 10},
-                {'id': 'db', 'name': 'Database', 'max_score': 10},
-            ],
-            start_date=now - timedelta(hours=1),
-            end_date=now + timedelta(hours=2),
+            start_date=now - timedelta(days=1),
+            end_date=now + timedelta(hours=12),
             status=Round.STATUS_SUBMISSION_CLOSED,
+            criteria=[{'id': 'backend', 'name': 'Backend', 'max_score': 10}],
         )
-        self.other_round = Round.objects.create(
-            tournament=self.other_tournament,
-            name='Round 1',
-            criteria=[{'id': 'ux', 'name': 'UX', 'max_score': 10}],
-            start_date=now - timedelta(hours=1),
-            end_date=now + timedelta(hours=2),
-            status=Round.STATUS_SUBMISSION_CLOSED,
+
+        self.team = Team.objects.create(
+            name='Team Eval',
+            email='team@example.com',
+            captain=captain,
+            is_public=True,
         )
-        self.submission = Submission.objects.create(
+        captain2 = User.objects.create_user(
+            username='captain_eval_2',
+            email='captain_eval_2@example.com',
+            password='TestPass123!',
+            role='team',
+        )
+        self.team2 = Team.objects.create(
+            name='Team Eval 2',
+            email='team2@example.com',
+            captain=captain2,
+            is_public=True,
+        )
+        self.submission1 = Submission.objects.create(
             team=self.team,
             round=self.round_obj,
-            github_url='https://github.com/example/repo',
-            demo_video_url='https://youtube.com/watch?v=test',
+            github_url='https://github.com/example/repo1',
+            demo_video_url='https://youtu.be/demo1',
+            created_by=captain,
         )
-        self.other_submission = Submission.objects.create(
-            team=self.team,
-            round=self.other_round,
-            github_url='https://github.com/example/repo-2',
-            demo_video_url='https://youtube.com/watch?v=test2',
+        self.submission2 = Submission.objects.create(
+            team=self.team2,
+            round=self.round_obj,
+            github_url='https://github.com/example/repo2',
+            demo_video_url='https://youtu.be/demo2',
+            created_by=captain2,
         )
-        self.assignment = JuryAssignment.objects.create(submission=self.submission, jury=self.jury)
-        self.other_assignment = JuryAssignment.objects.create(submission=self.other_submission, jury=self.other_jury)
-        self.url = reverse('jury_evaluate_create')
 
-    def _valid_scores(self):
-        return [
-            {'criterion_id': 'backend', 'score': 10},
-            {'criterion_id': 'db', 'score': 8},
+    def test_assign_jury_plain_array_replaces_existing_assignments(self):
+        JuryAssignment.objects.create(submission=self.submission1, jury=self.jury3)
+
+        payload = [
+            {'submission': self.submission1.id, 'jury': [self.jury1.id, self.jury2.id]},
+            {'submission': self.submission2.id, 'jury': [self.jury1.id, self.jury2.id]},
         ]
 
-    def test_create_evaluation_success_with_matching_tournament_id(self):
-        self.client.force_authenticate(user=self.jury)
-        payload = {
-            'tournament_id': self.tournament.id,
-            'assignment': self.assignment.id,
-            'scores': self._valid_scores(),
-            'comment': 'Excellent work!',
-        }
-
-        response = self.client.post(self.url, payload, format='json')
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(
+            reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}),
+            payload,
+            format='json',
+        )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(SubmissionEvaluation.objects.filter(assignment=self.assignment).exists())
-        self.assertNotIn('tournament_id', response.data)
+        self.assertEqual(response.data['created_assignments'], 4)
+        pairs = set(
+            JuryAssignment.objects.filter(submission__round=self.round_obj).values_list('submission_id', 'jury_id')
+        )
+        self.assertEqual(
+            pairs,
+            {
+                (self.submission1.id, self.jury1.id),
+                (self.submission1.id, self.jury2.id),
+                (self.submission2.id, self.jury1.id),
+                (self.submission2.id, self.jury2.id),
+            },
+        )
 
-    def test_create_evaluation_fails_when_tournament_id_is_for_other_tournament(self):
-        self.client.force_authenticate(user=self.jury)
-        payload = {
-            'tournament_id': self.other_tournament.id,
-            'assignment': self.assignment.id,
-            'scores': self._valid_scores(),
-            'comment': 'Mismatch tournament',
-        }
-
-        response = self.client.post(self.url, payload, format='json')
-
+    def test_assign_jury_requires_full_submission_coverage(self):
+        payload = [{'submission': self.submission1.id, 'jury': [self.jury1.id]}]
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}), payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        details = response.data.get('details', response.data)
-        self.assertIn('tournament_id', details)
+        self.assertIn('submission', response.data.get('details', {}))
 
-    def test_create_evaluation_fails_when_tournament_id_missing(self):
-        self.client.force_authenticate(user=self.jury)
-        payload = {
-            'assignment': self.assignment.id,
-            'scores': self._valid_scores(),
-            'comment': 'No tournament id',
-        }
-
-        response = self.client.post(self.url, payload, format='json')
-
+    def test_assign_jury_requires_same_jury_count_per_submission(self):
+        payload = [
+            {'submission': self.submission1.id, 'jury': [self.jury1.id]},
+            {'submission': self.submission2.id, 'jury': [self.jury1.id, self.jury2.id]},
+        ]
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}), payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        details = response.data.get('details', response.data)
-        self.assertIn('tournament_id', details)
+        self.assertIn('jury', response.data.get('details', {}))
 
-    def test_create_evaluation_fails_for_not_assigned_jury(self):
-        self.client.force_authenticate(user=self.jury)
-        payload = {
-            'tournament_id': self.other_tournament.id,
-            'assignment': self.other_assignment.id,
-            'scores': [{'criterion_id': 'ux', 'score': 9}],
-            'comment': 'Not assigned',
-        }
-
-        response = self.client.post(self.url, payload, format='json')
-
+    def test_assign_jury_rejects_non_jury_user(self):
+        payload = [
+            {'submission': self.submission1.id, 'jury': [self.non_admin.id]},
+            {'submission': self.submission2.id, 'jury': [self.non_admin.id]},
+        ]
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}), payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        details = response.data.get('details', response.data)
-        self.assertIn('assignment', details)
+        self.assertIn('jury', response.data.get('details', {}))
 
-    def test_create_evaluation_preserves_existing_scores_validation(self):
-        self.client.force_authenticate(user=self.jury)
-        payload = {
-            'tournament_id': self.tournament.id,
-            'assignment': self.assignment.id,
-            'scores': [{'criterion_id': 'backend', 'score': 10}],
-            'comment': 'Missing one criterion',
-        }
-
-        response = self.client.post(self.url, payload, format='json')
-
+    def test_assign_jury_rejects_when_round_not_submission_closed(self):
+        self.round_obj.status = Round.STATUS_ACTIVE
+        self.round_obj.save(update_fields=['status', 'updated_at'])
+        payload = [
+            {'submission': self.submission1.id, 'jury': [self.jury1.id]},
+            {'submission': self.submission2.id, 'jury': [self.jury1.id]},
+        ]
+        self.client.force_authenticate(self.admin)
+        response = self.client.post(reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}), payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        details = response.data.get('details', response.data)
-        self.assertIn('scores', details)
+
+    def test_assign_jury_admin_only(self):
+        payload = [
+            {'submission': self.submission1.id, 'jury': [self.jury1.id]},
+            {'submission': self.submission2.id, 'jury': [self.jury1.id]},
+        ]
+        self.client.force_authenticate(self.non_admin)
+        response = self.client.post(reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}), payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_organizer_and_jury_can_assign_jury(self):
+        for user in (self.organizer, self.jury1):
+            with self.subTest(role=user.role):
+                payload = [
+                    {'submission': self.submission1.id, 'jury': [self.jury2.id]},
+                    {'submission': self.submission2.id, 'jury': [self.jury2.id]},
+                ]
+                self.client.force_authenticate(user)
+                response = self.client.post(
+                    reverse('round_assign_jury', kwargs={'pk': self.round_obj.id}),
+                    payload,
+                    format='json',
+                )
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_available_jury_returns_all_by_default(self):
+        JuryAssignment.objects.create(submission=self.submission1, jury=self.jury1)
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(reverse('round_available_jury', kwargs={'pk': self.round_obj.id}))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertEqual(returned_ids, {self.jury1.id, self.jury2.id, self.jury3.id})
+
+    def test_available_jury_excludes_assigned_when_include_assigned_false(self):
+        JuryAssignment.objects.create(submission=self.submission1, jury=self.jury1)
+        self.client.force_authenticate(self.admin)
+        response = self.client.get(
+            reverse('round_available_jury', kwargs={'pk': self.round_obj.id}),
+            {'include_assigned': 'false'},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        returned_ids = {item['id'] for item in response.data}
+        self.assertEqual(returned_ids, {self.jury2.id, self.jury3.id})
+
+    def test_available_jury_admin_only(self):
+        self.client.force_authenticate(self.non_admin)
+        response = self.client.get(reverse('round_available_jury', kwargs={'pk': self.round_obj.id}))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
