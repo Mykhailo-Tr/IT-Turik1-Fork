@@ -23,6 +23,8 @@
 | **Почати раунд** | POST | `/api/tournaments/rounds/{id}/start/` | Admin |
 | **Закрити прийом робіт**| POST | `/api/tournaments/rounds/{id}/close-submissions/` | Admin |
 | **Фіналізація оцінок** | POST | `/api/tournaments/rounds/{id}/mark-evaluated/` | Admin |
+| **Всі роботи турніру** | GET | `/api/tournaments/{id}/submissions/` | Auth (журі/адмін) |
+| **Всі роботи раунду** | GET | `/api/tournaments/rounds/{id}/submissions/` | Auth (журі/адмін) |
 | **Мої роботи** | GET | `/api/tournaments/submissions/` | Команда |
 | **Подати роботу** | POST | `/api/tournaments/submissions/` | Команда |
 | **Деталі/Зміна роботи** | GET/PATCH | `/api/tournaments/submissions/{id}/` | Команда |
@@ -217,6 +219,38 @@
 > Якщо вказано `passing_count` і в турнірі вже є зареєстровані команди, значення не може перевищувати кількість зареєстрованих команд. Якщо команд ще немає (реєстрація не відкрита), перевірка пропускається.
 
 ### 3. Роботи (Команда)
+
+**Всі роботи турніру (Jury/Admin) — GET `/api/tournaments/{id}/submissions/`**
+```json
+[
+  {
+    "id": 1,
+    "team_details": {
+      "id": 3,
+      "name": "Team Rocket"
+    },
+    "round_details": {
+      "id": 2,
+      "name": "Round 1",
+      "start_date": "...",
+      "end_date": "...",
+      "status": "submission_closed"
+    },
+    "github_url": "https://github.com/...",
+    "demo_video_url": "https://youtube.com/...",
+    "live_demo_url": "",
+    "description": "...",
+    "created_at": "...",
+    "updated_at": "..."
+  }
+]
+```
+> Повертає всі submissions усіх раундів вказаного турніру, відсортовані за `updated_at` (спадання).
+> Якщо турнір не існує — `404`.
+
+**Всі роботи раунду (Jury/Admin) — GET `/api/tournaments/rounds/{id}/submissions/`**
+> Аналогічна структура відповіді, але фільтрує submissions тільки для конкретного раунду.
+> Якщо раунд не існує — `404`.
 
 **Подача роботи — POST `/api/tournaments/submissions/`**
 ```json
