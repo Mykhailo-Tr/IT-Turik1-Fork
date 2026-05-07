@@ -20,9 +20,6 @@ const props = withDefaults(defineProps<Props>(), { variant: 'gray' })
   font-weight: 700;
   padding: 0.2rem 0.5rem;
   border: 1px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .badge--green {
