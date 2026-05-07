@@ -203,7 +203,10 @@ const handleDelete = (id: number) => {
           showNotification('Notification deleted', 'success')
           isConfirmModalOpen.value = false
         },
-        onError: () => showNotification('Failed to delete notification', 'error')
+        onError: (err) => {
+          console.error('Failed to delete notification:', err)
+          showNotification('Failed to delete notification', 'error')
+        }
       })
     }
   }
@@ -221,7 +224,10 @@ const handleDeleteAll = () => {
           showNotification('All notifications deleted', 'success')
           isConfirmModalOpen.value = false
         },
-        onError: () => showNotification('Failed to delete notifications', 'error')
+        onError: (err) => {
+          console.error('Failed to delete all notifications:', err)
+          showNotification('Failed to delete notifications', 'error')
+        }
       })
     }
   }

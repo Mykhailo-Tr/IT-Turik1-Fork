@@ -177,7 +177,10 @@ const handleDelete = (id: number) => {
       deleteNotification(id, {
         onSuccess: () => {
           isConfirmModalOpen.value = false
-        }
+        },
+        onError: (err) => {
+          console.error('Failed to delete notification from dropdown:', err)
+        },
       })
     }
   }
@@ -193,7 +196,10 @@ const handleDeleteAll = () => {
       deleteAllNotifications(undefined, {
         onSuccess: () => {
           isConfirmModalOpen.value = false
-        }
+        },
+        onError: (err) => {
+          console.error('Failed to delete all notifications from dropdown:', err)
+        },
       })
     }
   }
