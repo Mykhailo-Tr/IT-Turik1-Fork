@@ -286,7 +286,6 @@
   "description": "Discuss project",
   "link": "https://meet.google.com/abc",
   "start_datetime": "2026-05-01T10:00:00Z",
-  "end_datetime": "2026-05-01T11:00:00Z",
   "icon": 2
 }
 ```
@@ -308,7 +307,7 @@
 ```json
 {
   "title": "Updated Title",
-  "end_datetime": "2026-05-01T12:00:00Z"
+  "start_datetime": "2026-05-01T12:00:00Z"
 }
 ```
 
@@ -317,7 +316,6 @@
 
 > **Валідація подій:**
 > - `start_datetime` є обов'язковим.
-> - Якщо вказано `end_datetime`, він має бути ≥ `start_datetime`.
 > - Якщо `type == "event"` — поле `link` ігнорується (встановлюється порожнім).
 > - Якщо `type == "meet"` — поле `link` дозволено.
 > - `tournament` має існувати.
