@@ -96,6 +96,15 @@
           </ui-button>
       </div>
     </div>
+
+    <ui-confirm-modal
+      v-model="isConfirmModalOpen"
+      :title="confirmModalConfig.title"
+      :message="confirmModalConfig.message"
+      :confirm-variant="confirmModalConfig.confirmVariant"
+      :loading="isDeletingAll"
+      @confirm="confirmModalConfig.onConfirm"
+    />
   </div>
 </template>
 
@@ -106,6 +115,7 @@ import BellIcon from '@/icons/BellIcon.vue'
 import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
 import TrashIcon from '@/icons/TrashIcon.vue'
 import UiButton from '@/components/UiButton.vue'
+import UiConfirmModal from '@/components/UiConfirmModal.vue'
 import { 
   useNotifications, 
   useUnreadCount, 
@@ -126,6 +136,15 @@ const { mutate: markAsRead } = useMarkAsRead()
 const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllAsRead()
 const { mutate: deleteNotification } = useDeleteNotification()
 const { mutate: deleteAllNotifications, isPending: isDeletingAll } = useDeleteAllNotifications()
+
+// Confirmation Modal State
+const isConfirmModalOpen = ref(false)
+const confirmModalConfig = ref({
+  title: '',
+  message: '',
+  onConfirm: () => {},
+  confirmVariant: 'danger' as const
+})
 
 const unreadNotifications = computed(() => {
   return notifications.value?.results?.filter(n => !n.is_read) || []
@@ -149,15 +168,35 @@ const handleMarkAllRead = () => {
 }
 
 const handleDelete = (id: number) => {
-  if (confirm('Delete this notification?')) {
-    deleteNotification(id)
+  confirmModalConfig.value = {
+    title: 'Delete Notification',
+    message: 'Delete this notification?',
+    confirmVariant: 'danger',
+    onConfirm: () => {
+      deleteNotification(id, {
+        onSuccess: () => {
+          isConfirmModalOpen.value = false
+        }
+      })
+    }
   }
+  isConfirmModalOpen.value = true
 }
 
 const handleDeleteAll = () => {
-  if (confirm('Delete ALL notifications?')) {
-    deleteAllNotifications()
+  confirmModalConfig.value = {
+    title: 'Delete All Notifications',
+    message: 'Delete ALL notifications? This cannot be undone.',
+    confirmVariant: 'danger',
+    onConfirm: () => {
+      deleteAllNotifications(undefined, {
+        onSuccess: () => {
+          isConfirmModalOpen.value = false
+        }
+      })
+    }
   }
+  isConfirmModalOpen.value = true
 }
 
 const handleNotificationClick = (notification: any, event: Event) => {
