@@ -48,6 +48,7 @@
               <div class="header-right">
                 <ui-badge :variant="badgeVariant(round.status)">{{ round.status }}</ui-badge>
                 <round-actions-popover
+                  v-if="user?.role === 'admin'"
                   :roundId="round.id"
                   :tournamentId="props.tournamentId"
                   :status="round.status"

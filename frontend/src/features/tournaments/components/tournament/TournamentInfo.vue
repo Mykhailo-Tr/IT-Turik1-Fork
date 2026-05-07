@@ -130,15 +130,12 @@ import FullScreenIcon from '@/icons/FullScreenIcon.vue'
 import { useCurrentRound, useStartRegistration, useTournamentInfo } from '@/api/queries/tournaments'
 import JoinTournamentBtn from './JoinTournamentBtn.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import { useQueryClient } from '@tanstack/vue-query'
-import { touranmentsKeys } from '@/api/queries/keys'
 
 interface Props {
   tournamentId: number
 }
 
 const props = defineProps<Props>()
-const queryClient = useQueryClient()
 const isDesciptionOpen = ref(false)
 
 const {
@@ -168,18 +165,9 @@ const toggleDescriptionModal = () => {
 const { mutate: startRegistration, isPending } = useStartRegistration()
 
 const handleStartRegistration = () => {
-  startRegistration(
-    {
-      tournamentId: props.tournamentId,
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: touranmentsKeys.touranment(props.tournamentId),
-        })
-      },
-    },
-  )
+  startRegistration({
+    tournamentId: props.tournamentId,
+  })
 }
 </script>
 
