@@ -58,7 +58,6 @@ export const useTournaments = (
         pageSize: toValue(payload.pageSize),
         status: toValue(payload.status),
       }),
-    staleTime: 1000 * 60 * 5,
     ...config,
   })
 }

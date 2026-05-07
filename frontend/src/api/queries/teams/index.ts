@@ -228,6 +228,7 @@ export const useAddMember = (
     mutationFn: $api.teams.addMember,
     onSuccess: (_, { teamId }) => {
       queryClient.invalidateQueries({ queryKey: teamKeys.info(teamId) })
+      queryClient.invalidateQueries({ queryKey: teamKeys.invitations(teamId) })
     },
     ...config,
   })
