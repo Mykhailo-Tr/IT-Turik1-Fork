@@ -76,6 +76,15 @@ class TournamentListView(SyncStatusesMixin, APIView):
     DEFAULT_PAGE_SIZE = 20
     MAX_PAGE_SIZE = 100
 
+    def _parse_positive_int(self, value, field_name):
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            raise ValidationError({field_name: 'Must be a positive integer.'})
+        if parsed < 1:
+            raise ValidationError({field_name: 'Must be a positive integer.'})
+        return parsed
+
     def _get_base_queryset(self):
         user = self.request.user
         base_queryset = get_tournament_queryset()
@@ -124,9 +133,12 @@ class TournamentListView(SyncStatusesMixin, APIView):
 
         total = queryset.count()
 
-        page = int(request.query_params.get('page', 1))
+        page = self._parse_positive_int(request.query_params.get('page', 1), 'page')
         page_size = min(
-            int(request.query_params.get('pageSize', self.DEFAULT_PAGE_SIZE)),
+            self._parse_positive_int(
+                request.query_params.get('pageSize', self.DEFAULT_PAGE_SIZE),
+                'pageSize',
+            ),
             self.MAX_PAGE_SIZE,
         )
         offset = (page - 1) * page_size

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from tournaments.models import Round
-from tournaments.permissions import CanSetResults
+from tournaments.permissions import CanManageAssignments, CanSetResults
 from .services import get_available_jury, replace_round_jury_assignments, try_auto_evaluate_round
 
 from .models import JuryAssignment, SubmissionEvaluation
@@ -53,7 +53,7 @@ class JuryEvaluationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AdminRoundAssignmentView(APIView):
-    permission_classes = [IsAuthenticated, CanSetResults]
+    permission_classes = [IsAuthenticated, CanManageAssignments]
 
     def post(self, request, pk):
         round_obj = get_object_or_404(Round, pk=pk)
@@ -67,7 +67,7 @@ class AdminRoundAssignmentView(APIView):
 
 
 class AvailableJuryListView(APIView):
-    permission_classes = [IsAuthenticated, CanSetResults]
+    permission_classes = [IsAuthenticated, CanManageAssignments]
 
     def get(self, request, pk):
         round_obj = get_object_or_404(Round, pk=pk)
