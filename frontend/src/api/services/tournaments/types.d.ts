@@ -213,3 +213,10 @@ export interface StartRoundArgs {
 }
 
 export type StartRoundResponse = Round
+
+// close submissions
+export interface CloseSubmissionsArgs {
+  roundId: RoundId
+}
+
+export type CloseSubmissionsResponse = Round

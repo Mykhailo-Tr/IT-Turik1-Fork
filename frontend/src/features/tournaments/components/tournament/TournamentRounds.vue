@@ -46,7 +46,9 @@
               <h4>{{ truncateText(round.name, 70) }}</h4>
 
               <div class="header-right">
-                <ui-badge :variant="badgeVariant(round.status)">{{ round.status }}</ui-badge>
+                <ui-badge :variant="badgeVariant(round.status)">{{
+                  badgeStatus(round.status)
+                }}</ui-badge>
                 <round-actions-popover
                   v-if="user?.role === 'admin'"
                   :roundId="round.id"
@@ -145,6 +147,13 @@ function badgeVariant(status: Round['status']): Variants {
   if (status === 'evaluated') return 'green'
   if (status === 'submission_closed') return 'red'
   return 'gray'
+}
+
+function badgeStatus(status: Round['status']) {
+  if (status === 'draft') return 'Draft'
+  if (status === 'active') return 'Active'
+  if (status === 'evaluated') return 'Evaluated'
+  if (status === 'submission_closed') return 'Closed'
 }
 </script>
 

@@ -1,6 +1,8 @@
 import type { AxiosError } from 'axios'
 import type { MaybeRefArgs, MutationConfig, QueryConfig } from '../types'
 import type {
+  CloseSubmissionsArgs,
+  CloseSubmissionsResponse,
   CreateEventArgs,
   CreateRoundArgs,
   CreateTournamentArgs,
@@ -289,11 +291,24 @@ export const useStartRound = (
   config?: MutationConfig<StartRoundResponse, AxiosError<ApiError>, StartRoundArgs>,
 ) => {
   const queryClient = useQueryClient()
-
   return useMutation<StartRoundResponse, AxiosError<ApiError>, StartRoundArgs>({
     mutationFn: $api.tournaments.startRound,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tournamentsKeys.rounds(data.tournament) })
+    },
+    ...config,
+  })
+}
+
+export const useCloseSubmissions = (
+  config?: MutationConfig<CloseSubmissionsResponse, AxiosError<ApiError>, CloseSubmissionsArgs>,
+) => {
+  const queryClient = useQueryClient()
+  return useMutation<CloseSubmissionsResponse, AxiosError<ApiError>, CloseSubmissionsArgs>({
+    mutationFn: $api.tournaments.closeSubmissions,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: tournamentsKeys.rounds(data.tournament) })
+      queryClient.resetQueries({ queryKey: tournamentsKeys.currentRound(data.tournament) })
     },
     ...config,
   })

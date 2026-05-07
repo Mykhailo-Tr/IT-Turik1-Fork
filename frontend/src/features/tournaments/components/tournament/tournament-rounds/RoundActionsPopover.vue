@@ -21,20 +21,34 @@
           "
           >Start round</ui-button
         >
-        <ui-button
-          v-if="profile?.role === 'admin'"
-          size="sm"
-          class="action-btn action-delete"
-          variant="danger"
-          @click="
-            () => {
-              close()
-              handleDeleteRound()
-            }
-          "
-        >
-          Delete
-        </ui-button>
+        <template v-if="profile?.role === 'admin'">
+          <ui-button
+            v-if="props.status === 'active'"
+            size="sm"
+            class="action-btn"
+            @click="
+              () => {
+                close()
+                handleCloseSubmissions()
+              }
+            "
+          >
+            Close submissions
+          </ui-button>
+          <ui-button
+            size="sm"
+            class="action-btn action-delete"
+            variant="danger"
+            @click="
+              () => {
+                close()
+                handleDeleteRound()
+              }
+            "
+          >
+            Delete
+          </ui-button>
+        </template>
       </div>
     </template>
   </ui-popover>
@@ -44,7 +58,7 @@
 import type { RoundId, RoundStatus, TournamentId } from '@/api/dbTypes'
 import { parseApiError } from '@/api/errors'
 import { useProfile } from '@/api/queries/accounts'
-import { useDeleteRound, useStartRound } from '@/api/queries/tournaments'
+import { useCloseSubmissions, useDeleteRound, useStartRound } from '@/api/queries/tournaments'
 import UiButton from '@/components/ui/UiButton.vue'
 import UiPopover from '@/components/ui/UiPopover.vue'
 import { useNotification } from '@/composables/useNotification'
@@ -62,6 +76,7 @@ const { showNotification } = useNotification()
 const { data: profile } = useProfile()
 const { mutate: deleteRound } = useDeleteRound({ id: props.tournamentId })
 const { mutate: startRound } = useStartRound()
+const { mutate: closeSubmissions } = useCloseSubmissions()
 
 function handleDeleteRound() {
   deleteRound(
@@ -79,6 +94,20 @@ function handleDeleteRound() {
 
 function handleStartRound() {
   startRound(
+    {
+      roundId: props.roundId,
+    },
+    {
+      onError: (error) => {
+        const parsedError = parseApiError(error)
+        showNotification(parsedError?.message, 'error')
+      },
+    },
+  )
+}
+
+function handleCloseSubmissions() {
+  closeSubmissions(
     {
       roundId: props.roundId,
     },
