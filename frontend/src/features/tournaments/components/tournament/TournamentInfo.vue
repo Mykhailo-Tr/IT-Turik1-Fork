@@ -1,7 +1,13 @@
 <template>
   <ui-card class="tournament-card" :is-error="isError">
     <template #header>
-      <h2 class="tournament-title">Tournament Info</h2>
+      <div class="tournament-header">
+        <h2>Tournament Info</h2>
+
+        <ui-button v-if="tournament?.status === 'draft'" size="sm" @click="handleStartRegistration"
+          ><loading-icon v-if="isPending" />Start registration</ui-button
+        >
+      </div>
     </template>
 
     <template #error>
@@ -121,14 +127,18 @@ import DescriptionModal from './modals/DescriptionModal.vue'
 import { truncateText } from '@/lib/utils'
 import { formatDate } from '@/lib/date'
 import FullScreenIcon from '@/icons/FullScreenIcon.vue'
-import { useCurrentRound, useTournamentInfo } from '@/api/queries/tournaments'
+import { useCurrentRound, useStartRegistration, useTournamentInfo } from '@/api/queries/tournaments'
 import JoinTournamentBtn from './JoinTournamentBtn.vue'
+import LoadingIcon from '@/icons/LoadingIcon.vue'
+import { useQueryClient } from '@tanstack/vue-query'
+import { touranmentsKeys } from '@/api/queries/keys'
 
 interface Props {
   tournamentId: number
 }
 
 const props = defineProps<Props>()
+const queryClient = useQueryClient()
 const isDesciptionOpen = ref(false)
 
 const {
@@ -154,6 +164,23 @@ const toggleDescriptionModal = () => {
   if (!isDescriptionLarge.value) return
   isDesciptionOpen.value = !isDesciptionOpen.value
 }
+
+const { mutate: startRegistration, isPending } = useStartRegistration()
+
+const handleStartRegistration = () => {
+  startRegistration(
+    {
+      tournamentId: props.tournamentId,
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: touranmentsKeys.touranment(props.tournamentId),
+        })
+      },
+    },
+  )
+}
 </script>
 
 <style scoped>
@@ -161,9 +188,17 @@ const toggleDescriptionModal = () => {
   flex: 1;
 }
 
-.tournament-title {
+.tournament-header {
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-timeline {
+  display: flex;
+  gap: 0.3rem;
 }
 
 .tournament-info {
