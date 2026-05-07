@@ -17,6 +17,7 @@ from .permissions import (
     CanManageRounds,
     CanManageRoundsOrReadOnly,
     CanManageParticipants,
+    CanRegisterTeamForTournament,
     CanSetResults,
     CanViewTournament,
     IsPlatformAdminOrTeamMemberPermission,
@@ -216,7 +217,7 @@ class TournamentStartRegistrationView(APIView):
 
 
 class TournamentTeamRegistrationCreateView(SyncStatusesMixin, APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanRegisterTeamForTournament]
 
     def post(self, request, pk):
         tournament = get_object_or_404(Tournament, pk=pk)
