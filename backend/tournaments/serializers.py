@@ -42,7 +42,37 @@ class TournamentPublicSerializer(serializers.ModelSerializer):
             'min_team_members',
             'status',
             'rounds',
+            'registered_team',
         )
+    
+    def get_registered_team(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
+
+        # Знаходимо всі команди юзера
+        user_team_ids = TeamMember.objects.filter(
+            user=request.user
+        ).values_list('team_id', flat=True)
+
+        # Додаємо команди де він капітан
+        from teams.models import Team as TeamModel
+        captain_team_ids = TeamModel.objects.filter(
+            captain=request.user
+        ).values_list('id', flat=True)
+
+        all_team_ids = set(user_team_ids) | set(captain_team_ids)
+
+        registration = obj.team_registrations.filter(
+            team_id__in=all_team_ids,
+            is_active=True,
+        ).select_related('team').first()
+
+        if not registration:
+            return None
+
+        from teams.serializers import TeamSummarySerializer
+        return TeamSummarySerializer(registration.team, context=self.context).data
 
 
 class ActiveTournamentSerializer(serializers.ModelSerializer):
@@ -400,4 +430,4 @@ class EventSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        return instance
+        return instance
