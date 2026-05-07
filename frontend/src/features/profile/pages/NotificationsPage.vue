@@ -124,20 +124,20 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import UiCard from '@/components/UiCard.vue'
-import UiButton from '@/components/UiButton.vue'
-import UiBadge from '@/components/UiBadge.vue'
-import UiConfirmModal from '@/components/UiConfirmModal.vue'
+import UiCard from '@/components/ui/UiCard.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiBadge from '@/components/ui/UiBadge.vue'
+import UiConfirmModal from '@/components/ui/UiConfirmModal.vue'
 import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
 import TrashIcon from '@/icons/TrashIcon.vue'
-import NotificationSettingsModal from '../components/NotificationSettingsModal.vue'
+import NotificationSettingsModal from '../components/notifications/NotificationSettingsModal.vue'
 import { 
   useNotifications, 
   useMarkAsRead, 
   useMarkAllAsRead,
   useDeleteNotification,
   useDeleteAllNotifications
-} from '@/queries/notifications'
+} from '@/api/queries/notifications'
 import { useNotification } from '@/composables/useNotification'
 
 const isSettingsModalOpen = ref(false)

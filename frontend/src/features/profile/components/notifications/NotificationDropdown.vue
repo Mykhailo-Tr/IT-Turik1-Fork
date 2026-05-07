@@ -86,32 +86,9 @@
                 </span>
                 <span class="item-date">{{ formatDate(notification.created_at) }}</span>
               </div>
-              <span class="item-message">
-                <template v-for="(part, index) in parseMessage(notification.message)" :key="index">
-                  <a
-                    v-if="part.type === 'user'"
-                    :href="`/users/${part.id}`"
-                    class="user-link"
-                    @click.stop
-                  >
-                    {{ part.text }}
-                  </a>
-                  <router-link
-                    v-else-if="part.type === 'team'"
-                    :to="`/teams/${part.id}`"
-                    class="user-link"
-                    @click.stop
-                  >
-                    {{ part.text }}
-                  </router-link>
-                  <span v-else>{{ part.text }}</span>
-                </template>
-              </span>
-              <span class="item-date">{{ formatDate(notification.created_at) }}</span>
             </div>
           </div>
         </div>
-      </div>
 
       <div class="dropdown-footer">
         <ui-button size="sm" variant="secondary" style="width: 100%" @click="goToAllNotifications">
@@ -138,8 +115,8 @@ import BellIcon from '@/icons/BellIcon.vue'
 import ExternalLinkIcon from '@/icons/ExternalLinkIcon.vue'
 
 import TrashIcon from '@/icons/TrashIcon.vue'
-import UiButton from '@/components/UiButton.vue'
-import UiConfirmModal from '@/components/UiConfirmModal.vue'
+import UiButton from '@/components/ui/UiButton.vue'
+import UiConfirmModal from '@/components/ui/UiConfirmModal.vue'
 import { 
   useNotifications, 
   useUnreadCount, 
@@ -147,8 +124,8 @@ import {
   useMarkAllAsRead,
   useDeleteNotification,
   useDeleteAllNotifications
-} from '@/queries/notifications'
-import type { Notification } from '@/api/notifications/types'
+} from '@/api/queries/notifications'
+import type { Notification } from '@/api/services/notifications/types'
 
 const isOpen = ref(false)
 const dropdownContainer = ref<HTMLElement | null>(null)
@@ -528,8 +505,8 @@ onUnmounted(() => {
 }
 
 .delete-btn-mini:hover {
-  color: var(--danger-600);
-  background: color-mix(in srgb, var(--danger-500) 10%, transparent);
+  color: #c4000a;
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
 .delete-btn-mini .icon {

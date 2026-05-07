@@ -71,7 +71,7 @@ export const useDeleteNotification = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (id: number) => {
-      return await $api.notifications.deleteNotification(id)
+      return await notificationsService.deleteNotification(id)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() })
@@ -84,7 +84,7 @@ export const useDeleteAllNotifications = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      return await $api.notifications.deleteAllNotifications()
+      return await notificationsService.deleteAllNotifications()
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.lists() })
