@@ -8,7 +8,7 @@
 | Дія | Метод | Шлях | Доступ |
 | :--- | :--- | :--- | :--- |
 | **Список турнірів** | GET | `/api/tournaments/` | Всі |
-| **Деталі турніру** | GET | `/api/tournaments/{id}/` | Всі |
+| **Деталі турніру** | GET | `/api/tournaments/{id}/` | Всі (+ `registered_team` для Auth) |
 | **Створити турнір** | POST | `/api/tournaments/manage/` | Admin |
 | **Редагувати турнір** | PATCH/DEL| `/api/tournaments/manage/{id}/` | Admin |
 | **Відкрити реєстрацію**| POST | `/api/tournaments/{id}/start-registration/` | Admin |
@@ -56,6 +56,28 @@
 ---
 
 ### 1. Турніри (Admin)
+
+**Деталі турніру — GET `/api/tournaments/{id}/`**
+```json
+{
+  "id": 5,
+  "name": "Hackathon 2026",
+  "description": "...",
+  "start_date": "2026-05-01T10:00:00Z",
+  "end_date": "2026-05-10T10:00:00Z",
+  "max_teams": 20,
+  "min_team_members": 2,
+  "status": "registration",
+  "rounds": [...],
+  "registered_team": {
+    "id": 3,
+    "name": "Team Rocket"
+  }
+}
+```
+> Поле `registered_team` — команда, якою авторизований користувач зареєстрований у цьому турнірі (капітан або учасник, `is_active=true`).
+> Якщо не авторизований або команди немає — `registered_team: null`.
+> Використовується для визначення `team` при поданні submission.
 
 **Створення турніру — POST `/api/tournaments/manage/`**
 ```json
