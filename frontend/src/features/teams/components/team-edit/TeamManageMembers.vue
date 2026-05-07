@@ -67,7 +67,7 @@
 
           <template #footer>
             <ui-button
-              v-if="member.id !== team?.captain_id"
+              v-if="member.id !== team?.captain_id && !team.is_in_active_tournament"
               variant="danger"
               size="sm"
               class="remove-member-btn"
@@ -126,7 +126,7 @@
       No members match your search.
     </p>
 
-    <div class="add-member-box">
+    <div class="add-member-box" v-if="!team.is_in_active_tournament">
       <h3>Invite user</h3>
 
       <div class="form-item">

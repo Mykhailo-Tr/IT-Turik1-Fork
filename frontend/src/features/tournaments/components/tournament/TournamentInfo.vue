@@ -130,15 +130,12 @@ import FullScreenIcon from '@/icons/FullScreenIcon.vue'
 import { useCurrentRound, useStartRegistration, useTournamentInfo } from '@/api/queries/tournaments'
 import JoinTournamentBtn from './JoinTournamentBtn.vue'
 import LoadingIcon from '@/icons/LoadingIcon.vue'
-import { useQueryClient } from '@tanstack/vue-query'
-import { touranmentsKeys } from '@/api/queries/keys'
 
 interface Props {
   tournamentId: number
 }
 
 const props = defineProps<Props>()
-const queryClient = useQueryClient()
 const isDesciptionOpen = ref(false)
 
 const {
@@ -148,7 +145,12 @@ const {
   isError,
 } = useTournamentInfo({ id: props.tournamentId })
 const error = computed(() => parseApiError(tournamentInfoError.value))
-const { data: currentRound } = useCurrentRound({ id: props.tournamentId })
+const { data: currentRound } = useCurrentRound(
+  { id: props.tournamentId },
+  {
+    enabled: computed(() => tournament.value?.status === 'running'),
+  },
+)
 
 const isDescriptionLarge = computed(() => (tournament.value?.description.length ?? 0) > 190)
 const statusBadgeVariant = computed(() => {
@@ -168,18 +170,9 @@ const toggleDescriptionModal = () => {
 const { mutate: startRegistration, isPending } = useStartRegistration()
 
 const handleStartRegistration = () => {
-  startRegistration(
-    {
-      tournamentId: props.tournamentId,
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: touranmentsKeys.touranment(props.tournamentId),
-        })
-      },
-    },
-  )
+  startRegistration({
+    tournamentId: props.tournamentId,
+  })
 }
 </script>
 

@@ -1,5 +1,7 @@
 import { apiClient } from '@/api/client'
 import type {
+  CloseSubmissionsArgs,
+  CloseSubmissionsResponse,
   CreateEventArgs,
   CreateRoundArgs,
   CreateTournamentArgs,
@@ -144,6 +146,13 @@ export const tournamentsService = {
   startRound: async (args: StartRoundArgs) => {
     const { data } = await apiClient.post<StartRoundResponse>(
       `${prefix}/rounds/${args.roundId}/start/`,
+    )
+    return data
+  },
+
+  closeSubmissions: async (args: CloseSubmissionsArgs) => {
+    const { data } = await apiClient.post<CloseSubmissionsResponse>(
+      `${prefix}/rounds/${args.roundId}/close-submissions/`,
     )
     return data
   },
