@@ -66,6 +66,37 @@ class NotificationMarkAllReadView(APIView):
         return Response({'marked': count}, status=status.HTTP_200_OK)
 
 
+class NotificationDeleteView(APIView):
+    """Delete a single notification."""
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        deleted_count, _ = Notification.objects.filter(
+            id=pk,
+            recipient=request.user,
+        ).delete()
+
+        if deleted_count == 0:
+            return Response(
+                {'detail': 'Notification not found.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response({'detail': 'Deleted.'}, status=status.HTTP_200_OK)
+
+
+class NotificationDeleteAllView(APIView):
+    """Delete all notifications for the current user."""
+
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        count, _ = Notification.objects.filter(
+            recipient=request.user,
+        ).delete()
+        return Response({'deleted': count}, status=status.HTTP_200_OK)
+
+
 class UnreadCountView(APIView):
     """Return the number of unread notifications (for badge display)."""
 
