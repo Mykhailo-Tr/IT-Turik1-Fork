@@ -378,7 +378,6 @@ class EventSerializer(serializers.ModelSerializer):
             'description',
             'link',
             'start_datetime',
-            'end_datetime',
             'icon',
             'created_at',
             'updated_at',
@@ -388,19 +387,10 @@ class EventSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         instance = self.instance
         event_type = attrs.get('type', getattr(instance, 'type', None))
-        start_datetime = attrs.get('start_datetime', getattr(instance, 'start_datetime', None))
-        end_datetime = attrs.get('end_datetime', getattr(instance, 'end_datetime', None))
-        errors = {}
-
-        if end_datetime and start_datetime and end_datetime < start_datetime:
-            errors['end_datetime'] = 'end_datetime must be greater than or equal to start_datetime.'
 
         if event_type == Event.TYPE_EVENT:
             attrs.pop('link', None)
             attrs['link'] = ''
-
-        if errors:
-            raise serializers.ValidationError(errors)
 
         return attrs
 

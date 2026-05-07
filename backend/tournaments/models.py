@@ -306,7 +306,6 @@ class Event(models.Model):
     description = models.TextField(blank=True)
     link = models.URLField(blank=True)
     start_datetime = models.DateTimeField()
-    end_datetime = models.DateTimeField(blank=True, null=True)
     icon = models.ForeignKey(
         Icon,
         on_delete=models.SET_NULL,
