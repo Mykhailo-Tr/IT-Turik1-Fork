@@ -3,9 +3,11 @@ import re
 from django.utils import timezone
 from rest_framework import serializers
 
+from backend.permissions import is_platform_admin
 from accounts.models import User
 
 from .models import Team, TeamInvitation, TeamJoinRequest, TeamMember
+from .services import assert_team_not_in_active_tournament, get_active_tournament_registration
 
 
 def clear_invitation_states_for_member(*, team, user=None, user_id=None):
@@ -23,6 +25,8 @@ def clear_join_request_states_for_member(*, team, user=None, user_id=None):
 
 
 def invite_user_to_team(*, team, user, invited_by):
+    assert_team_not_in_active_tournament(team)
+
     if TeamMember.objects.filter(team=team, user=user).exists():
         return None, False
 
@@ -54,8 +58,31 @@ def invite_user_to_team(*, team, user, invited_by):
     return invitation, created
 
 
-def is_platform_admin(user):
-    return bool(user and user.is_authenticated and (user.is_superuser or user.role == 'admin'))
+def get_user_invitation_status(*, team, user):
+    """Get the invitation status for a user in a specific team. Returns None if not invited or already a member."""
+    if not user:
+        return None
+    
+    is_member = any(member.id == user.id for member in team.members.all())
+    is_captain = team.captain_id == user.id
+    if is_member or is_captain:
+        return None
+
+    for invitation in team.invitations.all():
+        if invitation.user_id == user.id:
+            return invitation.status
+    return None
+
+
+def get_user_join_request_status(*, team, user):
+    """Get the join request status for a user in a specific team. Returns None if no pending request."""
+    if not user:
+        return None
+
+    for join_request in team.join_requests.all():
+        if join_request.user_id == user.id:
+            return join_request.status
+    return None
 
 
 class TeamMemberSerializer(serializers.ModelSerializer):
@@ -105,13 +132,10 @@ class TeamSerializer(serializers.ModelSerializer):
         required=False,
     )
     members = TeamMemberSerializer(many=True, read_only=True)
-    invitations = serializers.SerializerMethodField()
-    join_requests = serializers.SerializerMethodField()
-    my_invitation_status = serializers.SerializerMethodField()
-    my_join_request_status = serializers.SerializerMethodField()
     is_member = serializers.SerializerMethodField()
     is_captain = serializers.SerializerMethodField()
     can_request_to_join = serializers.SerializerMethodField()
+    is_in_active_tournament = serializers.SerializerMethodField()
 
     class Meta:
         model = Team
@@ -125,13 +149,10 @@ class TeamSerializer(serializers.ModelSerializer):
             'contact_telegram',
             'contact_discord',
             'members',
-            'invitations',
-            'join_requests',
-            'my_invitation_status',
-            'my_join_request_status',
             'is_member',
             'is_captain',
             'can_request_to_join',
+            'is_in_active_tournament',
             'member_ids',
         )
 
@@ -141,65 +162,37 @@ class TeamSerializer(serializers.ModelSerializer):
             return None
         return request.user
 
-    def _is_captain_for_user(self, obj, user):
-        return bool(user) and obj.captain_id == user.id
-
     def _is_member_for_user(self, obj, user):
         if not user:
             return False
         return any(member.id == user.id for member in obj.members.all())
 
-    def get_invitations(self, obj):
-        user = self._request_user()
-        if not self._is_captain_for_user(obj, user) and not is_platform_admin(user):
-            return []
-        member_ids = {member.id for member in obj.members.all()}
-        invitations = [invitation for invitation in obj.invitations.all() if invitation.user_id not in member_ids]
-        return TeamInvitationSerializer(invitations, many=True).data
-
-    def get_join_requests(self, obj):
-        user = self._request_user()
-        if not self._is_captain_for_user(obj, user) and not is_platform_admin(user):
-            return []
-        return TeamJoinRequestSerializer(obj.join_requests.all(), many=True).data
-
-    def get_my_invitation_status(self, obj):
-        user = self._request_user()
-        if not user:
-            return None
-        if self._is_member_for_user(obj, user) or self._is_captain_for_user(obj, user):
-            return None
-
-        for invitation in obj.invitations.all():
-            if invitation.user_id == user.id:
-                return invitation.status
-        return None
-
-    def get_my_join_request_status(self, obj):
-        user = self._request_user()
-        if not user:
-            return None
-
-        for join_request in obj.join_requests.all():
-            if join_request.user_id == user.id:
-                return join_request.status
-        return None
-
     def get_is_member(self, obj):
-        return self._is_member_for_user(obj, self._request_user())
+        user = self._request_user()
+        if not user:
+            return False
+        return self._is_member_for_user(obj, user)
 
     def get_is_captain(self, obj):
-        return self._is_captain_for_user(obj, self._request_user())
+        user = self._request_user()
+        return bool(user) and obj.captain_id == user.id
 
     def get_can_request_to_join(self, obj):
         user = self._request_user()
         if not user or not obj.is_public:
             return False
-        if self._is_member_for_user(obj, user) or self._is_captain_for_user(obj, user):
+        if self._is_member_for_user(obj, user) or obj.captain_id == user.id:
             return False
-        if self.get_my_invitation_status(obj) == TeamInvitation.STATUS_INVITED:
+        
+        invitation_status = get_user_invitation_status(team=obj, user=user)
+        if invitation_status == TeamInvitation.STATUS_INVITED:
             return False
-        return self.get_my_join_request_status(obj) != TeamJoinRequest.STATUS_PENDING
+        
+        join_request_status = get_user_join_request_status(team=obj, user=user)
+        return join_request_status != TeamJoinRequest.STATUS_PENDING
+
+    def get_is_in_active_tournament(self, obj):
+        return get_active_tournament_registration(obj) is not None
 
     def validate_contact_telegram(self, value):
         normalized = value.strip().lstrip('@')

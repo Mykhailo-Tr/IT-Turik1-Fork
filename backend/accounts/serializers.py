@@ -41,7 +41,7 @@ def generate_unique_role_code(length=12):
         code = ''.join(secrets.choice(alphabet) for _ in range(length))
         if not RoleActivationCode.objects.filter(code=code).exists():
             return code
-    raise serializers.ValidationError({'non_field_errors': ['Unable to generate a unique activation code. Please retry.']})
+    raise serializers.ValidationError({'message': ['Unable to generate a unique activation code. Please retry.']})
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -318,7 +318,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context.get('user')
         if user is None:
-            raise serializers.ValidationError({'non_field_errors': ['Invalid password reset request.']})
+            raise serializers.ValidationError({'message': ['Invalid password reset request.']})
 
         new_password = attrs.get('new_password')
         confirm_password = attrs.get('confirm_password')
@@ -343,7 +343,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     def validate(self, attrs):
         user = self.context.get('user')
         if user is None:
-            raise serializers.ValidationError({'non_field_errors': ['Invalid request context.']})
+            raise serializers.ValidationError({'message': ['Invalid request context.']})
 
         current_password = attrs.get('current_password')
         if not user.check_password(current_password):

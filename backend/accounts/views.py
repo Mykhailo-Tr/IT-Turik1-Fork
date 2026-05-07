@@ -48,7 +48,7 @@ class ActivationView(APIView):
             user.save(update_fields=['is_active'])
             return Response({'status': 'success', 'message': 'Account activated!'}, status=status.HTTP_200_OK)
 
-        raise ValidationError({'non_field_errors': ['Activation link is invalid or expired.']})
+        raise ValidationError({'message': ['Activation link is invalid or expired.']})
 
 
 class GoogleAuthView(APIView):
@@ -161,6 +161,12 @@ class UserListView(generics.ListAPIView):
         return queryset
 
 
+class UserDetailView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer
+    queryset = User.objects.filter(is_active=True, is_superuser=False)
+
+
 class PasswordResetRequestView(APIView):
     permission_classes = (AllowAny,)
 
@@ -188,13 +194,13 @@ class PasswordResetConfirmView(APIView):
     def get(self, request, uidb64, token):
         user = self._get_user(uidb64)
         if user is None or not default_token_generator.check_token(user, token):
-            raise ValidationError({'non_field_errors': ['Password reset link is invalid or expired.']})
+            raise ValidationError({'message': ['Password reset link is invalid or expired.']})
         return Response({'message': 'Password reset link is valid.'}, status=status.HTTP_200_OK)
 
     def post(self, request, uidb64, token):
         user = self._get_user(uidb64)
         if user is None or not default_token_generator.check_token(user, token):
-            raise ValidationError({'non_field_errors': ['Password reset link is invalid or expired.']})
+            raise ValidationError({'message': ['Password reset link is invalid or expired.']})
 
         serializer = PasswordResetConfirmSerializer(data=request.data, context={'user': user})
         serializer.is_valid(raise_exception=True)

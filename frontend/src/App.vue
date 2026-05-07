@@ -16,13 +16,13 @@
       >
         <span>{{ notification.message }}</span>
         <ui-button
-          variant="outline-accent"
+          class="close-notice-btn"
+          :variant="notification.type === 'success' ? 'default' : 'danger'"
           size="sm"
           type="button"
-          class="app-notice-close"
           @click="hideNotification()"
-          >Dismiss</ui-button
-        >
+          ><CrossIcon
+        /></ui-button>
       </div>
     </Transition>
 
@@ -33,12 +33,26 @@
 </template>
 
 <script setup lang="ts">
-import { useNotification } from '@/features/shared/composables/useNotification'
+import { useNotification } from '@/composables/useNotification'
 import AppNavbar from './components/shared/AppNavbar.vue'
-import UiButton from './components/UiButton.vue'
+import UiButton from './components/ui/UiButton.vue'
 import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
+import CrossIcon from './icons/CrossIcon.vue'
 
 const { notification, hideNotification } = useNotification()
+
+const applyTheme = () => {
+  const html = document.documentElement
+  const currentTheme = localStorage.getItem('theme') ?? 'light'
+
+  if (currentTheme === 'dark') {
+    html.classList.add('dark')
+  } else {
+    html.classList.remove('dark')
+  }
+}
+
+applyTheme()
 </script>
 
 <style scoped>
@@ -54,7 +68,7 @@ const { notification, hideNotification } = useNotification()
   position: fixed;
   border-radius: 999px;
   filter: blur(40px);
-  z-index: -1;
+  z-index: 1;
   pointer-events: none;
 }
 
@@ -77,6 +91,8 @@ const { notification, hideNotification } = useNotification()
 .page-content {
   width: min(1100px, 100% - 2rem);
   margin: 1.6rem auto 2.4rem;
+  position: relative;
+  z-index: 9;
 }
 
 .app-notice {
@@ -91,6 +107,12 @@ const { notification, hideNotification } = useNotification()
   gap: 0.7rem;
   z-index: 2000;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.24);
+  backdrop-filter: blur(20px);
+}
+
+.close-notice-btn {
+  background: transparent;
+  border: none;
 }
 
 .type-info {
@@ -125,10 +147,6 @@ const { notification, hideNotification } = useNotification()
 }
 
 @media (max-width: 680px) {
-  .app-shell {
-    --nav-offset: 122px;
-  }
-
   .nav-container {
     align-items: flex-start;
     flex-direction: column;
