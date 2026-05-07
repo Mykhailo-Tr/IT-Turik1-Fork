@@ -201,3 +201,8 @@ export interface EditEventArgs {
 export interface DeleteEventArgs {
   eventId: EventId
 }
+
+// start registration
+export interface StartRegistrationArgs {
+  tournamentId: TournamentId
+}

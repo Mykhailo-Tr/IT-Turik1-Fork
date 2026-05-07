@@ -24,6 +24,7 @@ import type {
   GetTournamentsArgs,
   GetTournamentsResponse,
   RegisterTeamArgs,
+  StartRegistrationArgs,
   SubmitRoundArgs,
 } from '@/api/services/tournaments/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -269,6 +270,15 @@ export const useDeleteEvent = (
 ) => {
   return useMutation<unknown, AxiosError<ApiError>, DeleteEventArgs>({
     mutationFn: $api.tournaments.deleteEvent,
+    ...config,
+  })
+}
+
+export const useStartRegistration = (
+  config?: MutationConfig<unknown, AxiosError<ApiError>, StartRegistrationArgs>,
+) => {
+  return useMutation<unknown, AxiosError<ApiError>, StartRegistrationArgs>({
+    mutationFn: $api.tournaments.startRegistration,
     ...config,
   })
 }

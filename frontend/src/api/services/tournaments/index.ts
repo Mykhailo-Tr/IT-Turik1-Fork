@@ -22,6 +22,7 @@ import type {
   GetTournamentInfoResponse,
   GetTournamentsArgs,
   RegisterTeamArgs,
+  StartRegistrationArgs,
   SubmitRoundArgs,
 } from './types'
 
@@ -130,6 +131,11 @@ export const tournamentsService = {
 
   deleteEvent: async (args: DeleteEventArgs) => {
     const { data } = await apiClient.delete(`${prefix}/events/${args.eventId}/`)
+    return data
+  },
+
+  startRegistration: async (args: StartRegistrationArgs) => {
+    const { data } = await apiClient.post(`${prefix}/${args.tournamentId}/start-registration/`)
     return data
   },
 }
