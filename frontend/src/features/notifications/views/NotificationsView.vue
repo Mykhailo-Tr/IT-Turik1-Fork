@@ -397,8 +397,8 @@ const formatDate = (dateStr: string) => {
 }
 
 .delete-btn:hover {
-  color: var(--danger-600);
-  background: color-mix(in srgb, var(--danger-500) 10%, transparent);
+  color: #c4000a;
+  background: color-mix(in srgb, var(--destructive) 10%, transparent);
 }
 
 .delete-btn .icon {

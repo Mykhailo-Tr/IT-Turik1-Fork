@@ -370,11 +370,11 @@ onUnmounted(() => {
 }
 
 .action-link.danger {
-  color: var(--danger-500);
+  color: var(--destructive);
 }
 
 .action-link.danger:hover:not(:disabled) {
-  color: var(--danger-600);
+  color: #c4000a;
 }
 
 .action-link:disabled {
