@@ -137,16 +137,7 @@ class RoundSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         instance = self.instance
         tournament = attrs.get('tournament', getattr(instance, 'tournament', None))
-        start_date = attrs.get('start_date', getattr(instance, 'start_date', None))
-        end_date = attrs.get('end_date', getattr(instance, 'end_date', None))
         errors = {}
-
-        if start_date and end_date and start_date >= end_date:
-            errors['end_date'] = 'end_date must be greater than start_date.'
-
-        if tournament and start_date and end_date:
-            if start_date < tournament.start_date or end_date > tournament.end_date:
-                errors['start_date'] = 'Round dates must be within tournament dates.'
 
         passing_count = attrs.get('passing_count', getattr(instance, 'passing_count', None))
         if passing_count is not None and tournament:
