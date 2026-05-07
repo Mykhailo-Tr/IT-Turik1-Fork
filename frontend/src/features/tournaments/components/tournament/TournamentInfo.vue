@@ -145,7 +145,12 @@ const {
   isError,
 } = useTournamentInfo({ id: props.tournamentId })
 const error = computed(() => parseApiError(tournamentInfoError.value))
-const { data: currentRound } = useCurrentRound({ id: props.tournamentId })
+const { data: currentRound } = useCurrentRound(
+  { id: props.tournamentId },
+  {
+    enabled: computed(() => tournament.value?.status === 'running'),
+  },
+)
 
 const isDescriptionLarge = computed(() => (tournament.value?.description.length ?? 0) > 190)
 const statusBadgeVariant = computed(() => {
