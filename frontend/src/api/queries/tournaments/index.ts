@@ -25,6 +25,8 @@ import type {
   GetTournamentsResponse,
   RegisterTeamArgs,
   StartRegistrationArgs,
+  StartRoundArgs,
+  StartRoundResponse,
   SubmitRoundArgs,
 } from '@/api/services/tournaments/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -279,6 +281,20 @@ export const useStartRegistration = (
 ) => {
   return useMutation<unknown, AxiosError<ApiError>, StartRegistrationArgs>({
     mutationFn: $api.tournaments.startRegistration,
+    ...config,
+  })
+}
+
+export const useStartRound = (
+  config?: MutationConfig<StartRoundResponse, AxiosError<ApiError>, StartRoundArgs>,
+) => {
+  const queryClient = useQueryClient()
+
+  return useMutation<StartRoundResponse, AxiosError<ApiError>, StartRoundArgs>({
+    mutationFn: $api.tournaments.startRound,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: touranmentsKeys.rounds(data.tournament) })
+    },
     ...config,
   })
 }

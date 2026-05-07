@@ -23,6 +23,8 @@ import type {
   GetTournamentsArgs,
   RegisterTeamArgs,
   StartRegistrationArgs,
+  StartRoundArgs,
+  StartRoundResponse,
   SubmitRoundArgs,
 } from './types'
 
@@ -136,6 +138,13 @@ export const tournamentsService = {
 
   startRegistration: async (args: StartRegistrationArgs) => {
     const { data } = await apiClient.post(`${prefix}/${args.tournamentId}/start-registration/`)
+    return data
+  },
+
+  startRound: async (args: StartRoundArgs) => {
+    const { data } = await apiClient.post<StartRoundResponse>(
+      `${prefix}/rounds/${args.roundId}/start/`,
+    )
     return data
   },
 }
