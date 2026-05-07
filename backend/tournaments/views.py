@@ -1,13 +1,13 @@
 from django.db.models import Count, IntegerField, Prefetch, Q, Value
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
+from rest_framework import generics, status, viewsets
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from teams.models import Team
-from .models import Round, Submission, Tournament, TournamentTeamRegistration
+from .models import Event, Icon, Round, Submission, Tournament, TournamentTeamRegistration
 from backend.permissions import Permission, has_permission as user_has_permission
 
 from .permissions import (
@@ -24,10 +24,10 @@ from .permissions import (
 from .serializers import (
     ActiveTournamentSerializer,
     CurrentTaskSerializer,
-    
+    EventSerializer,
+    IconSerializer,
     OwnSubmissionSerializer,
     RoundSerializer,
-    
     SubmissionSerializer,
     TournamentAdminSerializer,
     TournamentPublicSerializer,
@@ -75,6 +75,15 @@ class TournamentListView(SyncStatusesMixin, APIView):
     permission_classes = [AllowAny]
     DEFAULT_PAGE_SIZE = 20
     MAX_PAGE_SIZE = 100
+
+    def _parse_positive_int(self, value, field_name):
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            raise ValidationError({field_name: 'Must be a positive integer.'})
+        if parsed < 1:
+            raise ValidationError({field_name: 'Must be a positive integer.'})
+        return parsed
 
     def _get_base_queryset(self):
         user = self.request.user
@@ -124,9 +133,12 @@ class TournamentListView(SyncStatusesMixin, APIView):
 
         total = queryset.count()
 
-        page = int(request.query_params.get('page', 1))
+        page = self._parse_positive_int(request.query_params.get('page', 1), 'page')
         page_size = min(
-            int(request.query_params.get('pageSize', self.DEFAULT_PAGE_SIZE)),
+            self._parse_positive_int(
+                request.query_params.get('pageSize', self.DEFAULT_PAGE_SIZE),
+                'pageSize',
+            ),
             self.MAX_PAGE_SIZE,
         )
         offset = (page - 1) * page_size
@@ -434,3 +446,22 @@ class CurrentTaskView(SyncStatusesMixin, APIView):
             raise NotFound('No active round is available right now.')
 
         return Response(CurrentTaskSerializer(active_round).data, status=status.HTTP_200_OK)
+
+
+class EventViewSet(viewsets.ModelViewSet):
+    serializer_class = EventSerializer
+    permission_classes = [CanManageRoundsOrReadOnly]
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+
+    def get_queryset(self):
+        queryset = Event.objects.select_related('icon', 'tournament').order_by('start_datetime')
+        tournament_id = self.request.query_params.get('tournament')
+        if tournament_id:
+            queryset = queryset.filter(tournament_id=tournament_id)
+        return queryset
+
+
+class IconListView(generics.ListAPIView):
+    queryset = Icon.objects.all()
+    serializer_class = IconSerializer
+    permission_classes = [AllowAny]
